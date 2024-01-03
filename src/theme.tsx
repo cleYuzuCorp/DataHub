@@ -1,9 +1,10 @@
 import { createTheme } from '@mui/material/styles'
-export {}
+export { }
 
 const customColors = {
     darkYellow: '#F7E13D',
     lightYellow: '#FFF080',
+    lightYellowMid: 'rgba(255, 240, 128, 0.50)',
     darkBlue: '#1B255F',
     lightBlue: '#001FD0',
     orange: '#F37962',
@@ -18,6 +19,7 @@ const theme = createTheme({
         },
         secondary: {
             main: customColors.lightYellow,
+            light: customColors.lightYellowMid
         },
         text: {
             primary: customColors.darkBlue,
