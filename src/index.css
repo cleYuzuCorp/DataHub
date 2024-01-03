@@ -1,6 +1,28 @@
+@font-face {
+  font-family: 'BD Supper';
+  src: url('../public/font/BDSupper/BDSupperRegular.otf') format('otf');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Hero New';
+  src: url('../public/font/HeroNew/HeroNewExtraBold.otf') format('otf');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Duos Brush Pro';
+  src: url('../public/font/DuosBrushPro-Black/DuosBrushPro-Black.ttf') format('ttf');
+  font-weight: normal;
+  font-style: normal;
+}
+
+
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+  font-family: 'BD Supper', 'Hero New' -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
