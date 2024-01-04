@@ -4,11 +4,21 @@ import { Accordion, AccordionDetails, AccordionSummary, Stack, Typography } from
 import theme from "../../theme"
 import { useState } from "react"
 
-const AAccordion = (props: { title: string, value: string[], active: string[], setActive: (item: string[]) => void }) => {
+const AAccordion = (props: { title: string, values: string[], active: string[], setActive: (item: string[]) => void }) => {
 
-    const { title, value, active, setActive } = props
+    const { title, values, active, setActive } = props
 
     const [hovered, setHovered] = useState("")
+
+    const handleClick = (value: string) => {
+        if (title === "Logiciel") {
+            const updatedActive = active.filter(item => !values.includes(item))
+            setActive([value, ...updatedActive])
+        } else {
+            setActive([value])
+        }
+    }
+
 
     return (
         <Accordion
@@ -28,7 +38,7 @@ const AAccordion = (props: { title: string, value: string[], active: string[], s
                 expandIcon={<FontAwesomeIcon icon={faChevronDown} />}
                 sx={{
                     cursor: 'pointer',
-                    padding: '0px 20px 0px 20px',
+                    padding: '0px 20px 0px 30px',
                     background: hovered === title ? theme.palette.secondary.light : 'none'
                 }}
             >
@@ -42,17 +52,20 @@ const AAccordion = (props: { title: string, value: string[], active: string[], s
 
             <AccordionDetails sx={{ width: "100%" }}>
                 <Stack>
-                    {value.map((v) => <Typography
-                        onMouseEnter={() => setHovered(v)}
+                    {values.map((value) => <Typography
+                        onMouseEnter={() => setHovered(value)}
                         onMouseLeave={() => setHovered("")}
-                        onClick={() => title === "Logiciel" ? setActive([...active, v]) : setActive([v])}
+                        onClick={() => handleClick(value)}
                         sx={{
+                            minWidth: '160px',
+                            maxWidth: '160px',
+                            width: '100%',
                             cursor: 'pointer',
-                            padding: '5px 0px 5px 0px',
-                            background: active.includes(v) || hovered === v ? theme.palette.secondary.light : 'none'
+                            padding: '5px 20px 5px 20px',
+                            background: active.includes(value) || hovered === value ? theme.palette.secondary.light : 'none'
                         }}
                     >
-                        {v}
+                        {value}
                     </Typography>)}
                 </Stack>
             </AccordionDetails>
