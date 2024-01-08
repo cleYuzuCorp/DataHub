@@ -16,6 +16,7 @@ const AHeaderSelect = (props: { values: string[], active: string[], setActive: (
     return (
         <Stack paddingTop="17px" borderTop="1px solid #C1C1C1">
             {values.map((value) => <Typography
+                key={value}
                 onMouseEnter={() => setHovered(value)}
                 onMouseLeave={() => setHovered("")}
                 onClick={() => handleClick(value)}

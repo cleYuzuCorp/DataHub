@@ -53,6 +53,7 @@ const AAccordion = (props: { title: string, values: string[], active: string[], 
             <AccordionDetails sx={{ width: "100%" }}>
                 <Stack>
                     {values.map((value) => <Typography
+                        key={value}
                         onMouseEnter={() => setHovered(value)}
                         onMouseLeave={() => setHovered("")}
                         onClick={() => handleClick(value)}

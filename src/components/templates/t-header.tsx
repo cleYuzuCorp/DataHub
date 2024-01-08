@@ -3,99 +3,40 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { Stack, Typography } from "@mui/material"
 import AAccordion from "../atoms/a-accordion"
 import AHeaderSelect from "../atoms/a-header-select"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import theme from "../../theme"
 import { useNavigate } from "react-router-dom"
-import { EventType, LogLevel, PublicClientApplication } from "@azure/msal-browser"
 
-const THeader = () => {
+const THeader = (props: { instance?: any }) => {
+
+    const { instance } = props
 
     const navigate = useNavigate()
 
     const [hovered, setHovered] = useState("")
     const [active, setActive] = useState([""])
 
-    const clientid = '8bbbed94-f29e-4371-a35e-1be5ab9b127a'
-    const tid = '38f7ed09-cbe6-415b-aea9-9f74c54f0c18'
-    const mslInstanceConfig = useMemo(() => {
-        return {
-            auth: {
-                clientId: clientid,
-                authority: `https://login.microsoftonline.com/${tid}`,
-                redirectUri: "/",
-                postLogoutRedirectUri: "/",
-                navigateToLoginRequestUrl: false
-            },
-            cache: {
-                cacheLocation: "localStorage",
-                storeAuthStateInCookie: false
-            },
-            system: {
-                loggerOptions: {
-                    loggerCallback: (level: any, message: any, containsPii: any) => {
-                        if (containsPii) {
-                            return
-                        }
-                        switch (level) {
-                            case LogLevel.Error:
-                                console.error(message)
-                                return
-                            case LogLevel.Info:
-                                return
-                            case LogLevel.Verbose:
-                                console.debug(message)
-                                return
-                            case LogLevel.Warning:
-                                console.warn(message)
-                                return
-                            default:
-                                return
-                        }
-                    }
-                }
-            }
-        }
-    }, [])
-
-    const mslInstance = new PublicClientApplication(mslInstanceConfig)
-
-    const initializeMsal = async () => {
-        await mslInstance.initialize()
-        await mslInstance.handleRedirectPromise();
-
-        if (!mslInstance.getActiveAccount() && mslInstance.getAllAccounts().length > 0) {
-            mslInstance.setActiveAccount(mslInstance.getAllAccounts()[0]);
-        }
-        mslInstance.addEventCallback((event) => {
-            if (event.eventType === EventType.LOGIN_SUCCESS && event.payload && 'account' in event.payload && event.payload.account !== undefined) {
-                const account = event.payload.account;
-                mslInstance.setActiveAccount(account);
-            }
-        });
-    };
-
-    useEffect(() => {
-        initializeMsal()
-    }, []);
-
     const handleSubmit = async () => {
 
         const loginRequest = {
             scopes: ["openid", "user.read"],
         }
-        const accounts = mslInstance.getAllAccounts();
+        const accounts = instance.getAllAccounts()
+        console.log(accounts)
         if (accounts.length === 0) {
-            await mslInstance.loginRedirect({ ...loginRequest, prompt: "select_account" }).catch((error: any) => console.log(error))
+            await instance.loginRedirect({ ...loginRequest, prompt: "select_account" }).catch((error: any) => console.log(error))
         }
     }
 
     useEffect(() => {
-        if (active.includes("Dashboard")) {
-            navigate('persona/dashboard')
+        if (active.includes("customers accounts")) {
+            navigate('/comptes-clients')
+        } else if (active.includes("Dashboard")) {
+            navigate('/persona/dashboard')
         } else if (active.includes("Enrichissement")) {
-            navigate('persona/enrichissement')
+            navigate('/persona/enrichissement')
         } else if (active.includes("Historique")) {
-            navigate('persona/historique')
+            navigate('/persona/historique')
         }
     }, [active])
 

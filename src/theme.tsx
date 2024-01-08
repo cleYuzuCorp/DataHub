@@ -138,28 +138,55 @@ const theme = createTheme({
         MuiTextField: {
             styleOverrides: {
                 root: {
-                    minWidth: '240px',
+                    minWidth: '120px',
+                    borderRadius: '15px',
+                    background: customColors.white,
                     "& label.Mui-focused": {
                         color: customColors.darkBlue
                     },
+                    "&:hover": {
+                        "& label": {
+                            color: customColors.darkBlue
+                        },
+                        "& .MuiInput-underline:before": {
+                            borderBottomColor: 'transparent'
+                        },
+                        "& .MuiInput-underline:after": {
+                            borderBottomColor: 'transparent'
+                        },
+                        "& .MuiFilledInput-underline:before": {
+                            borderBottomColor: 'transparent'
+                        },
+                        "& .MuiFilledInput-underline:after": {
+                            borderBottomColor: 'transparent'
+                        },
+                        "& .MuiOutlinedInput-root": {
+                            "&.Mui-focused fieldset": {
+                                borderColor: 'transparent'
+                            },
+                            "& fieldset": {
+                                borderColor: 'transparent'
+                            }
+                        },
+                    },
                     "& .MuiInput-underline:before": {
-                        borderBottomColor: customColors.darkBlue
+                        borderBottomColor: 'transparent'
                     },
                     "& .MuiInput-underline:after": {
-                        borderBottomColor: customColors.darkBlue
+                        borderBottomColor: 'transparent'
                     },
                     "& .MuiFilledInput-underline:before": {
-                        borderBottomColor: customColors.darkBlue
+                        borderBottomColor: 'transparent'
                     },
                     "& .MuiFilledInput-underline:after": {
-                        borderBottomColor: customColors.darkBlue
+                        borderBottomColor: 'transparent'
                     },
                     "& .MuiOutlinedInput-root": {
                         "&.Mui-focused fieldset": {
-                            borderColor: customColors.darkBlue
+                            borderColor: 'transparent'
                         },
                         "& fieldset": {
-                            borderColor: customColors.darkBlue
+                            borderColor: 'transparent'
                         }
                     },
                     "& .MuiInputLabel-root": {

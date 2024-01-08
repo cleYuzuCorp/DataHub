@@ -1,23 +1,15 @@
-import { Stack, Typography, ThemeProvider, Container } from "@mui/material"
-import theme from "../theme"
-import THeader from "../components/templates/t-header"
+import { Stack, Container, Typography } from "@mui/material"
 
 const Home = () => {
 
     return (
-        <ThemeProvider theme={theme}>
-            <Stack direction="row">
-                <THeader />
-
-                <Container maxWidth="lg">
-                    <Stack alignItems="center" marginTop="150px" marginBottom="150px">
-                        <Typography variant="h1" sx={{ color: theme.palette.text.primary }}>
-                            Bienvenue sur DataHub !
-                        </Typography>
-                    </Stack>
-                </Container>
+        <Container maxWidth="md">
+            <Stack alignItems="center" marginTop="100px" marginBottom="100px">
+                <Typography variant="h3">
+                    Bienvenue sur Datahub !
+                </Typography>
             </Stack>
-        </ThemeProvider>
+        </Container>
     )
 }
 
