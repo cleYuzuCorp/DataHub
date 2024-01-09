@@ -35,8 +35,8 @@ const App = () => {
   )
 }
 
-const clientid = process.env.PUBLIC_URL
-const tid = process.env.REACT_APP_TID
+const clientid = process.env.REACT_APP_APPID as string
+const tid = process.env.REACT_APP_TID as string
 
 export const mslInstanceConfig = {
   auth: {

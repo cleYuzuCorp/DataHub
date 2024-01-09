@@ -1,5 +1,4 @@
 import { createTheme } from '@mui/material/styles'
-export { }
 
 const customColors = {
     darkYellow: '#F7E13D',
@@ -12,7 +11,7 @@ const customColors = {
     white: '#FFFFFF'
 }
 
-const theme = createTheme({
+export const theme = createTheme({
     palette: {
         primary: {
             main: customColors.darkYellow,
@@ -139,6 +138,7 @@ const theme = createTheme({
             styleOverrides: {
                 root: {
                     minWidth: '120px',
+                    border: '1px solid',
                     borderRadius: '15px',
                     background: customColors.white,
                     "& label.Mui-focused": {
