@@ -6,6 +6,8 @@ import AHeaderSelect from "../atoms/a-header-select"
 import { useEffect, useState } from "react"
 import theme from "../../theme"
 import { useNavigate } from "react-router-dom"
+import { Customer } from "../../interfaces/customer"
+import { acquireToken } from "../../App"
 
 const THeader = (props: { instance?: any }) => {
 
@@ -15,6 +17,38 @@ const THeader = (props: { instance?: any }) => {
 
     const [hovered, setHovered] = useState("")
     const [active, setActive] = useState([""])
+    const [customers, setCustomers] = useState<Customer[]>([])
+    const [customersNames, setCustomersNames] = useState<Array<string>>()
+
+    useEffect(() => {
+        const names = customers.map((customer) => customer.NomClient as string)
+        setCustomersNames(names)
+    }, [customers])
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                await instance.initialize()
+                const accessToken = await acquireToken(instance)
+
+                const response = await fetch(`${process.env.REACT_APP_API_URL}/tenant/getAll`, {
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`,
+                        "Content-Type": "application/json",
+                    },
+                })
+
+                const responseData = await response.json()
+                if (responseData.statusCode !== 401) {
+                    setCustomers(responseData)
+                }
+            } catch (error) {
+                console.log("Erreur:", error)
+            }
+        }
+
+        fetchData()
+    }, [instance])
 
     const handleSubmit = async () => {
 
@@ -22,7 +56,6 @@ const THeader = (props: { instance?: any }) => {
             scopes: ["openid", "user.read"],
         }
         const accounts = instance.getAllAccounts()
-        console.log(accounts)
         if (accounts.length === 0) {
             await instance.loginRedirect({ ...loginRequest, prompt: "select_account" }).catch((error: any) => console.log(error))
         }
@@ -31,20 +64,20 @@ const THeader = (props: { instance?: any }) => {
     useEffect(() => {
         if (active.includes("customers accounts")) {
             navigate('/comptes-clients')
-        } else if (active.includes("Dashboard")) {
-            navigate('/persona/dashboard')
-        } else if (active.includes("Enrichissement")) {
-            navigate('/persona/enrichissement')
+        } else if (active.includes("Association rôle - mot clés")) {
+            navigate('/persona/dashboard/association-role-keywords')
+        } else if (active.includes("Association persona - rôle")) {
+            navigate('/persona/dashboard/association-persona-role')
+        } else if (active.includes("Initialement nul")) {
+            navigate('/persona/enrichissement/initially-null')
+        } else if (active.includes("Modification trouvé")) {
+            navigate('/persona/enrichissement/change-found')
+        } else if (active.includes("Aucune modification trouvé")) {
+            navigate('/persona/enrichissement/no-change-found')
         } else if (active.includes("Historique")) {
             navigate('/persona/historique')
         }
     }, [active])
-
-    const customers = [
-        "Compte de Thomas",
-        "DataHub test",
-        "YuzuCorp"
-    ]
 
     const softwares = [
         "Hubspot"
@@ -86,7 +119,7 @@ const THeader = (props: { instance?: any }) => {
             }}
         >
             <img
-                src="images/logo/logo_yuzu.png"
+                src={process.env.PUBLIC_URL + "/images/logo/logo_yuzu.png"}
                 alt="Logo"
                 style={{
                     width: '100px',
@@ -116,8 +149,10 @@ const THeader = (props: { instance?: any }) => {
                         </Typography>
                     </Stack>
 
-                    <AAccordion title="Choix du client" values={customers} active={active} setActive={setActive} />
-                    {active.some(value => customers.includes(value)) &&
+                    {customersNames &&
+                        <AAccordion title="Choix du client" values={customersNames} active={active} setActive={setActive} />
+                    }
+                    {active.some(value => customersNames?.includes(value)) &&
                         <AAccordion title="Logiciel" values={softwares} active={active} setActive={setActive} />
                     }
                 </Stack>

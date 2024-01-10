@@ -1,12 +1,11 @@
 import { faGear, faTrash, faXmark } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { Container, IconButton, Paper, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography } from "@mui/material"
+import { Container, IconButton, Modal, Paper, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography } from "@mui/material"
 import theme from "../theme"
 import AButton from "../components/atoms/a-button"
 import { useEffect, useState } from "react"
 import { acquireToken } from "../App"
 import { Customer } from "../interfaces/customer"
-import { Modal } from "@mui/base"
 
 const CustomersAccounts = (props: { instance: any }) => {
 
@@ -47,6 +46,54 @@ const CustomersAccounts = (props: { instance: any }) => {
     }
 
     const handleClose = () => {
+        setOpen(false)
+    }
+
+    const handleSelectedCustomerChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = event.target
+
+        setSelectedCustomer((prevCustomer: Customer | undefined) => {
+            if (prevCustomer) {
+                return {
+                    ...prevCustomer,
+                    [name]: value,
+                }
+            }
+            return prevCustomer
+        })
+    }
+
+    const editCustomer = async () => {
+        const accessToken = await acquireToken(instance)
+
+        const payloadName = {
+            NomClient: selectedCustomer?.NomClient
+        }
+
+        const payloadSettings = {
+            IdTenant: selectedCustomer?.IdTenant,
+            IntitulePoste_NomInterne: selectedCustomer?.IntitulePoste_NomInterne,
+            Persona_NomInterne: selectedCustomer?.Persona_NomInterne
+        }
+
+        await fetch(`${process.env.REACT_APP_API_URL}/tenant/patch/${selectedCustomer?.IdTenant}`, {
+            method: "PATCH",
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payloadName)
+        })
+
+        await fetch(`${process.env.REACT_APP_API_PERSONA}/persona/upsertSettingsTenant`, {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payloadSettings)
+        })
+
         setOpen(false)
     }
 
@@ -155,31 +202,32 @@ const CustomersAccounts = (props: { instance: any }) => {
                     </AButton>
                 </Stack>
 
-                <Modal open={open} onClose={handleClose}>
+                {selectedCustomer ? <Modal open={open} onClose={handleClose}>
                     <Stack
-                        spacing={2}
+                        spacing={4}
+                        alignItems="center"
                         sx={{
                             position: 'absolute',
                             top: '50%',
                             left: '50%',
                             transform: 'translate(-50%, -50%)',
-                            border: 'none',
+                            borderRadius: '15px',
                             background: theme.palette.background.default,
-                            padding: '20px'
+                            padding: '30px 50px 30px 50px'
                         }}
                     >
-                        <FontAwesomeIcon
-                            icon={faXmark}
-                            size="lg"
-                            style={{
+                        <IconButton
+                            sx={{
                                 position: 'absolute',
                                 top: '10px',
                                 right: '10px',
-                                cursor: 'pointer',
-                                color: theme.palette.text.primary
+                                width: '40px',
+                                height: '40px'
                             }}
                             onClick={handleClose}
-                        />
+                        >
+                            <FontAwesomeIcon icon={faXmark} color={theme.palette.text.primary} />
+                        </IconButton>
                         <Typography variant="h4">
                             Informations du client
                         </Typography>
@@ -187,7 +235,9 @@ const CustomersAccounts = (props: { instance: any }) => {
                         <TextField
                             required
                             placeholder="Nom"
-                            value={selectedCustomer?.IdTenant}
+                            name="NomClient"
+                            value={selectedCustomer.NomClient}
+                            onChange={handleSelectedCustomerChange}
                             sx={{
                                 borderColor: '#E0E0E0',
                                 boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)'
@@ -197,7 +247,9 @@ const CustomersAccounts = (props: { instance: any }) => {
                         <TextField
                             required
                             placeholder="Intitulé de poste interne"
-                            value={selectedCustomer?.IntitulePoste_NomInterne}
+                            name="IntitulePoste_NomInterne"
+                            value={selectedCustomer.IntitulePoste_NomInterne}
+                            onChange={handleSelectedCustomerChange}
                             sx={{
                                 borderColor: '#E0E0E0',
                                 boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)'
@@ -207,18 +259,20 @@ const CustomersAccounts = (props: { instance: any }) => {
                         <TextField
                             required
                             placeholder="Nom du persona interne"
-                            value={selectedCustomer?.Persona_NomInterne}
+                            name="Persona_NomInterne"
+                            value={selectedCustomer.Persona_NomInterne}
+                            onChange={handleSelectedCustomerChange}
                             sx={{
                                 borderColor: '#E0E0E0',
                                 boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)'
                             }}
                         />
 
-                        <AButton variant="contained">
+                        <AButton variant="contained" onClick={editCustomer}>
                             Sauvegarder
                         </AButton>
                     </Stack>
-                </Modal>
+                </Modal> : null}
             </Stack>
         </Container>
     )

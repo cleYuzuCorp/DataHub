@@ -192,7 +192,7 @@ export const theme = createTheme({
                     "& .MuiInputLabel-root": {
                         color: customColors.darkBlue
                     }
-                }
+                },
             }
         },
         MuiStepLabel: {

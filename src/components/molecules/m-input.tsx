@@ -45,8 +45,10 @@ const MInput = (props: {
     }
 
     const handleParentChange = (value: string) => {
-        setParent(value)
-        clearErrors('parent')
+        if (parentLabel !== "Persona") {
+            setParent(value)
+            clearErrors('parent')
+        }
     }
 
     const handleChildChange = (index: number, value: string) => {

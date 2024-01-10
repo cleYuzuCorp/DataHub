@@ -1,4 +1,4 @@
-import { IconButton, Paper, Stack, Table, TableBody, TableCell, TableHead, TableRow, Typography } from "@mui/material"
+import { IconButton, Paper, Stack, Table, TableBody, TableCell, TableHead, TableRow, Typography, useMediaQuery } from "@mui/material"
 import { useState } from "react"
 import theme from "../../theme"
 import { faTrash, faGear } from "@fortawesome/free-solid-svg-icons"
@@ -13,9 +13,12 @@ const OFormAssociation = (props: { parentLabel: string, childLabel: string }) =>
 
     const { parentLabel, childLabel } = props
 
+    const isDesktop = useMediaQuery(theme.breakpoints.up('sm'))
+
     const [parent, setParent] = useState<string>("")
     const [childs, setChilds] = useState<Array<string>>([""])
     const [associations, setAssociations] = useState([{ parent: "", childs: [""] }])
+    const [associationsBackUp, setAssociationsBackUp] = useState([[{ parent: "", childs: [""] }]])
     const [isEditing, setIsEditing] = useState<number>()
 
     const schema = yup.object().shape({
@@ -36,9 +39,22 @@ const OFormAssociation = (props: { parentLabel: string, childLabel: string }) =>
     }
 
     const removeAssociation = (index: number) => {
-        const newAssociations = [...associations];
-        newAssociations.splice(index, 1);
-        setAssociations(newAssociations);
+        const newAssociations = [...associations]
+        newAssociations.splice(index, 1)
+        setAssociations(newAssociations)
+    }
+
+    const restoreAssociations = () => {
+        if (associationsBackUp.length > 0) {
+            const lastBackup = associationsBackUp[associationsBackUp.length - 1]
+            setAssociations([...lastBackup])
+            setAssociationsBackUp(associationsBackUp.slice(0, -1))
+            setParent("")
+            setChilds([""])
+            setIsEditing(undefined)
+        } else {
+            setAssociations([{ parent: "", childs: [""] }])
+        }
     }
 
     const handleSubmit = async () => {
@@ -54,6 +70,7 @@ const OFormAssociation = (props: { parentLabel: string, childLabel: string }) =>
                 if (isEditing !== undefined) {
                     const updatedAssociations = [...associations]
                     updatedAssociations[isEditing] = { parent, childs }
+                    setAssociationsBackUp([...associationsBackUp, [...associations]])
                     setAssociations(updatedAssociations)
                     setParent("")
                     setChilds([""])
@@ -68,6 +85,7 @@ const OFormAssociation = (props: { parentLabel: string, childLabel: string }) =>
                         setParent("")
                         setChilds([""])
                     }
+                    setAssociationsBackUp([...associationsBackUp, JSON.parse(JSON.stringify(associations))])
                 }
             }
         } catch (validationError: any) {
@@ -79,12 +97,12 @@ const OFormAssociation = (props: { parentLabel: string, childLabel: string }) =>
 
     return (
         <Stack spacing={8} alignItems="center" width="100%">
-            <Stack spacing={4} direction="row" width="100%">
+            <Stack spacing={4} direction={isDesktop ? "row" : "column"} width="100%">
                 <Stack spacing={4}>
                     <AButton variant="outlined">
                         Charger les données
                     </AButton>
-                    <AButton variant="outlined" color="error">
+                    <AButton variant="outlined" color="error" onClick={restoreAssociations}>
                         Restaurer
                     </AButton>
                     <AButton variant="contained" onClick={handleSubmit}>
@@ -137,28 +155,32 @@ const OFormAssociation = (props: { parentLabel: string, childLabel: string }) =>
                                         padding="10px"
                                         borderRadius="15px"
                                         sx={{
-                                            width: `${association.parent.length}ch`,
-                                            background: theme.palette.secondary.light
+                                            width: isDesktop ? `${association.parent.length}ch` : "100%",
+                                            background: theme.palette.secondary.light,
                                         }}
                                     >
                                         {association.parent}
                                     </Typography>
                                 </TableCell>
                                 <TableCell align="center">
-                                    <Stack spacing={1} direction="row" justifyContent="center">
+                                    <Stack
+                                        spacing={1}
+                                        direction={isDesktop ? "row" : "column"}
+                                        maxWidth={isDesktop ? 'inherit' : 0}
+                                        width="100%"
+                                    >
                                         {association.childs.map((keyWord, index) => <Stack spacing={1} direction="row">
                                             <Typography>
                                                 {keyWord}
                                             </Typography>
-
-                                            <Typography>
+                                            {isDesktop ? <Typography>
                                                 {association.childs.length < 2 || association.childs.length - 1 === index ? null : "-"}
-                                            </Typography>
+                                            </Typography> : null}
                                         </Stack>)}
                                     </Stack>
                                 </TableCell>
                                 <TableCell>
-                                    <Stack spacing={1} direction="row" justifyContent="flex-end">
+                                    <Stack direction="row" justifyContent="flex-end" >
                                         <IconButton
                                             onClick={() => editAssociation(index)}
                                             sx={{
