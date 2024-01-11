@@ -11,7 +11,7 @@ const AppRoutes = (props: { instance?: any }) => {
 
   const { instance } = props
 
-  const isDesktop = useMediaQuery(theme.breakpoints.up('sm'))
+  const isDesktop = useMediaQuery('(min-width:1000px)')
 
   const [open, setOpen] = useState(false)
 

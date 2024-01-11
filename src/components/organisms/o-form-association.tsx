@@ -13,7 +13,7 @@ const OFormAssociation = (props: { parentLabel: string, childLabel: string }) =>
 
     const { parentLabel, childLabel } = props
 
-    const isDesktop = useMediaQuery(theme.breakpoints.up('sm'))
+    const isDesktop = useMediaQuery('(min-width:1000px)')
 
     const [parent, setParent] = useState<string>("")
     const [childs, setChilds] = useState<Array<string>>([""])
@@ -166,7 +166,8 @@ const OFormAssociation = (props: { parentLabel: string, childLabel: string }) =>
                                     <Stack
                                         spacing={1}
                                         direction={isDesktop ? "row" : "column"}
-                                        maxWidth={isDesktop ? 'inherit' : 0}
+                                        justifyContent="center"
+                                        alignItems="center"
                                         width="100%"
                                     >
                                         {association.childs.map((keyWord, index) => <Stack spacing={1} direction="row">
@@ -180,7 +181,7 @@ const OFormAssociation = (props: { parentLabel: string, childLabel: string }) =>
                                     </Stack>
                                 </TableCell>
                                 <TableCell>
-                                    <Stack direction="row" justifyContent="flex-end" >
+                                    <Stack direction={isDesktop ? "row" : "column"} justifyContent="flex-end" alignItems="flex-end">
                                         <IconButton
                                             onClick={() => editAssociation(index)}
                                             sx={{

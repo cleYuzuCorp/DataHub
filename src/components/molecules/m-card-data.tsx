@@ -12,7 +12,6 @@ const MCardData = (props: { number: number, label: string, contacts: Contact[] }
                 spacing={2}
                 alignItems="center"
                 justifyContent="center"
-                maxWidth="350px"
                 width="100%"
                 height="200px"
                 sx={{
@@ -24,7 +23,7 @@ const MCardData = (props: { number: number, label: string, contacts: Contact[] }
                     {number}
                 </Typography>
 
-                <Typography color={theme.palette.background.default}>
+                <Typography textAlign="center" color={theme.palette.background.default}>
                     {label}
                 </Typography>
             </Stack>
