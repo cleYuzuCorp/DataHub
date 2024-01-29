@@ -9,8 +9,16 @@ const AHeaderSelect = (props: { values: string[], active: string[], setActive: (
     const [hovered, setHovered] = useState("")
 
     const handleClick = (value: string) => {
-        const updatedActive = active.filter(item => !values.includes(item))
-        setActive([value, ...updatedActive])
+        if (values.includes('Persona')) {
+            console.log(active[0], 'active')
+            setActive([active[0], value])
+        } else if (values.includes('Dashboard')) {
+            setActive([active[0], active[1], value])
+        } else if (active.length === 3 || active.length === 4) {
+            setActive([active[0], active[1], active[2], value])
+        } else {
+            setActive([value])
+        }
     }
 
     return (

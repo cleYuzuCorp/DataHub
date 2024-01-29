@@ -30,7 +30,30 @@ const CustomersAccounts = (props: { instance: any }) => {
 
                 const responseData = await response.json()
                 if (responseData.statusCode !== 401) {
-                    setCustomers(responseData)
+                    const updatedCustomers = await Promise.all(
+                        responseData.map(async (tenant: { IdTenant: number; NomClient: string }) => {
+                            const tenantDetailsResponse = await fetch(
+                                `${process.env.REACT_APP_API_PERSONA}/persona/settingsTenant/?idTenant=${tenant.IdTenant}`,
+                                {
+                                    headers: {
+                                        Authorization: `Bearer ${accessToken}`,
+                                        "Content-Type": "application/json",
+                                    },
+                                }
+                            )
+
+                            const tenantDetails = await tenantDetailsResponse.json()
+
+                            return {
+                                IdTenant: tenant.IdTenant,
+                                NomClient: tenant.NomClient,
+                                IntitulePoste_NomInterne: tenantDetails.IntitulePoste_NomInterne,
+                                Persona_NomInterne: tenantDetails.Persona_NomInterne,
+                            }
+                        })
+                    )
+
+                    setCustomers(updatedCustomers)
                 }
             } catch (error) {
                 console.log("Erreur:", error)

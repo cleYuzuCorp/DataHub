@@ -1,10 +1,39 @@
-import { Paper, Stack, Table, TableBody, TableCell, TableHead, TableRow, Typography } from "@mui/material"
+import { Paper, Stack, Table, TableBody, TableCell, TableFooter, TableHead, TablePagination, TableRow, Typography } from "@mui/material"
 import theme from "../../theme"
-import { Contact } from "../../interfaces/contact"
+import { JobTitle } from "../../interfaces/job-title"
+import { useState } from "react"
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import { faArrowDown, faArrowUp } from "@fortawesome/free-solid-svg-icons"
 
-const MCardData = (props: { number: number, label: string, contacts: Contact[] }) => {
+const MCardData = (props: { number: number, label: string, jobTitles: JobTitle[] }) => {
 
-    const { number, label, contacts } = props
+    const { number, label, jobTitles } = props
+
+    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
+
+    const [page, setPage] = useState(0)
+    const [rowsPerPage, setRowsPerPage] = useState(5)
+
+    const toggleSortOrder = () => {
+        setSortOrder((prevOrder) => (prevOrder === 'asc' ? 'desc' : 'asc'))
+    }
+
+    const handleChangePage = (event: React.MouseEvent<HTMLButtonElement> | null, newPage: number) => {
+        setPage(newPage)
+    }
+
+    const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setRowsPerPage(parseInt(event.target.value, 10))
+        setPage(0)
+    }
+
+    const sortedContacts = jobTitles.sort((a, b) => {
+        if (sortOrder === 'asc') {
+            return a.occurences - b.occurences
+        } else {
+            return b.occurences - a.occurences
+        }
+    })
 
     return (
         <Stack>
@@ -37,23 +66,37 @@ const MCardData = (props: { number: number, label: string, contacts: Contact[] }
                             </Typography>
                         </TableCell>
                         <TableCell align="right">
-                            <Typography variant="body2">
-                                Occurences
-                            </Typography>
+                            <Stack
+                                spacing={1}
+                                direction="row"
+                                alignItems="center"
+                                onClick={toggleSortOrder}
+                                sx={{
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                <Typography variant="body2">
+                                    Occurences
+                                </Typography>
+                                {sortOrder === 'asc' ?
+                                    <FontAwesomeIcon icon={faArrowUp} /> :
+                                    <FontAwesomeIcon icon={faArrowDown} />
+                                }
+                            </Stack>
                         </TableCell>
                     </TableRow>
                 </TableHead>
                 <TableBody>
-                    {contacts.map((contact) =>
-                        <TableRow key={contact.jobTitle}>
+                    {sortedContacts.map((jobTitle) =>
+                        <TableRow key={jobTitle.jobTitle}>
                             <TableCell align="left">
                                 <Typography>
-                                    {contact.jobTitle}
+                                    {jobTitle.jobTitle}
                                 </Typography>
                             </TableCell>
                             <TableCell align="right">
                                 <Typography>
-                                    {contact.occurences}
+                                    {jobTitle.occurences}
                                 </Typography>
                             </TableCell>
                         </TableRow>

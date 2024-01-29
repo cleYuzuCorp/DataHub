@@ -3,42 +3,44 @@ import { useEffect, useState } from "react"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons"
 import Chart from "react-apexcharts"
-import { Contact } from "../../interfaces/contact"
+import { JobTitle } from "../../interfaces/job-title"
 import theme from "../../theme"
 import MCardData from "../molecules/m-card-data"
 import AButton from "../atoms/a-button"
 import jsPDF from "jspdf"
+import html2canvas from "html2canvas"
+import * as XLSX from 'xlsx'
 
 const OData = () => {
 
     const isDesktop = useMediaQuery('(min-width:1000px)')
 
     const [searchTerm, setSearchTerm] = useState("")
-    const [filteredContacts, setFilteredContacts] = useState<Contact[]>()
+    const [filteredJobTitle, setFilteredJobTitle] = useState<JobTitle[]>()
     const [contactsJobTitles, setContactsJobTitles] = useState([""])
     const [contactsOccurences, setContactsOccurences] = useState([0])
 
     useEffect(() => {
-        const jobTitles: string[] = []
+        const jT: string[] = []
         const occurences: number[] = []
 
-        if (filteredContacts) {
-            filteredContacts.map((contact) => {
-                jobTitles.push(contact.jobTitle)
-                occurences.push(contact.occurences)
+        if (filteredJobTitle) {
+            filteredJobTitle.map((jobTitle) => {
+                jT.push(jobTitle.jobTitle)
+                occurences.push(jobTitle.occurences)
             })
         } else {
-            contacts.map((contact) => {
-                jobTitles.push(contact.jobTitle)
-                occurences.push(contact.occurences)
+            jobTitles.map((jobTitle) => {
+                jT.push(jobTitle.jobTitle)
+                occurences.push(jobTitle.occurences)
             })
         }
 
-        setContactsJobTitles(jobTitles)
+        setContactsJobTitles(jT)
         setContactsOccurences(occurences)
-    }, [filteredContacts])
+    }, [filteredJobTitle])
 
-    const contacts = [
+    const jobTitles = [
         {
             jobTitle: "SalesPerson",
             occurences: 1
@@ -64,14 +66,32 @@ const OData = () => {
     const handleFilteredChange = (value: string) => {
         setSearchTerm(value)
 
-        const filtered = contacts.filter(contact =>
-            contact.jobTitle.toLowerCase().includes(value.toLowerCase())
+        const filtered = jobTitles.filter(jobTitle =>
+            jobTitle.jobTitle.toLowerCase().includes(value.toLowerCase())
         )
 
-        setFilteredContacts(filtered)
+        setFilteredJobTitle(filtered)
     }
 
-    const generatePDF = () => {
+    const generateExcel = () => {
+        const rolesData = jobTitles.map(jobTitle => ({ Role: jobTitle.jobTitle, Occurences: jobTitle.occurences }))
+        const personasData = jobTitles.map(jobTitle => ({ Persona: jobTitle.jobTitle, Occurences: jobTitle.occurences }))
+        const liaisonsData = jobTitles.map(jobTitle => ({ Liaisons: jobTitle.jobTitle, Occurences: jobTitle.occurences }))
+
+        const rolesSheet = XLSX.utils.json_to_sheet(rolesData)
+        const personasSheet = XLSX.utils.json_to_sheet(personasData)
+        const liaisonsSheet = XLSX.utils.json_to_sheet(liaisonsData)
+
+        const wb = XLSX.utils.book_new()
+        XLSX.utils.book_append_sheet(wb, rolesSheet, 'Roles')
+        XLSX.utils.book_append_sheet(wb, personasSheet, 'Personas')
+        XLSX.utils.book_append_sheet(wb, liaisonsSheet, 'Liaisons')
+
+        XLSX.writeFile(wb, 'contacts_data.xlsx')
+    }
+
+
+    const generatePDF = async () => {
         const pdf = new jsPDF()
 
         const maxWidth = 150
@@ -84,63 +104,86 @@ const OData = () => {
             pdf.text(splitText, x, y)
         }
 
-        pdf.addImage('/images/logo/logo_yuzu.png', 'PNG', 20, 20, 150, 75)
+        pdf.addImage('/images/logo/logo_yuzu.png', 'PNG', 30, 20, 150, 75)
 
         pdf.setFont('BD Supper, sans serif', 'bold')
         pdf.setFontSize(40)
-        addTextWithWrap('Bilan Datahub Persona', 50, 100)
+        addTextWithWrap('Bilan Datahub Persona', 30, 100)
 
         pdf.setFont('BD Supper, sans serif', 'normal')
         pdf.setFontSize(16)
-        addTextWithWrap(`Au total, 974 contacts sont présents sur HubSpot. Parmis eux, ${contacts.length} intitulés de postes distincts`, 20, 130)
+        addTextWithWrap(`Au total, 974 jobTitles sont présents sur HubSpot. Parmis eux, ${jobTitles.length} intitulés de postes distincts`, 20, 130)
 
         pdf.setFont('BD Supper, sans serif', 'bold')
         pdf.setFontSize(19)
-        addTextWithWrap(`Répartition entre les ${contacts.length} personas présents sur Hubspot`, 20, 150)
+        addTextWithWrap(`Répartition entre les ${jobTitles.length} personas présents sur Hubspot`, 20, 150)
 
-        const tableHeaders = ['Nom', 'Poste'];
-        const tableData = contacts.map(contact => [contact.jobTitle, contact.occurences]);
+        const chartImage = await convertChartToImage()
+        if (chartImage) {
+            pdf.addImage(chartImage, 'PNG', 30, 180, 160, 80)
+        }
 
-        const startY = 170
+        pdf.addPage()
+
+        const tableHeaders = ['Nom', 'Poste', 'Pourcentage']
+        const tableData = jobTitles.map(jobTitle => [jobTitle.jobTitle, jobTitle.occurences, 0])
+
+        const startY = 20
         const margin = 10
         const cellWidth = (pdf.internal.pageSize.width - 2 * margin - 20) / tableHeaders.length
-        const cellHeight = lineHeight + 5; // Adjust the height as needed
+        const cellHeight = lineHeight + 5
 
-        // Rectangle around the table
-        pdf.rect(margin, startY, pdf.internal.pageSize.width - 2 * margin, (tableData.length + 2) * cellHeight);
+        pdf.rect(margin, startY, pdf.internal.pageSize.width - 2 * margin, (tableData.length + 2) * cellHeight)
 
         pdf.setFont('BD Supper, sans serif', 'bold')
         tableHeaders.forEach((header, i) => {
-            if (i === 1) {
-                // Décalage du header "Poste" sur la droite
-                pdf.text(header, margin + i * cellWidth + 40, startY + cellHeight);
+            if (i === 0) {
+                pdf.text(header, margin + i * cellWidth + 10, startY + cellHeight)
+            } else if (i === 1) {
+                pdf.text(header, margin + i * cellWidth + 40, startY + cellHeight)
             } else {
-                pdf.text(header, margin + i * cellWidth + 10, startY + cellHeight);
+                pdf.text(header, margin + i * cellWidth + 30, startY + cellHeight)
             }
         })
 
-        // Line separating header and values
-        pdf.line(margin, startY + cellHeight + 5, pdf.internal.pageSize.width - margin, startY + cellHeight + 5);
+        pdf.line(margin, startY + cellHeight + 5, pdf.internal.pageSize.width - margin, startY + cellHeight + 5)
 
         pdf.setFont('BD Supper, sans serif', 'normal')
         tableData.forEach((rowData, rowIndex) => {
             rowData.forEach((cellData, colIndex) => {
-                if (colIndex === 1) {
-                    // Adjusting the position of the text for the 'Poste' column
-                    pdf.text(String(cellData), margin + colIndex * cellWidth + 40, startY + (rowIndex + 2) * cellHeight);
+                if (colIndex === 0) {
+                    pdf.text(String(cellData), margin + colIndex * cellWidth + 10, startY + (rowIndex + 2) * cellHeight)
+                } else if (colIndex === 1) {
+                    pdf.text(String(cellData), margin + colIndex * cellWidth + 40, startY + (rowIndex + 2) * cellHeight)
                 } else {
-                    pdf.text(String(cellData), margin + colIndex * cellWidth + 10, startY + (rowIndex + 2) * cellHeight);
+                    pdf.text(String(cellData), margin + colIndex * cellWidth + 30, startY + (rowIndex + 2) * cellHeight)
                 }
             })
 
-            // Line separating rows
-            pdf.line(margin, startY + (rowIndex + 2) * cellHeight + 5, pdf.internal.pageSize.width - margin, startY + (rowIndex + 2) * cellHeight + 5);
+            pdf.line(margin, startY + (rowIndex + 2) * cellHeight + 5, pdf.internal.pageSize.width - margin, startY + (rowIndex + 2) * cellHeight + 5)
 
-            // Vertical line between names and positions
-            pdf.line(margin + cellWidth + 30, startY, margin + cellWidth + 30, startY + (tableData.length + 2) * cellHeight);
+            pdf.line(margin + cellWidth + 30, startY, margin + cellWidth + 30, startY + (tableData.length + 2) * cellHeight)
         })
 
+        const totalOccurences = jobTitles.reduce((sum, jobTitle) => sum + jobTitle.occurences, 0)
+
+        tableData.forEach((rowData, rowIndex) => {
+            const percentage = (rowData[1] as number / totalOccurences) * 100
+            rowData[2] = `${percentage.toFixed(2)}%`
+        })
+
+        pdf.line(margin + cellWidth + 80, startY, margin + cellWidth + 80, startY + (tableData.length + 2) * cellHeight)
+
         pdf.save()
+    }
+
+    const convertChartToImage = async () => {
+        const chartContainer = document.getElementById('chart-container')
+        if (chartContainer) {
+            const canvas = await html2canvas(chartContainer)
+            return canvas.toDataURL('image/png')
+        }
+        return null
     }
 
     return (
@@ -189,6 +232,7 @@ const OData = () => {
 
                 <Stack width="100%" height="100%">
                     <Chart
+                        id="chart-container"
                         type="bar"
                         width="100%"
                         height="350px"
@@ -230,21 +274,21 @@ const OData = () => {
             <Stack spacing={2}>
                 <Stack spacing={4} direction={isDesktop ? "row" : "column"} justifyContent="space-between" width="100%">
                     <MCardData
-                        number={filteredContacts ? filteredContacts.length : contacts.length}
+                        number={filteredJobTitle ? filteredJobTitle.length : jobTitles.length}
                         label="Nombre d'intitulé de poste différents"
-                        contacts={filteredContacts ? filteredContacts : contacts}
+                        jobTitles={filteredJobTitle ? filteredJobTitle : jobTitles}
                     />
 
                     <MCardData
-                        number={filteredContacts ? filteredContacts.length : contacts.length}
+                        number={filteredJobTitle ? filteredJobTitle.length : jobTitles.length}
                         label="Nombre de persona différents"
-                        contacts={filteredContacts ? filteredContacts : contacts}
+                        jobTitles={filteredJobTitle ? filteredJobTitle : jobTitles}
                     />
 
                     <MCardData
-                        number={filteredContacts ? filteredContacts.length : contacts.length}
+                        number={filteredJobTitle ? filteredJobTitle.length : jobTitles.length}
                         label="Nombre de liaisons différentes"
-                        contacts={filteredContacts ? filteredContacts : contacts}
+                        jobTitles={filteredJobTitle ? filteredJobTitle : jobTitles}
                     />
                 </Stack>
 
@@ -253,7 +297,7 @@ const OData = () => {
                         Télécharger le PDF
                     </AButton>
 
-                    <AButton variant="contained">
+                    <AButton variant="contained" onClick={generateExcel}>
                         Télécharger l'Excel
                     </AButton>
                 </Stack>

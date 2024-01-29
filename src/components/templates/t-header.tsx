@@ -79,10 +79,6 @@ const THeader = (props: { instance?: any }) => {
         }
     }, [active])
 
-    const softwares = [
-        "Hubspot"
-    ]
-
     const choices = [
         "Persona",
         "Secteur d'activité"
@@ -104,6 +100,8 @@ const THeader = (props: { instance?: any }) => {
         "Modification trouvé",
         "Aucune modification trouvé"
     ]
+
+    console.log(active, 'a')
 
     return (
         <Stack
@@ -152,13 +150,10 @@ const THeader = (props: { instance?: any }) => {
                     {customersNames &&
                         <AAccordion title="Choix du client" values={customersNames} active={active} setActive={setActive} />
                     }
-                    {active.some(value => customersNames?.includes(value)) &&
-                        <AAccordion title="Logiciel" values={softwares} active={active} setActive={setActive} />
-                    }
                 </Stack>
 
                 <Stack>
-                    {active.some(value => softwares.includes(value)) &&
+                    {customersNames && active.some(value => customersNames.includes(value)) &&
                         <AHeaderSelect values={choices} active={active} setActive={setActive} />
                     }
                     {active.includes("Persona") &&

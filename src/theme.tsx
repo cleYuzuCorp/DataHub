@@ -7,6 +7,7 @@ const customColors = {
     darkBlue: '#1B255F',
     lightBlue: '#001FD0',
     orange: '#F37962',
+    lightOrange: 'rgba(243, 121, 98, 0.50)',
     grey: '#F4F5FD',
     white: '#FFFFFF'
 }
@@ -26,6 +27,7 @@ export const theme = createTheme({
         },
         info: {
             main: customColors.orange,
+            light: customColors.lightOrange
         },
         background: {
             default: customColors.white,
