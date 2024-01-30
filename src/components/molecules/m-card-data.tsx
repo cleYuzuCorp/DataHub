@@ -11,23 +11,11 @@ const MCardData = (props: { number: number, label: string, jobTitles: JobTitle[]
 
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
 
-    const [page, setPage] = useState(0)
-    const [rowsPerPage, setRowsPerPage] = useState(5)
-
     const toggleSortOrder = () => {
         setSortOrder((prevOrder) => (prevOrder === 'asc' ? 'desc' : 'asc'))
     }
 
-    const handleChangePage = (event: React.MouseEvent<HTMLButtonElement> | null, newPage: number) => {
-        setPage(newPage)
-    }
-
-    const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setRowsPerPage(parseInt(event.target.value, 10))
-        setPage(0)
-    }
-
-    const sortedContacts = jobTitles.sort((a, b) => {
+    const sortedJobTitle = jobTitles.sort((a, b) => {
         if (sortOrder === 'asc') {
             return a.occurences - b.occurences
         } else {
@@ -87,7 +75,7 @@ const MCardData = (props: { number: number, label: string, jobTitles: JobTitle[]
                     </TableRow>
                 </TableHead>
                 <TableBody>
-                    {sortedContacts.map((jobTitle) =>
+                    {sortedJobTitle.map((jobTitle) =>
                         <TableRow key={jobTitle.jobTitle}>
                             <TableCell align="left">
                                 <Typography>

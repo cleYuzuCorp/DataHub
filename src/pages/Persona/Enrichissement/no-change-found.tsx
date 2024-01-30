@@ -1,12 +1,12 @@
 import { Container, Stack, Typography } from "@mui/material"
 import OTableEnrichment from "../../../components/organisms/o-table-enrichment"
 
-const InitiallyNull = () => {
+const NoChangeFound = () => {
 
     const contacts = [
         {
             jobTitle: "SalesPerson",
-            proposedPersona: "manager",
+            proposedPersona: "",
             appearances: 1,
             hsObjectId: 1,
             firstName: "Maria",
@@ -14,7 +14,7 @@ const InitiallyNull = () => {
         },
         {
             jobTitle: "Directeur commericial",
-            proposedPersona: "directeur",
+            proposedPersona: "",
             appearances: 1,
             hsObjectId: 1,
             firstName: "Maria",
@@ -22,7 +22,7 @@ const InitiallyNull = () => {
         },
         {
             jobTitle: "Sales & Marketing Director",
-            proposedPersona: "manager",
+            proposedPersona: "",
             appearances: 1,
             hsObjectId: 1,
             firstName: "Maria",
@@ -30,7 +30,7 @@ const InitiallyNull = () => {
         },
         {
             jobTitle: "svp sales & strategy",
-            proposedPersona: "manager",
+            proposedPersona: "",
             appearances: 1,
             hsObjectId: 1,
             firstName: "Maria",
@@ -38,7 +38,7 @@ const InitiallyNull = () => {
         },
         {
             jobTitle: "pdg",
-            proposedPersona: "pdg",
+            proposedPersona: "",
             appearances: 1,
             hsObjectId: 1,
             firstName: "Maria",
@@ -53,10 +53,10 @@ const InitiallyNull = () => {
                     DataHub
                 </Typography>
 
-                <OTableEnrichment contacts={contacts} />
+                <OTableEnrichment contacts={contacts} nothing={true} />
             </Stack>
         </Container>
     )
 }
 
-export default InitiallyNull
+export default NoChangeFound

@@ -19,11 +19,18 @@ const THeader = (props: { instance?: any }) => {
     const [active, setActive] = useState([""])
     const [customers, setCustomers] = useState<Customer[]>([])
     const [customersNames, setCustomersNames] = useState<Array<string>>()
+    const [selectedCustomer, setSelectedCustomer] = useState<Customer>()
 
     useEffect(() => {
         const names = customers.map((customer) => customer.NomClient as string)
         setCustomersNames(names)
     }, [customers])
+
+    useEffect(() => {
+        const foundCustomer = customers.find(customer => active.includes(customer.NomClient as string))
+
+        setSelectedCustomer(foundCustomer)
+    }, [active, customers])
 
     useEffect(() => {
         const fetchData = async () => {
@@ -65,9 +72,9 @@ const THeader = (props: { instance?: any }) => {
         if (active.includes("customers accounts")) {
             navigate('/comptes-clients')
         } else if (active.includes("Association rôle - mot clés")) {
-            navigate('/persona/dashboard/association-role-keywords')
+            navigate(`/persona/dashboard/association-role-keywords?id=${selectedCustomer?.IdTenant}`)
         } else if (active.includes("Association persona - rôle")) {
-            navigate('/persona/dashboard/association-persona-role')
+            navigate(`/persona/dashboard/association-persona-role?id=${selectedCustomer?.IdTenant}`)
         } else if (active.includes("Initialement nul")) {
             navigate('/persona/enrichissement/initially-null')
         } else if (active.includes("Modification trouvé")) {
@@ -75,7 +82,7 @@ const THeader = (props: { instance?: any }) => {
         } else if (active.includes("Aucune modification trouvé")) {
             navigate('/persona/enrichissement/no-change-found')
         } else if (active.includes("Historique")) {
-            navigate('/persona/historique')
+            navigate('/persona/history/')
         }
     }, [active])
 
@@ -100,8 +107,6 @@ const THeader = (props: { instance?: any }) => {
         "Modification trouvé",
         "Aucune modification trouvé"
     ]
-
-    console.log(active, 'a')
 
     return (
         <Stack

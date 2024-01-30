@@ -1,20 +1,24 @@
-import { IconButton, Paper, Stack, Table, TableBody, TableCell, TableHead, TableRow, Typography, useMediaQuery } from "@mui/material"
-import { useState } from "react"
+import { IconButton, Paper, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography, useMediaQuery } from "@mui/material"
+import { useEffect, useState } from "react"
 import theme from "../../theme"
-import { faTrash, faGear } from "@fortawesome/free-solid-svg-icons"
+import { faTrash, faGear, faPlus, faXmark, faArrowRotateRight } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import AButton from "../atoms/a-button"
-import MInput from "../molecules/m-input"
 import * as yup from "yup"
 import { yupResolver } from "@hookform/resolvers/yup"
 import { useForm } from "react-hook-form"
+import { acquireToken } from "../../App"
+import { useLocation, useParams } from "react-router-dom"
 
-const OFormAssociation = (props: { parentLabel: string, childLabel: string }) => {
+const OFormAssociation = (props: { instance: any, parentLabel: string, childLabel: string }) => {
 
-    const { parentLabel, childLabel } = props
+    const { instance, parentLabel, childLabel } = props
+
+    const idTenant = new URLSearchParams(useLocation().search).get('id')
 
     const isDesktop = useMediaQuery('(min-width:1000px)')
 
+    const [hovered, setHovered] = useState<number>()
     const [parent, setParent] = useState<string>("")
     const [childs, setChilds] = useState<Array<string>>([""])
     const [associations, setAssociations] = useState([{ parent: "", childs: [""] }])
@@ -32,6 +36,89 @@ const OFormAssociation = (props: { parentLabel: string, childLabel: string }) =>
         resolver: yupResolver(schema),
     })
 
+    console.log(idTenant, 'id')
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const accessToken = await acquireToken(instance)
+
+                const response = await fetch(`${process.env.REACT_APP_API_PERSONA}/persona/findAllAssociationsForTenant?IdTenant=${idTenant}`, {
+                    method: "GET",
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`,
+                        "Content-Type": "application/json"
+                    }
+                })
+
+                const data = await response.json()
+
+                if (data.personasRoles || data.rolesMotsClefs) {
+                    if (parentLabel === "Persona") {
+                        const associationsData = Object.keys(data.personasRoles).map((personaKey) => {
+                            return {
+                                parent: personaKey,
+                                childs: data.personasRoles[personaKey].Roles.length !== 0 ? data.personasRoles[personaKey].Roles : [""]
+                            }
+                        })
+                        setAssociations(associationsData)
+                    } else {
+                        const associationsData = Object.keys(data.rolesMotsClefs).map((roleKey) => {
+                            return {
+                                parent: roleKey,
+                                childs: data.personasRoles[roleKey].Roles.length !== 0 ? data.personasRoles[roleKey].Roles : [""]
+                            }
+                        })
+                        setAssociations(associationsData)
+                    }
+                }
+
+            } catch (error) {
+                console.error("Une erreur s'est produite lors de la requête :", error)
+            }
+        }
+
+        fetchData()
+    }, [parentLabel])
+
+    const addChild = () => {
+        setChilds((prevchilds) => [...prevchilds, ""])
+        setTimeout(() => {
+            const lastIndex = childs.length
+            const lastInput = document.getElementById(`child-input-${lastIndex}`)
+            lastInput && lastInput.focus()
+        }, 0)
+    }
+
+    const removeChild = (indexToRemove: number) => {
+        if (childs.length > 1) {
+            const newchilds = childs.filter((_, index) => index !== indexToRemove)
+            setChilds(newchilds)
+
+            const focusedIndex = indexToRemove === 0 ? 0 : indexToRemove - 1
+            const focusedInput = document.getElementById(`child-input-${focusedIndex}`)
+            focusedInput && focusedInput.focus()
+        } else {
+            setChilds([""])
+            const focusedInput = document.getElementById(`child-input-0`)
+            focusedInput && focusedInput.focus()
+        }
+    }
+
+    const handleParentChange = (value: string) => {
+        if (parentLabel !== "Persona") {
+            setParent(value)
+            clearErrors('parent')
+        }
+    }
+
+    const handleChildChange = (index: number, value: string) => {
+        const newchilds = [...childs]
+        newchilds[index] = value
+        setChilds(newchilds)
+        clearErrors(`childs[${index}` as keyof typeof errors)
+    }
+
     const editAssociation = (index: number) => {
         setIsEditing(index)
         setParent(associations[index].parent)
@@ -44,7 +131,7 @@ const OFormAssociation = (props: { parentLabel: string, childLabel: string }) =>
         setAssociations(newAssociations)
     }
 
-    const restoreAssociations = () => {
+    const backUpAssociations = () => {
         if (associationsBackUp.length > 0) {
             const lastBackup = associationsBackUp[associationsBackUp.length - 1]
             setAssociations([...lastBackup])
@@ -57,7 +144,7 @@ const OFormAssociation = (props: { parentLabel: string, childLabel: string }) =>
         }
     }
 
-    const handleSubmit = async () => {
+    const addRow = async () => {
         try {
             clearErrors()
 
@@ -95,6 +182,35 @@ const OFormAssociation = (props: { parentLabel: string, childLabel: string }) =>
         }
     }
 
+    // const handleSubmit = async () => {
+    //     const body = {
+    //         idTenant: idTenant,
+    //         associationsRoleMotClef: associations.map((association) => {
+    //           return {
+    //             NomRole: association.parent,
+    //             NomMotClef: association.childs.map((child) => keyword.value),
+    //           }
+    //         }),
+    //         associationsPersonaRole: personas.map((persona) => {
+    //           return {
+    //             NomPersona: persona.persona,
+    //             NomRole: persona.roles,
+    //           }
+    //         }),
+    //       }
+
+    //     const accessToken = await acquireToken(instance)
+
+    //     const response = await fetch(`${process.env.REACT_APP_API_PERSONA}/persona/save`, {
+    //         method: "POST",
+    //         headers: {
+    //             Authorization: `Bearer ${accessToken}`,
+    //             "Content-Type": "application/json"
+    //         },
+    //         body: JSON.stringify(body)
+    //     })
+    // }
+
     return (
         <Stack spacing={8} alignItems="center" width="100%">
             <Stack spacing={4} direction={isDesktop ? "row" : "column"} width="100%">
@@ -102,24 +218,160 @@ const OFormAssociation = (props: { parentLabel: string, childLabel: string }) =>
                     <AButton variant="outlined">
                         Charger les données
                     </AButton>
-                    <AButton variant="outlined" color="error" onClick={restoreAssociations}>
+                    <AButton variant="outlined" color="error" onClick={backUpAssociations}>
                         Restaurer
                     </AButton>
-                    <AButton variant="contained" onClick={handleSubmit}>
+                    <AButton variant="contained" onClick={addRow}>
                         Sauvegarder
                     </AButton>
                 </Stack>
 
-                <MInput
-                    parent={parent}
-                    childs={childs}
-                    parentLabel={parentLabel}
-                    childLabel={childLabel}
-                    setParent={setParent}
-                    setChilds={setChilds}
-                    errors={errors}
-                    clearErrors={clearErrors}
-                />
+                <Stack width="100%" borderRadius="15px" sx={{ boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)' }}>
+                    <Stack
+                        spacing={2}
+                        direction="row"
+                        padding="16px"
+                        borderRadius="15px"
+                        sx={{
+                            background: theme.palette.text.primary
+                        }}
+                    >
+                        <TextField
+                            fullWidth
+                            placeholder={parentLabel}
+                            value={parent}
+                            onChange={(e) => handleParentChange(e.target.value)}
+                            helperText={errors.parent?.message}
+                            sx={{
+                                borderColor: errors.parent ? theme.palette.error.main : '#E0E0E0',
+                                '& .MuiFormHelperText-root': {
+                                    color: errors.parent ? theme.palette.error.main : 'inherit'
+                                }
+                            }}
+                        />
+
+                        <IconButton
+                            onClick={addRow}
+                            sx={{
+                                width: '50px',
+                                height: '50px',
+                                borderRadius: '10px',
+                                background: theme.palette.primary.main,
+                                transition: 'transform ease-in-out 0.2s',
+                                ':hover': {
+                                    background: theme.palette.primary.main,
+                                    transform: 'scale(1.2)'
+                                }
+                            }}
+                        >
+                            <FontAwesomeIcon icon={faPlus} color={theme.palette.text.primary} size="xs" />
+                        </IconButton>
+
+                        <IconButton
+                            onClick={backUpAssociations}
+                            sx={{
+                                width: '50px',
+                                height: '50px',
+                                borderRadius: '10px',
+                                background: theme.palette.error.main,
+                                transition: 'transform ease-in-out 0.4s',
+                                ':hover': {
+                                    background: theme.palette.error.main,
+                                    transform: 'scale(1.2)'
+                                }
+                            }}
+                        >
+                            <FontAwesomeIcon icon={faArrowRotateRight} color={theme.palette.text.primary} size="xs" />
+                        </IconButton>
+                    </Stack>
+
+                    <Stack direction="row" flexWrap="wrap" padding="5px">
+                        {childs.map((value, index) => <Stack
+                            key={index}
+                            position='relative'
+                            onMouseEnter={() => setHovered(index)}
+                            onMouseLeave={() => setHovered(undefined)}
+                            sx={{
+                                transition: 'all ease-in-out 0.4s'
+                            }}
+                        >
+                            <TextField
+                                id={`child-input-${index}`}
+                                placeholder={childLabel}
+                                value={value}
+                                onChange={(e) => handleChildChange(index, e.target.value)}
+                                helperText={errors.childs?.[index]?.message}
+                                sx={{
+                                    maxWidth: '120px',
+                                    margin: '10px 10px 10px 10px',
+                                    borderColor: errors.childs?.[index] ? theme.palette.error.main : '#E0E0E0',
+                                    transition: 'all ease-in-out 0.4s',
+                                    boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)',
+                                    background: hovered === index ? theme.palette.secondary.light : null,
+                                    '& .MuiFormHelperText-root': {
+                                        color: errors.parent ? theme.palette.error.main : 'inherit'
+                                    }
+                                }}
+                            />
+                            <Stack
+                                onMouseEnter={() => setHovered(index)}
+                                onMouseLeave={() => setHovered(undefined)}
+                                onClick={() => removeChild(index)}
+                                sx={{
+                                    position: 'absolute',
+                                    top: '5px',
+                                    right: '5px',
+                                    padding: '5px',
+                                    borderRadius: '30px',
+                                    transition: 'all ease-in-out 0.4s',
+                                    background: theme.palette.background.default,
+                                    boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)',
+                                    cursor: 'pointer',
+                                    opacity: hovered === index ? 1 : 0,
+                                }}
+                            >
+                                <FontAwesomeIcon icon={faXmark} size="xs" />
+                            </Stack>
+                        </Stack>
+                        )}
+
+                        <Stack spacing={2} direction="row" padding="16px">
+                            <IconButton
+                                onClick={addChild}
+                                sx={{
+                                    width: '50px',
+                                    height: '50px',
+                                    borderRadius: '10px',
+                                    background: theme.palette.primary.main,
+                                    transition: 'transform ease-in-out 0.2s',
+                                    ':hover': {
+                                        background: theme.palette.primary.main,
+                                        transform: 'scale(1.2)'
+                                    }
+                                }}
+                            >
+                                <FontAwesomeIcon icon={faPlus} color={theme.palette.text.primary} size="xs" />
+                            </IconButton>
+
+                            <IconButton
+                                onClick={() => removeChild(childs.length - 1)}
+                                sx={{
+                                    width: '50px',
+                                    height: '50px',
+                                    borderRadius: '10px',
+                                    background: theme.palette.error.main,
+                                    transition: 'transform ease-in-out 0.4s',
+                                    ':hover': {
+                                        background: theme.palette.error.main,
+                                        transform: 'scale(1.2)'
+                                    }
+                                }}
+                            >
+                                <FontAwesomeIcon icon={faTrash} color={theme.palette.text.primary} size="xs" />
+                            </IconButton>
+                        </Stack>
+                    </Stack>
+                </Stack>
             </Stack>
 
             {associations.length > 0 && !(
@@ -192,7 +444,7 @@ const OFormAssociation = (props: { parentLabel: string, childLabel: string }) =>
                                             <FontAwesomeIcon icon={faGear} color={theme.palette.text.primary} />
                                         </IconButton>
 
-                                        <IconButton
+                                        {parentLabel !== "Persona" ? <IconButton
                                             onClick={() => removeAssociation(index)}
                                             sx={{
                                                 width: '50px',
@@ -200,7 +452,7 @@ const OFormAssociation = (props: { parentLabel: string, childLabel: string }) =>
                                             }}
                                         >
                                             <FontAwesomeIcon icon={faTrash} color={theme.palette.error.main} />
-                                        </IconButton>
+                                        </IconButton> : null}
                                     </Stack>
                                 </TableCell>
                             </TableRow>

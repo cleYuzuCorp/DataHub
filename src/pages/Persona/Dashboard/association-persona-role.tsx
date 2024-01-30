@@ -1,7 +1,9 @@
 import { Container, Stack, Typography } from "@mui/material"
 import OFormAssociation from "../../../components/organisms/o-form-association"
 
-const AssociationPersonaRole = () => {
+const AssociationPersonaRole = (props: { instance: any }) => {
+
+    const { instance } = props
 
     return (
         <Container maxWidth="lg">
@@ -9,7 +11,7 @@ const AssociationPersonaRole = () => {
                 <Typography variant="h3">
                     DataHub
                 </Typography>
-                <OFormAssociation parentLabel="Persona" childLabel="Role" />
+                <OFormAssociation instance={instance} parentLabel="Persona" childLabel="Role" />
             </Stack>
         </Container>
     )

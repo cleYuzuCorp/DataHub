@@ -1,7 +1,7 @@
 import { Container, Stack, Typography } from "@mui/material"
 import OTableEnrichment from "../../../components/organisms/o-table-enrichment"
 
-const InitiallyNull = () => {
+const ChangeFound = () => {
 
     const contacts = [
         {
@@ -59,4 +59,4 @@ const InitiallyNull = () => {
     )
 }
 
-export default InitiallyNull
+export default ChangeFound
