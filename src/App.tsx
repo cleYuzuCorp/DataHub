@@ -47,7 +47,7 @@ export const mslInstanceConfig = {
     navigateToLoginRequestUrl: false
   },
   cache: {
-    cacheLocation: "localStorage",
+    cacheLocation: "sessionStorage",
     storeAuthStateInCookie: false
   },
   system: {

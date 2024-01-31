@@ -13,7 +13,6 @@ const AssociationRoleKeywords = (props: { instance: any }) => {
                     DataHub
                 </Typography>
                 <OData />
-                <OFormAssociation instance={instance} parentLabel="Rôle" childLabel="Mot clé" />
             </Stack>
         </Container>
     )

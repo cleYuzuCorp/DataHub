@@ -11,7 +11,8 @@ const AssociationPersonaRole = (props: { instance: any }) => {
                 <Typography variant="h3">
                     DataHub
                 </Typography>
-                <OFormAssociation instance={instance} parentLabel="Persona" childLabel="Role" />
+                <OFormAssociation instance={instance} parentLabel="Rôle" childLabel="Mot clé" />
+                <OFormAssociation instance={instance} parentLabel="Persona" childLabel="Rôle" />
             </Stack>
         </Container>
     )

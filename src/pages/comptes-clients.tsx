@@ -117,6 +117,18 @@ const CustomersAccounts = (props: { instance: any }) => {
             body: JSON.stringify(payloadSettings)
         })
 
+        // const editCustomer: Customer[] = customers.map((customer) => {
+        //     customer.IdTenant === selectedCustomer?.IdTenant ? {payloadName, payloadSettings} : customer
+        // })
+
+        // setCustomers(editCustomer)
+
+        setCustomers((prevCustomers) =>
+            prevCustomers.map((customer) =>
+                customer.IdTenant === selectedCustomer?.IdTenant ? { ...payloadName, ...payloadSettings } : customer
+            ) as Customer[]
+        )
+
         setOpen(false)
     }
 

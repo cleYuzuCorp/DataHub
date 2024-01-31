@@ -1,4 +1,4 @@
-import { IconButton, Paper, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography, useMediaQuery } from "@mui/material"
+import { IconButton, MenuItem, Paper, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography, useMediaQuery } from "@mui/material"
 import { useEffect, useState } from "react"
 import theme from "../../theme"
 import { faTrash, faGear, faPlus, faXmark, faArrowRotateRight } from "@fortawesome/free-solid-svg-icons"
@@ -8,7 +8,7 @@ import * as yup from "yup"
 import { yupResolver } from "@hookform/resolvers/yup"
 import { useForm } from "react-hook-form"
 import { acquireToken } from "../../App"
-import { useLocation, useParams } from "react-router-dom"
+import { useLocation } from "react-router-dom"
 
 const OFormAssociation = (props: { instance: any, parentLabel: string, childLabel: string }) => {
 
@@ -23,6 +23,8 @@ const OFormAssociation = (props: { instance: any, parentLabel: string, childLabe
     const [childs, setChilds] = useState<Array<string>>([""])
     const [associations, setAssociations] = useState([{ parent: "", childs: [""] }])
     const [associationsBackUp, setAssociationsBackUp] = useState([[{ parent: "", childs: [""] }]])
+    const [associationsRoleKeywords, setAssociationsRoleKeywords] = useState([{ parent: "", childs: [""] }])
+    const [associationsPersonaRoles, setAssociationsPersonaRoles] = useState([{ parent: "", childs: [""] }])
     const [isEditing, setIsEditing] = useState<number>()
 
     const schema = yup.object().shape({
@@ -36,11 +38,10 @@ const OFormAssociation = (props: { instance: any, parentLabel: string, childLabe
         resolver: yupResolver(schema),
     })
 
-    console.log(idTenant, 'id')
-
     useEffect(() => {
         const fetchData = async () => {
             try {
+                await instance.initialize()
                 const accessToken = await acquireToken(instance)
 
                 const response = await fetch(`${process.env.REACT_APP_API_PERSONA}/persona/findAllAssociationsForTenant?IdTenant=${idTenant}`, {
@@ -54,32 +55,41 @@ const OFormAssociation = (props: { instance: any, parentLabel: string, childLabe
                 const data = await response.json()
 
                 if (data.personasRoles || data.rolesMotsClefs) {
-                    if (parentLabel === "Persona") {
-                        const associationsData = Object.keys(data.personasRoles).map((personaKey) => {
-                            return {
-                                parent: personaKey,
-                                childs: data.personasRoles[personaKey].Roles.length !== 0 ? data.personasRoles[personaKey].Roles : [""]
-                            }
-                        })
-                        setAssociations(associationsData)
-                    } else {
-                        const associationsData = Object.keys(data.rolesMotsClefs).map((roleKey) => {
-                            return {
-                                parent: roleKey,
-                                childs: data.personasRoles[roleKey].Roles.length !== 0 ? data.personasRoles[roleKey].Roles : [""]
-                            }
-                        })
-                        setAssociations(associationsData)
-                    }
-                }
+                    const associationsPersonaRolesData = Object.keys(data.personasRoles).map((personaKey) => {
+                        return {
+                            parent: personaKey,
+                            childs: data.personasRoles[personaKey].Roles.length !== 0 ? data.personasRoles[personaKey].Roles : [""]
+                        }
+                    })
 
+                    setAssociationsPersonaRoles(associationsPersonaRolesData)
+
+                    const associationsRoleKeywordsData = Object.keys(data.rolesMotsClefs).map((roleKey) => {
+                        return {
+                            parent: roleKey,
+                            childs: data.rolesMotsClefs[roleKey].MotsClefs.length !== 0 ? data.rolesMotsClefs[roleKey].MotsClefs : [""]
+                        }
+                    })
+
+                    setAssociationsRoleKeywords(associationsRoleKeywordsData)
+
+                    console.log(associationsRoleKeywordsData, 'a')
+                }
             } catch (error) {
                 console.error("Une erreur s'est produite lors de la requête :", error)
             }
         }
 
         fetchData()
-    }, [parentLabel])
+    }, [])
+
+    useEffect(() => {
+        if (parentLabel === "Persona") {
+            setAssociations(associationsPersonaRoles)
+        } else {
+            setAssociations(associationsRoleKeywords)
+        }
+    }, [associationsPersonaRoles, associationsRoleKeywords])
 
     const addChild = () => {
         setChilds((prevchilds) => [...prevchilds, ""])
@@ -132,7 +142,7 @@ const OFormAssociation = (props: { instance: any, parentLabel: string, childLabe
     }
 
     const backUpAssociations = () => {
-        if (associationsBackUp.length > 0) {
+        if (associations.length > 0) {
             const lastBackup = associationsBackUp[associationsBackUp.length - 1]
             setAssociations([...lastBackup])
             setAssociationsBackUp(associationsBackUp.slice(0, -1))
@@ -182,46 +192,58 @@ const OFormAssociation = (props: { instance: any, parentLabel: string, childLabe
         }
     }
 
-    // const handleSubmit = async () => {
-    //     const body = {
-    //         idTenant: idTenant,
-    //         associationsRoleMotClef: associations.map((association) => {
-    //           return {
-    //             NomRole: association.parent,
-    //             NomMotClef: association.childs.map((child) => keyword.value),
-    //           }
-    //         }),
-    //         associationsPersonaRole: personas.map((persona) => {
-    //           return {
-    //             NomPersona: persona.persona,
-    //             NomRole: persona.roles,
-    //           }
-    //         }),
-    //       }
+    const handleSubmit = async () => {
 
-    //     const accessToken = await acquireToken(instance)
+        if (parentLabel === "Persona") {
+            setAssociationsPersonaRoles(associations)
+        } else {
+            setAssociationsRoleKeywords(associations)
+        }
 
-    //     const response = await fetch(`${process.env.REACT_APP_API_PERSONA}/persona/save`, {
-    //         method: "POST",
-    //         headers: {
-    //             Authorization: `Bearer ${accessToken}`,
-    //             "Content-Type": "application/json"
-    //         },
-    //         body: JSON.stringify(body)
-    //     })
-    // }
+        const fetchData = async () => {
+            if (idTenant) {
+                const parsedId = parseInt(idTenant, 10)
+
+                const body = {
+                    idTenant: parsedId,
+                    associationsRoleMotClef: associationsRoleKeywords.map((association) => {
+                        return {
+                            NomRole: association.parent,
+                            NomMotClef: association.childs,
+                        }
+                    }),
+                    associationsPersonaRole: associationsPersonaRoles.map((persona) => {
+                        return {
+                            NomPersona: persona.parent,
+                            NomRole: persona.childs,
+                        }
+                    }),
+                }
+
+                const accessToken = await acquireToken(instance)
+
+                const response = await fetch(`${process.env.REACT_APP_API_PERSONA}/persona/save`, {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(body)
+                })
+            }
+        }
+
+        fetchData()
+    }
 
     return (
         <Stack spacing={8} alignItems="center" width="100%">
             <Stack spacing={4} direction={isDesktop ? "row" : "column"} width="100%">
-                <Stack spacing={4}>
-                    <AButton variant="outlined">
-                        Charger les données
-                    </AButton>
+                <Stack spacing={4} justifyContent="flex-end">
                     <AButton variant="outlined" color="error" onClick={backUpAssociations}>
                         Restaurer
                     </AButton>
-                    <AButton variant="contained" onClick={addRow}>
+                    <AButton variant="contained" onClick={handleSubmit}>
                         Sauvegarder
                     </AButton>
                 </Stack>
@@ -295,7 +317,30 @@ const OFormAssociation = (props: { instance: any, parentLabel: string, childLabe
                                 transition: 'all ease-in-out 0.4s'
                             }}
                         >
-                            <TextField
+                            {parentLabel === "Persona" ? <TextField
+                                id={`child-input-${index}`}
+                                select
+                                label={childLabel}
+                                value={value}
+                                onChange={(e) => handleChildChange(index, e.target.value)}
+                                helperText={errors.childs?.[index]?.message}
+                                InputLabelProps={{
+                                    style: { color: '#A8ACC0' }
+                                }}
+                                sx={{
+                                    maxWidth: '120px',
+                                    margin: '10px 10px 10px 10px',
+                                    borderColor: errors.childs?.[index] ? theme.palette.error.main : '#E0E0E0',
+                                    transition: 'all ease-in-out 0.4s',
+                                    boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)',
+                                    background: hovered === index ? theme.palette.secondary.light : null,
+                                    '& .MuiFormHelperText-root': {
+                                        color: errors.parent ? theme.palette.error.main : 'inherit'
+                                    }
+                                }}
+                            >
+                                <MenuItem value="test">test</MenuItem>
+                            </TextField> : <TextField
                                 id={`child-input-${index}`}
                                 placeholder={childLabel}
                                 value={value}
@@ -312,7 +357,8 @@ const OFormAssociation = (props: { instance: any, parentLabel: string, childLabe
                                         color: errors.parent ? theme.palette.error.main : 'inherit'
                                     }
                                 }}
-                            />
+                            />}
+
                             <Stack
                                 onMouseEnter={() => setHovered(index)}
                                 onMouseLeave={() => setHovered(undefined)}
@@ -433,7 +479,7 @@ const OFormAssociation = (props: { instance: any, parentLabel: string, childLabe
                                     </Stack>
                                 </TableCell>
                                 <TableCell>
-                                    <Stack direction={isDesktop ? "row" : "column"} justifyContent="flex-end" alignItems="flex-end">
+                                    <Stack direction="row" justifyContent="flex-end" alignItems="flex-end">
                                         <IconButton
                                             onClick={() => editAssociation(index)}
                                             sx={{

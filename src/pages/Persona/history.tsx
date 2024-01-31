@@ -1,11 +1,13 @@
 import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { Checkbox, Container, Paper, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography, useMediaQuery } from "@mui/material"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import AButton from "../../components/atoms/a-button"
 import theme from "../../theme"
+import { useLocation } from "react-router-dom"
+import { acquireToken } from "../../App"
 
-const History = () => {
+const History = (props: { instance: any }) => {
 
     const histories = [
         {
@@ -65,11 +67,40 @@ const History = () => {
         }
     ]
 
+    const { instance } = props
+
+    const idTenant = new URLSearchParams(useLocation().search).get('id')
+
     const isDesktop = useMediaQuery('(min-width:1000px)')
 
     const [searchTerm, setSearchTerm] = useState("")
     const [filteredHistory, setFilteredHistory] = useState(histories)
     const [selectedRows, setSelectedRows] = useState<Array<number>>([])
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                await instance.initialize()
+                const accessToken = await acquireToken(instance)
+
+                const response = await fetch(`${process.env.REACT_APP_API_PERSONA}/persona/history?idTenant=${idTenant}`, {
+                    method: "GET",
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`,
+                        "Content-Type": "application/json"
+                    }
+                })
+
+                console.log(response, 'r')
+
+                const data = await response.json()
+            } catch (error) {
+                console.error("Une erreur s'est produite lors de la requête :", error)
+            }
+        }
+
+        fetchData()
+    }, [])
 
     const handleFilteredChange = (value: string) => {
         setSearchTerm(value)

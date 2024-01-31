@@ -71,10 +71,10 @@ const THeader = (props: { instance?: any }) => {
     useEffect(() => {
         if (active.includes("customers accounts")) {
             navigate('/comptes-clients')
-        } else if (active.includes("Association rôle - mot clés")) {
-            navigate(`/persona/dashboard/association-role-keywords?id=${selectedCustomer?.IdTenant}`)
-        } else if (active.includes("Association persona - rôle")) {
-            navigate(`/persona/dashboard/association-persona-role?id=${selectedCustomer?.IdTenant}`)
+        } else if (active.includes("Formulaire")) {
+            navigate(`/persona/dashboard/form?id=${selectedCustomer?.IdTenant}`)
+        } else if (active.includes("Données")) {
+            navigate(`/persona/dashboard/data`)
         } else if (active.includes("Initialement nul")) {
             navigate('/persona/enrichissement/initially-null')
         } else if (active.includes("Modification trouvé")) {
@@ -82,7 +82,7 @@ const THeader = (props: { instance?: any }) => {
         } else if (active.includes("Aucune modification trouvé")) {
             navigate('/persona/enrichissement/no-change-found')
         } else if (active.includes("Historique")) {
-            navigate('/persona/history/')
+            navigate(`/persona/history?id=${selectedCustomer?.IdTenant}`)
         }
     }, [active])
 
@@ -98,8 +98,8 @@ const THeader = (props: { instance?: any }) => {
     ]
 
     const dashboard = [
-        "Association rôle - mot clés",
-        "Association persona - rôle"
+        "Formulaire",
+        "Données"
     ]
 
     const enrichissement = [
