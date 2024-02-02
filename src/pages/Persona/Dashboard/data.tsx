@@ -12,7 +12,7 @@ const AssociationRoleKeywords = (props: { instance: any }) => {
                 <Typography variant="h3">
                     DataHub
                 </Typography>
-                <OData />
+                <OData instance={instance} />
             </Stack>
         </Container>
     )

@@ -10,73 +10,214 @@ import AButton from "../atoms/a-button"
 import jsPDF from "jspdf"
 import html2canvas from "html2canvas"
 import * as XLSX from 'xlsx'
+import { acquireToken } from "../../App"
+import { useLocation } from "react-router-dom"
+import { log } from "console"
 
-const OData = () => {
+const OData = (props: { instance: any }) => {
+
+    const { instance } = props
+
+    const idTenant = new URLSearchParams(useLocation().search).get('id')
 
     const isDesktop = useMediaQuery('(min-width:1000px)')
 
+    const [dbPersona, setDbPersona] = useState([{ description: "", value: "" }])
+    const [associationsRoleKeywords, setAssociationsRoleKeywords] = useState([{ parent: "", childs: [""] }])
+    const [associationsPersonaRoles, setAssociationsPersonaRoles] = useState([{ parent: "", childs: [""] }])
+
+    const [numberContacts, setNumberContacts] = useState()
+    const [numberRoles, setNumberRoles] = useState()
+    const [numberPersonas, setNumberPersonas] = useState()
+    const [numberLinks, setNumberLinks] = useState()
+
+    const [roles, setRoles] = useState<JobTitle[]>([])
+    const [personas, setPersonas] = useState<JobTitle[]>([])
+    const [links, setLinks] = useState<JobTitle[]>([])
+
     const [searchTerm, setSearchTerm] = useState("")
-    const [filteredJobTitle, setFilteredJobTitle] = useState<JobTitle[]>()
     const [contactsJobTitles, setContactsJobTitles] = useState([""])
     const [contactsOccurences, setContactsOccurences] = useState([0])
 
+    const [filteredRoles, setFilteredRoles] = useState<JobTitle[]>()
+    const [filteredPersonas, setFilteredPersonas] = useState<JobTitle[]>()
+    const [filteredLinks, setFilteredLinks] = useState<JobTitle[]>()
+
     useEffect(() => {
-        const jT: string[] = []
+        const fetchData = async () => {
+            try {
+                await instance.initialize()
+                const accessToken = await acquireToken(instance)
+
+                const response = await fetch(`${process.env.REACT_APP_API_PERSONA}/persona/findAllAssociationsForTenant?IdTenant=${idTenant}`, {
+                    method: "GET",
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`,
+                        "Content-Type": "application/json"
+                    }
+                })
+
+                const data = await response.json()
+
+                if (data.personasRoles || data.rolesMotsClefs || data.dbPersona) {
+                    const associationsPersonaRolesData = Object.keys(data.personasRoles).map((personaKey) => {
+                        return {
+                            parent: personaKey,
+                            childs: data.personasRoles[personaKey].Roles.length !== 0 ? data.personasRoles[personaKey].Roles : [""]
+                        }
+                    })
+
+                    setAssociationsPersonaRoles(associationsPersonaRolesData)
+
+                    const associationsRoleKeywordsData = Object.keys(data.rolesMotsClefs).map((roleKey) => {
+                        return {
+                            parent: roleKey,
+                            childs: data.rolesMotsClefs[roleKey].MotsClefs.length !== 0 ? data.rolesMotsClefs[roleKey].MotsClefs : [""]
+                        }
+                    })
+
+                    setAssociationsRoleKeywords(associationsRoleKeywordsData)
+
+                    const personas = data.dbPersona.map((persona: { description: string, value: string }) => {
+                        return {
+                            description: persona.description,
+                            value: persona.value
+                        }
+                    })
+
+                    setDbPersona(personas)
+                }
+
+            } catch (error) {
+                console.error("Une erreur s'est produite lors de la requête :", error)
+            }
+        }
+
+        fetchData()
+    }, [])
+
+    useEffect(() => {
+        const fetchData = async () => {
+            if (idTenant) {
+                const parsedId = parseInt(idTenant, 10)
+
+                const body = {
+                    idTenant: parsedId,
+                    dbPersona: dbPersona,
+                    associationsRoleMotClef: associationsRoleKeywords.map((roleKeywords) => {
+                        if (roleKeywords.parent !== "" && roleKeywords.childs.every((child) => child !== "")) {
+                            return {
+                                NomRole: roleKeywords.parent,
+                                NomMotClef: roleKeywords.childs,
+                            }
+                        } else {
+                            return undefined
+                        }
+                    }).filter((association) => association !== undefined),
+                    associationsPersonaRole: associationsPersonaRoles.map((personaRoles) => {
+                        if (personaRoles.parent !== "" && personaRoles.childs.every((child) => child !== "")) {
+                            return {
+                                NomPersona: personaRoles.parent,
+                                NomRole: personaRoles.childs,
+                            }
+                        } else {
+                            return undefined
+                        }
+                    }).filter((association) => association !== undefined)
+                }
+
+                const accessToken = await acquireToken(instance)
+
+                console.log(body, 'b')
+
+                const response = await fetch(`${process.env.REACT_APP_API_PERSONA}/hubspot/processPersona`, {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(body)
+                })
+
+                const data = await response.json()
+
+                console.log(data)
+
+                setNumberContacts(data.dashboard.totalOfDifferentContacts)
+                setNumberRoles(data.dashboard.totalOfDifferentRoles)
+                setNumberPersonas(data.dashboard.totalOfDifferentPersonas)
+                setNumberLinks(data.dashboard.totalOfDifferentLiaisons)
+
+                const rolesData = Object.entries(data.dashboard.occurencesByRoles).map(([jobTitle, occurences]) => ({
+                    jobTitle: jobTitle as string,
+                    occurences: occurences as number
+                }))
+
+                setRoles(rolesData)
+
+                const personasData = Object.entries(data.dashboard.occurencesByPersonas).map(([jobTitle, occurences]) => ({
+                    jobTitle: jobTitle as string,
+                    occurences: occurences as number
+                }))
+
+                setPersonas(personasData)
+
+                const linksData = Object.entries(data.dashboard.occurencesByLiaisons).map(([jobTitle, occurences]) => ({
+                    jobTitle: jobTitle as string,
+                    occurences: occurences as number
+                }))
+
+                setLinks(linksData)
+            }
+        }
+
+        fetchData()
+    }, [dbPersona])
+
+    useEffect(() => {
+        const jobTitles: string[] = []
         const occurences: number[] = []
 
-        if (filteredJobTitle) {
-            filteredJobTitle.map((jobTitle) => {
-                jT.push(jobTitle.jobTitle)
-                occurences.push(jobTitle.occurences)
+        if (filteredPersonas) {
+            filteredPersonas.map((persona) => {
+                jobTitles.push(persona.jobTitle)
+                occurences.push(persona.occurences)
             })
         } else {
-            jobTitles.map((jobTitle) => {
-                jT.push(jobTitle.jobTitle)
-                occurences.push(jobTitle.occurences)
+            personas.map((persona) => {
+                jobTitles.push(persona.jobTitle)
+                occurences.push(persona.occurences)
             })
         }
 
-        setContactsJobTitles(jT)
+        setContactsJobTitles(jobTitles)
         setContactsOccurences(occurences)
-    }, [filteredJobTitle])
-
-    const jobTitles = [
-        {
-            jobTitle: "SalesPerson",
-            occurences: 1
-        },
-        {
-            jobTitle: "Directeur commericial",
-            occurences: 1
-        },
-        {
-            jobTitle: "Sales & Marketing Director",
-            occurences: 1
-        },
-        {
-            jobTitle: "svp sales & strategy",
-            occurences: 1
-        },
-        {
-            jobTitle: "pdg",
-            occurences: 1
-        },
-    ]
+    }, [filteredPersonas])
 
     const handleFilteredChange = (value: string) => {
         setSearchTerm(value)
 
-        const filtered = jobTitles.filter(jobTitle =>
-            jobTitle.jobTitle.toLowerCase().includes(value.toLowerCase())
+        const filteredRole = roles.filter(role =>
+            role.jobTitle.toLowerCase().includes(value.toLowerCase())
         )
 
-        setFilteredJobTitle(filtered)
+        const filteredPersona = personas.filter(persona =>
+            persona.jobTitle.toLowerCase().includes(value.toLowerCase())
+        )
+
+        const filteredLink = links.filter(link =>
+            link.jobTitle.toLowerCase().includes(value.toLowerCase())
+        )
+
+        setFilteredRoles(filteredRole)
+        setFilteredPersonas(filteredPersona)
+        setFilteredLinks(filteredLink)
     }
 
     const generateExcel = () => {
-        const rolesData = jobTitles.map(jobTitle => ({ Role: jobTitle.jobTitle, Occurences: jobTitle.occurences }))
-        const personasData = jobTitles.map(jobTitle => ({ Persona: jobTitle.jobTitle, Occurences: jobTitle.occurences }))
-        const liaisonsData = jobTitles.map(jobTitle => ({ Liaisons: jobTitle.jobTitle, Occurences: jobTitle.occurences }))
+        const rolesData = roles.map(role => ({ Role: role.jobTitle, Occurences: role.occurences }))
+        const personasData = personas.map(persona => ({ Persona: persona.jobTitle, Occurences: persona.occurences }))
+        const liaisonsData = links.map(link => ({ Liaisons: link.jobTitle, Occurences: link.occurences }))
 
         const rolesSheet = XLSX.utils.json_to_sheet(rolesData)
         const personasSheet = XLSX.utils.json_to_sheet(personasData)
@@ -112,11 +253,11 @@ const OData = () => {
 
         pdf.setFont('BD Supper, sans serif', 'normal')
         pdf.setFontSize(16)
-        addTextWithWrap(`Au total, 974 jobTitles sont présents sur HubSpot. Parmis eux, ${jobTitles.length} intitulés de postes distincts`, 20, 130)
+        addTextWithWrap(`Au total, 974 contacts sont présents sur HubSpot. Parmis eux, ${numberRoles} intitulés de postes distincts`, 20, 130)
 
         pdf.setFont('BD Supper, sans serif', 'bold')
         pdf.setFontSize(19)
-        addTextWithWrap(`Répartition entre les ${jobTitles.length} personas présents sur Hubspot`, 20, 150)
+        addTextWithWrap(`Répartition entre les ${numberPersonas} personas présents sur Hubspot`, 20, 150)
 
         const chartImage = await convertChartToImage()
         if (chartImage) {
@@ -126,7 +267,7 @@ const OData = () => {
         pdf.addPage()
 
         const tableHeaders = ['Nom', 'Poste', 'Pourcentage']
-        const tableData = jobTitles.map(jobTitle => [jobTitle.jobTitle, jobTitle.occurences, 0])
+        const tableData = roles.map(role => [role.jobTitle, role.occurences, 0])
 
         const startY = 20
         const margin = 10
@@ -165,7 +306,7 @@ const OData = () => {
             pdf.line(margin + cellWidth + 30, startY, margin + cellWidth + 30, startY + (tableData.length + 2) * cellHeight)
         })
 
-        const totalOccurences = jobTitles.reduce((sum, jobTitle) => sum + jobTitle.occurences, 0)
+        const totalOccurences = roles.reduce((sum, role) => sum + role.occurences, 0)
 
         tableData.forEach((rowData, rowIndex) => {
             const percentage = (rowData[1] as number / totalOccurences) * 100
@@ -186,6 +327,8 @@ const OData = () => {
         return null
     }
 
+    console.log(searchTerm)
+
     return (
         <Stack spacing={8} width="100%">
             <Stack spacing={2} direction={isDesktop ? "row" : "column"} alignItems="center" width="100%">
@@ -203,7 +346,7 @@ const OData = () => {
                         }}
                     >
                         <Typography variant="h3" color={theme.palette.background.default}>
-                            974
+                            {numberContacts}
                         </Typography>
 
                         <Typography color={theme.palette.background.default}>
@@ -274,21 +417,21 @@ const OData = () => {
             <Stack spacing={2}>
                 <Stack spacing={4} direction={isDesktop ? "row" : "column"} justifyContent="space-between" width="100%">
                     <MCardData
-                        number={filteredJobTitle ? filteredJobTitle.length : jobTitles.length}
+                        number={filteredRoles ? filteredRoles.length : roles.length}
                         label="Nombre d'intitulé de poste différents"
-                        jobTitles={filteredJobTitle ? filteredJobTitle : jobTitles}
+                        jobTitles={filteredRoles ? filteredRoles : roles}
                     />
 
                     <MCardData
-                        number={filteredJobTitle ? filteredJobTitle.length : jobTitles.length}
+                        number={filteredPersonas ? filteredPersonas.length : personas.length}
                         label="Nombre de persona différents"
-                        jobTitles={filteredJobTitle ? filteredJobTitle : jobTitles}
+                        jobTitles={filteredPersonas ? filteredPersonas : personas}
                     />
 
                     <MCardData
-                        number={filteredJobTitle ? filteredJobTitle.length : jobTitles.length}
+                        number={filteredLinks ? filteredLinks.length : links.length}
                         label="Nombre de liaisons différentes"
-                        jobTitles={filteredJobTitle ? filteredJobTitle : jobTitles}
+                        jobTitles={filteredLinks ? filteredLinks : links}
                     />
                 </Stack>
 

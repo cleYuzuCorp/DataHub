@@ -74,7 +74,7 @@ const THeader = (props: { instance?: any }) => {
         } else if (active.includes("Formulaire")) {
             navigate(`/persona/dashboard/form?id=${selectedCustomer?.IdTenant}`)
         } else if (active.includes("Données")) {
-            navigate(`/persona/dashboard/data`)
+            navigate(`/persona/dashboard/data?id=${selectedCustomer?.IdTenant}`)
         } else if (active.includes("Initialement nul")) {
             navigate('/persona/enrichissement/initially-null')
         } else if (active.includes("Modification trouvé")) {

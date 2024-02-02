@@ -19,13 +19,16 @@ const OFormAssociation = (props: { instance: any, parentLabel: string, childLabe
     const isDesktop = useMediaQuery('(min-width:1000px)')
 
     const [hovered, setHovered] = useState<number>()
+    const [isEditing, setIsEditing] = useState<number>()
+    const [isSubmit, setIsSumbit] = useState<boolean>(false)
+
     const [parent, setParent] = useState<string>("")
     const [childs, setChilds] = useState<Array<string>>([""])
+
     const [associations, setAssociations] = useState([{ parent: "", childs: [""] }])
     const [associationsBackUp, setAssociationsBackUp] = useState([[{ parent: "", childs: [""] }]])
     const [associationsRoleKeywords, setAssociationsRoleKeywords] = useState([{ parent: "", childs: [""] }])
     const [associationsPersonaRoles, setAssociationsPersonaRoles] = useState([{ parent: "", childs: [""] }])
-    const [isEditing, setIsEditing] = useState<number>()
 
     const schema = yup.object().shape({
         parent: yup.string().required('Le champ rôle est requis'),
@@ -72,8 +75,6 @@ const OFormAssociation = (props: { instance: any, parentLabel: string, childLabe
                     })
 
                     setAssociationsRoleKeywords(associationsRoleKeywordsData)
-
-                    console.log(associationsRoleKeywordsData, 'a')
                 }
             } catch (error) {
                 console.error("Une erreur s'est produite lors de la requête :", error)
@@ -200,41 +201,49 @@ const OFormAssociation = (props: { instance: any, parentLabel: string, childLabe
             setAssociationsRoleKeywords(associations)
         }
 
-        const fetchData = async () => {
-            if (idTenant) {
-                const parsedId = parseInt(idTenant, 10)
-
-                const body = {
-                    idTenant: parsedId,
-                    associationsRoleMotClef: associationsRoleKeywords.map((association) => {
-                        return {
-                            NomRole: association.parent,
-                            NomMotClef: association.childs,
-                        }
-                    }),
-                    associationsPersonaRole: associationsPersonaRoles.map((persona) => {
-                        return {
-                            NomPersona: persona.parent,
-                            NomRole: persona.childs,
-                        }
-                    }),
-                }
-
-                const accessToken = await acquireToken(instance)
-
-                const response = await fetch(`${process.env.REACT_APP_API_PERSONA}/persona/save`, {
-                    method: "POST",
-                    headers: {
-                        Authorization: `Bearer ${accessToken}`,
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify(body)
-                })
-            }
-        }
-
-        fetchData()
+        setIsSumbit(true)
     }
+
+    useEffect(() => {
+        if (isSubmit) {
+            const fetchData = async () => {
+                if (idTenant) {
+                    const parsedId = parseInt(idTenant, 10)
+
+                    const body = {
+                        idTenant: parsedId,
+                        associationsRoleMotClef: associationsRoleKeywords.map((association) => {
+                            return {
+                                NomRole: association.parent,
+                                NomMotClef: association.childs,
+                            }
+                        }),
+                        associationsPersonaRole: associationsPersonaRoles.map((persona) => {
+                            return {
+                                NomPersona: persona.parent,
+                                NomRole: persona.childs,
+                            }
+                        })
+                    }
+
+                    const accessToken = await acquireToken(instance)
+
+                    const response = await fetch(`${process.env.REACT_APP_API_PERSONA}/persona/save`, {
+                        method: "POST",
+                        headers: {
+                            Authorization: `Bearer ${accessToken}`,
+                            "Content-Type": "application/json"
+                        },
+
+                        body: JSON.stringify(body)
+                    })
+                }
+            }
+
+            fetchData()
+            setIsSumbit(false)
+        }
+    }, [isSubmit])
 
     return (
         <Stack spacing={8} alignItems="center" width="100%">
@@ -339,7 +348,10 @@ const OFormAssociation = (props: { instance: any, parentLabel: string, childLabe
                                     }
                                 }}
                             >
-                                <MenuItem value="test">test</MenuItem>
+                                {associationsRoleKeywords.map((association) => <MenuItem value={association.parent}>
+                                    {association.parent}
+                                </MenuItem>
+                                )}
                             </TextField> : <TextField
                                 id={`child-input-${index}`}
                                 placeholder={childLabel}
