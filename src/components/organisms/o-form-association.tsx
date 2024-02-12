@@ -1,255 +1,41 @@
 import { IconButton, MenuItem, Paper, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography, useMediaQuery } from "@mui/material"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import theme from "../../theme"
 import { faTrash, faGear, faPlus, faXmark, faArrowRotateRight } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import AButton from "../atoms/a-button"
-import * as yup from "yup"
-import { yupResolver } from "@hookform/resolvers/yup"
-import { useForm } from "react-hook-form"
-import { acquireToken } from "../../App"
-import { useLocation } from "react-router-dom"
+import { FieldErrors } from "react-hook-form"
 
-const OFormAssociation = (props: { instance: any, parentLabel: string, childLabel: string }) => {
+const OFormAssociation = (props: {
+    parentLabel: string,
+    childLabel: string,
+    parent: string,
+    childs: string[],
+    roles?: { parent: string, childs: string[] }[],
+    associations: { parent: string, childs: string[] }[],
+    errors: FieldErrors<{ childs?: string[] | undefined; parent: string; }>,
+    addChilds: () => void,
+    removeChilds: (indexToRemove: number) => void,
+    handleParentChange: (value: string) => void,
+    handleChildsChange: (index: number, value: string) => void,
+    editAssociations: (index: number) => void,
+    removeAssociations: (index: number) => void,
+    backUp: () => void,
+    addRow: () => void,
+    handleSubmit: () => void
+}) => {
 
-    const { instance, parentLabel, childLabel } = props
-
-    const idTenant = new URLSearchParams(useLocation().search).get('id')
+    const { parentLabel, childLabel, parent, childs, roles, associations, errors, addChilds, removeChilds, handleParentChange, handleChildsChange, editAssociations, removeAssociations, backUp, addRow, handleSubmit } = props
 
     const isDesktop = useMediaQuery('(min-width:1000px)')
 
     const [hovered, setHovered] = useState<number>()
-    const [isEditing, setIsEditing] = useState<number>()
-    const [isSubmit, setIsSumbit] = useState<boolean>(false)
-
-    const [parent, setParent] = useState<string>("")
-    const [childs, setChilds] = useState<Array<string>>([""])
-
-    const [associations, setAssociations] = useState([{ parent: "", childs: [""] }])
-    const [associationsBackUp, setAssociationsBackUp] = useState([[{ parent: "", childs: [""] }]])
-    const [associationsRoleKeywords, setAssociationsRoleKeywords] = useState([{ parent: "", childs: [""] }])
-    const [associationsPersonaRoles, setAssociationsPersonaRoles] = useState([{ parent: "", childs: [""] }])
-
-    const schema = yup.object().shape({
-        parent: yup.string().required('Le champ rôle est requis'),
-        childs: yup.array().of(
-            yup.string().required('Le champs ne peut pas être vide')
-        )
-    })
-
-    const { clearErrors, setError, formState: { errors } } = useForm({
-        resolver: yupResolver(schema),
-    })
-
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                await instance.initialize()
-                const accessToken = await acquireToken(instance)
-
-                const response = await fetch(`${process.env.REACT_APP_API_PERSONA}/persona/findAllAssociationsForTenant?IdTenant=${idTenant}`, {
-                    method: "GET",
-                    headers: {
-                        Authorization: `Bearer ${accessToken}`,
-                        "Content-Type": "application/json"
-                    }
-                })
-
-                const data = await response.json()
-
-                if (data.personasRoles || data.rolesMotsClefs) {
-                    const associationsPersonaRolesData = Object.keys(data.personasRoles).map((personaKey) => {
-                        return {
-                            parent: personaKey,
-                            childs: data.personasRoles[personaKey].Roles.length !== 0 ? data.personasRoles[personaKey].Roles : [""]
-                        }
-                    })
-
-                    setAssociationsPersonaRoles(associationsPersonaRolesData)
-
-                    const associationsRoleKeywordsData = Object.keys(data.rolesMotsClefs).map((roleKey) => {
-                        return {
-                            parent: roleKey,
-                            childs: data.rolesMotsClefs[roleKey].MotsClefs.length !== 0 ? data.rolesMotsClefs[roleKey].MotsClefs : [""]
-                        }
-                    })
-
-                    setAssociationsRoleKeywords(associationsRoleKeywordsData)
-                }
-            } catch (error) {
-                console.error("Une erreur s'est produite lors de la requête :", error)
-            }
-        }
-
-        fetchData()
-    }, [])
-
-    useEffect(() => {
-        if (parentLabel === "Persona") {
-            setAssociations(associationsPersonaRoles)
-        } else {
-            setAssociations(associationsRoleKeywords)
-        }
-    }, [associationsPersonaRoles, associationsRoleKeywords])
-
-    const addChild = () => {
-        setChilds((prevchilds) => [...prevchilds, ""])
-        setTimeout(() => {
-            const lastIndex = childs.length
-            const lastInput = document.getElementById(`child-input-${lastIndex}`)
-            lastInput && lastInput.focus()
-        }, 0)
-    }
-
-    const removeChild = (indexToRemove: number) => {
-        if (childs.length > 1) {
-            const newchilds = childs.filter((_, index) => index !== indexToRemove)
-            setChilds(newchilds)
-
-            const focusedIndex = indexToRemove === 0 ? 0 : indexToRemove - 1
-            const focusedInput = document.getElementById(`child-input-${focusedIndex}`)
-            focusedInput && focusedInput.focus()
-        } else {
-            setChilds([""])
-            const focusedInput = document.getElementById(`child-input-0`)
-            focusedInput && focusedInput.focus()
-        }
-    }
-
-    const handleParentChange = (value: string) => {
-        if (parentLabel !== "Persona") {
-            setParent(value)
-            clearErrors('parent')
-        }
-    }
-
-    const handleChildChange = (index: number, value: string) => {
-        const newchilds = [...childs]
-        newchilds[index] = value
-        setChilds(newchilds)
-        clearErrors(`childs[${index}` as keyof typeof errors)
-    }
-
-    const editAssociation = (index: number) => {
-        setIsEditing(index)
-        setParent(associations[index].parent)
-        setChilds(associations[index].childs)
-    }
-
-    const removeAssociation = (index: number) => {
-        const newAssociations = [...associations]
-        newAssociations.splice(index, 1)
-        setAssociations(newAssociations)
-    }
-
-    const backUpAssociations = () => {
-        if (associations.length > 0) {
-            const lastBackup = associationsBackUp[associationsBackUp.length - 1]
-            setAssociations([...lastBackup])
-            setAssociationsBackUp(associationsBackUp.slice(0, -1))
-            setParent("")
-            setChilds([""])
-            setIsEditing(undefined)
-        } else {
-            setAssociations([{ parent: "", childs: [""] }])
-        }
-    }
-
-    const addRow = async () => {
-        try {
-            clearErrors()
-
-            const isValid = await schema.validate({
-                parent: parent,
-                childs: childs
-            }, { abortEarly: false })
-
-            if (isValid) {
-                if (isEditing !== undefined) {
-                    const updatedAssociations = [...associations]
-                    updatedAssociations[isEditing] = { parent, childs }
-                    setAssociationsBackUp([...associationsBackUp, [...associations]])
-                    setAssociations(updatedAssociations)
-                    setParent("")
-                    setChilds([""])
-                    setIsEditing(undefined)
-                } else {
-                    if (associations.length === 1 && associations[0].parent === "" && associations[0].childs[0] === "") {
-                        setAssociations([{ parent: parent, childs: childs }, ...associations.slice(1)])
-                        setParent("")
-                        setChilds([""])
-                    } else {
-                        setAssociations([...associations, { parent: parent, childs: childs }])
-                        setParent("")
-                        setChilds([""])
-                    }
-                    setAssociationsBackUp([...associationsBackUp, JSON.parse(JSON.stringify(associations))])
-                }
-            }
-        } catch (validationError: any) {
-            validationError.inner.forEach((error: { path: any; message: string }) => {
-                setError(error.path, { type: 'manual', message: error.message })
-            })
-        }
-    }
-
-    const handleSubmit = async () => {
-
-        if (parentLabel === "Persona") {
-            setAssociationsPersonaRoles(associations)
-        } else {
-            setAssociationsRoleKeywords(associations)
-        }
-
-        setIsSumbit(true)
-    }
-
-    useEffect(() => {
-        if (isSubmit) {
-            const fetchData = async () => {
-                if (idTenant) {
-                    const parsedId = parseInt(idTenant, 10)
-
-                    const body = {
-                        idTenant: parsedId,
-                        associationsRoleMotClef: associationsRoleKeywords.map((association) => {
-                            return {
-                                NomRole: association.parent,
-                                NomMotClef: association.childs,
-                            }
-                        }),
-                        associationsPersonaRole: associationsPersonaRoles.map((persona) => {
-                            return {
-                                NomPersona: persona.parent,
-                                NomRole: persona.childs,
-                            }
-                        })
-                    }
-
-                    const accessToken = await acquireToken(instance)
-
-                    const response = await fetch(`${process.env.REACT_APP_API_PERSONA}/persona/save`, {
-                        method: "POST",
-                        headers: {
-                            Authorization: `Bearer ${accessToken}`,
-                            "Content-Type": "application/json"
-                        },
-
-                        body: JSON.stringify(body)
-                    })
-                }
-            }
-
-            fetchData()
-            setIsSumbit(false)
-        }
-    }, [isSubmit])
 
     return (
         <Stack spacing={8} alignItems="center" width="100%">
             <Stack spacing={4} direction={isDesktop ? "row" : "column"} width="100%">
                 <Stack spacing={4} justifyContent="flex-end">
-                    <AButton variant="outlined" color="error" onClick={backUpAssociations}>
+                    <AButton variant="outlined" color="error" onClick={backUp}>
                         Restaurer
                     </AButton>
                     <AButton variant="contained" onClick={handleSubmit}>
@@ -299,7 +85,7 @@ const OFormAssociation = (props: { instance: any, parentLabel: string, childLabe
                         </IconButton>
 
                         <IconButton
-                            onClick={backUpAssociations}
+                            onClick={backUp}
                             sx={{
                                 width: '50px',
                                 height: '50px',
@@ -331,7 +117,7 @@ const OFormAssociation = (props: { instance: any, parentLabel: string, childLabe
                                 select
                                 label={childLabel}
                                 value={value}
-                                onChange={(e) => handleChildChange(index, e.target.value)}
+                                onChange={(e) => handleChildsChange(index, e.target.value)}
                                 helperText={errors.childs?.[index]?.message}
                                 InputLabelProps={{
                                     style: { color: '#A8ACC0' }
@@ -348,15 +134,15 @@ const OFormAssociation = (props: { instance: any, parentLabel: string, childLabe
                                     }
                                 }}
                             >
-                                {associationsRoleKeywords.map((association) => <MenuItem value={association.parent}>
-                                    {association.parent}
+                                {roles?.map((role) => <MenuItem value={role.parent}>
+                                    {role.parent}
                                 </MenuItem>
                                 )}
                             </TextField> : <TextField
                                 id={`child-input-${index}`}
                                 placeholder={childLabel}
                                 value={value}
-                                onChange={(e) => handleChildChange(index, e.target.value)}
+                                onChange={(e) => handleChildsChange(index, e.target.value)}
                                 helperText={errors.childs?.[index]?.message}
                                 sx={{
                                     maxWidth: '120px',
@@ -374,7 +160,7 @@ const OFormAssociation = (props: { instance: any, parentLabel: string, childLabe
                             <Stack
                                 onMouseEnter={() => setHovered(index)}
                                 onMouseLeave={() => setHovered(undefined)}
-                                onClick={() => removeChild(index)}
+                                onClick={() => removeChilds(index)}
                                 sx={{
                                     position: 'absolute',
                                     top: '5px',
@@ -395,7 +181,7 @@ const OFormAssociation = (props: { instance: any, parentLabel: string, childLabe
 
                         <Stack spacing={2} direction="row" padding="16px">
                             <IconButton
-                                onClick={addChild}
+                                onClick={addChilds}
                                 sx={{
                                     width: '50px',
                                     height: '50px',
@@ -412,7 +198,7 @@ const OFormAssociation = (props: { instance: any, parentLabel: string, childLabe
                             </IconButton>
 
                             <IconButton
-                                onClick={() => removeChild(childs.length - 1)}
+                                onClick={() => removeChilds(childs.length - 1)}
                                 sx={{
                                     width: '50px',
                                     height: '50px',
@@ -493,7 +279,7 @@ const OFormAssociation = (props: { instance: any, parentLabel: string, childLabe
                                 <TableCell>
                                     <Stack direction="row" justifyContent="flex-end" alignItems="flex-end">
                                         <IconButton
-                                            onClick={() => editAssociation(index)}
+                                            onClick={() => editAssociations(index)}
                                             sx={{
                                                 width: '50px',
                                                 height: '50px'
@@ -503,7 +289,7 @@ const OFormAssociation = (props: { instance: any, parentLabel: string, childLabe
                                         </IconButton>
 
                                         {parentLabel !== "Persona" ? <IconButton
-                                            onClick={() => removeAssociation(index)}
+                                            onClick={() => removeAssociations(index)}
                                             sx={{
                                                 width: '50px',
                                                 height: '50px'

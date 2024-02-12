@@ -22,6 +22,7 @@ const OData = (props: { instance: any }) => {
 
     const isDesktop = useMediaQuery('(min-width:1000px)')
 
+    const [dataInit, setDataInit] = useState(false)
     const [dbPersona, setDbPersona] = useState([{ description: "", value: "" }])
     const [associationsRoleKeywords, setAssociationsRoleKeywords] = useState([{ parent: "", childs: [""] }])
     const [associationsPersonaRoles, setAssociationsPersonaRoles] = useState([{ parent: "", childs: [""] }])
@@ -29,7 +30,6 @@ const OData = (props: { instance: any }) => {
     const [numberContacts, setNumberContacts] = useState()
     const [numberRoles, setNumberRoles] = useState()
     const [numberPersonas, setNumberPersonas] = useState()
-    const [numberLinks, setNumberLinks] = useState()
 
     const [roles, setRoles] = useState<JobTitle[]>([])
     const [personas, setPersonas] = useState<JobTitle[]>([])
@@ -86,6 +86,8 @@ const OData = (props: { instance: any }) => {
                     })
 
                     setDbPersona(personas)
+
+                    setDataInit(true)
                 }
 
             } catch (error) {
@@ -98,7 +100,7 @@ const OData = (props: { instance: any }) => {
 
     useEffect(() => {
         const fetchData = async () => {
-            if (idTenant) {
+            if (idTenant && dataInit) {
                 const parsedId = parseInt(idTenant, 10)
 
                 const body = {
@@ -128,8 +130,6 @@ const OData = (props: { instance: any }) => {
 
                 const accessToken = await acquireToken(instance)
 
-                console.log(body, 'b')
-
                 const response = await fetch(`${process.env.REACT_APP_API_PERSONA}/hubspot/processPersona`, {
                     method: "POST",
                     headers: {
@@ -141,12 +141,9 @@ const OData = (props: { instance: any }) => {
 
                 const data = await response.json()
 
-                console.log(data)
-
                 setNumberContacts(data.dashboard.totalOfDifferentContacts)
                 setNumberRoles(data.dashboard.totalOfDifferentRoles)
                 setNumberPersonas(data.dashboard.totalOfDifferentPersonas)
-                setNumberLinks(data.dashboard.totalOfDifferentLiaisons)
 
                 const rolesData = Object.entries(data.dashboard.occurencesByRoles).map(([jobTitle, occurences]) => ({
                     jobTitle: jobTitle as string,
@@ -172,7 +169,7 @@ const OData = (props: { instance: any }) => {
         }
 
         fetchData()
-    }, [dbPersona])
+    }, [dataInit])
 
     useEffect(() => {
         const jobTitles: string[] = []
@@ -326,8 +323,6 @@ const OData = (props: { instance: any }) => {
         }
         return null
     }
-
-    console.log(searchTerm)
 
     return (
         <Stack spacing={8} width="100%">

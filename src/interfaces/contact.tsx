@@ -1,8 +1,14 @@
 export interface Contact {
-    jobTitle: string,
-    proposedPersona: string,
-    appearances: number,
-    hsObjectId: number,
-    firstName: string,
-    lastName: string
+    intituledePoste: string
+    personaProposed: string
+    occurence: number
+    contacts: [
+        {
+            hs_object_id: string
+            role: string
+            persona: string
+            firsname: string
+            lastname: string
+        }
+    ]
 }

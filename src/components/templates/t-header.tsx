@@ -76,11 +76,11 @@ const THeader = (props: { instance?: any }) => {
         } else if (active.includes("Données")) {
             navigate(`/persona/dashboard/data?id=${selectedCustomer?.IdTenant}`)
         } else if (active.includes("Initialement nul")) {
-            navigate('/persona/enrichissement/initially-null')
+            navigate(`/persona/enrichissement/initially-null?id=${selectedCustomer?.IdTenant}`)
         } else if (active.includes("Modification trouvé")) {
-            navigate('/persona/enrichissement/change-found')
+            navigate(`/persona/enrichissement/change-found?id=${selectedCustomer?.IdTenant}`)
         } else if (active.includes("Aucune modification trouvé")) {
-            navigate('/persona/enrichissement/no-change-found')
+            navigate(`/persona/enrichissement/no-change-found?id=${selectedCustomer?.IdTenant}`)
         } else if (active.includes("Historique")) {
             navigate(`/persona/history?id=${selectedCustomer?.IdTenant}`)
         }
@@ -115,9 +115,11 @@ const THeader = (props: { instance?: any }) => {
             minWidth="200px"
             width="100%"
             overflow="hidden"
-            flex='1 1 100%'
-            height="100vh"
+            flex="1 1 100%"
+            minHeight="100vh"
+            flexGrow={1}
             sx={{
+                background: theme.palette.background.default,
                 boxShadow: '0px 4px 10px 0px rgba(0, 0, 0, 0.25)'
             }}
         >

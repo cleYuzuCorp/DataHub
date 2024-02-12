@@ -1,14 +1,20 @@
 import { faMagnifyingGlass, faChevronUp, faChevronDown, faArrowDown, faArrowUp } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { Checkbox, Collapse, Paper, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography, useMediaQuery } from "@mui/material"
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import theme from "../../theme"
 import AButton from "../atoms/a-button"
 import { Contact } from "../../interfaces/contact"
+import { acquireToken } from "../../App"
 
-const OTableEnrichment = (props: { contacts: Contact[], nothing?: boolean }) => {
+const OTableEnrichment = (props: {
+    instance: any, id: string | null, contacts: Contact[], nothing?: boolean, dbPersona: {
+        description: string;
+        value: string;
+    }[]
+}) => {
 
-    const { contacts, nothing } = props
+    const { instance, id, contacts, nothing, dbPersona } = props
 
     const isDesktop = useMediaQuery('(min-width:1000px)')
 
@@ -17,7 +23,8 @@ const OTableEnrichment = (props: { contacts: Contact[], nothing?: boolean }) => 
 
     const [hovered, setHovered] = useState<number | undefined>()
     const [open, setOpen] = useState<Array<boolean>>([])
-    const [selectedRows, setSelectedRows] = useState<Array<number>>([])
+    const [selectedContacts, setSelectedContacts] = useState<Array<Contact>>([])
+    const [ignoredContacts, setIgnoredContacts] = useState<Array<Contact>>([])
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
 
     const toggleSortOrder = () => {
@@ -26,47 +33,80 @@ const OTableEnrichment = (props: { contacts: Contact[], nothing?: boolean }) => 
 
     const sortedContacts = filteredContacts.sort((a, b) => {
         if (sortOrder === 'asc') {
-            return a.appearances - b.appearances
+            return a.occurence - b.occurence
         } else {
-            return b.appearances - a.appearances
+            return b.occurence - a.occurence
         }
     })
 
     const handleFilteredChange = (value: string) => {
         setSearchTerm(value)
-
-        const filtered = contacts.filter(contact =>
-            contact.jobTitle.toLowerCase().includes(value.toLowerCase())
-        )
-
-        setFilteredContacts(filtered)
     }
+
+    useEffect(() => {
+        const filtered = contacts.filter(contact =>
+            (!ignoredContacts.includes(contact)) &&
+            (contact.intituledePoste.toLowerCase().includes(searchTerm.toLowerCase()))
+        )
+        setFilteredContacts(filtered)
+    }, [searchTerm, ignoredContacts, contacts])
 
     const toggleRow = (index: number) => {
         setOpen((prevOpenRows) => ({
             ...prevOpenRows,
-            [index]: !prevOpenRows[index],
+            [index]: !prevOpenRows[index]
         }))
     }
 
     const handleSelectAllChange = () => {
-        if (selectedRows.length === filteredContacts.length) {
-            setSelectedRows([])
+        if (selectedContacts.length === filteredContacts.length) {
+            setSelectedContacts([])
         } else {
-            setSelectedRows(Array.from({ length: filteredContacts.length }, (_, i) => i))
+            setSelectedContacts(filteredContacts)
         }
     }
 
     const handleSelectChange = (index: number) => {
-        if (selectedRows.includes(index)) {
-            setSelectedRows(selectedRows.filter((row) => row !== index))
+        if (selectedContacts.includes(filteredContacts[index])) {
+            setSelectedContacts(selectedContacts.filter((contact) => contact !== filteredContacts[index]))
         } else {
-            if (!selectedRows) {
-                setSelectedRows([index])
-            } else {
-                setSelectedRows([...selectedRows, index])
-            }
+            setSelectedContacts([...selectedContacts, filteredContacts[index]])
         }
+    }
+
+    const handleIgnoreProposal = () => {
+        setIgnoredContacts((prevIgnoredContacts) => [
+            ...prevIgnoredContacts,
+            ...selectedContacts
+        ])
+        setSelectedContacts([])
+    }
+
+    const handleSubmit = async () => {
+        const account = instance.getActiveAccount()
+
+        const body = {
+            idTenant: id,
+            emailModified: account.username,
+            tableOfValues: dbPersona,
+            propositions: selectedContacts,
+        }
+
+        await instance.initialize()
+        const accessToken = await acquireToken(instance)
+
+        const response = await fetch(`${process.env.REACT_APP_API_PERSONA}/hubspot/enrich`, {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(body)
+        })
+
+        handleIgnoreProposal()
+
+        console.log(response)
     }
 
     return (
@@ -91,11 +131,11 @@ const OTableEnrichment = (props: { contacts: Contact[], nothing?: boolean }) => 
                 />
 
                 <Stack spacing={2} direction="row" alignItems="center" justifyContent={isDesktop ? "flex-end" : "space-between"} width="100%">
-                    <AButton variant="outlined" color="error">
-                        Ignorer la séléction
+                    <AButton variant="outlined" color="error" onClick={handleIgnoreProposal}>
+                        Ignorer la proposition
                     </AButton>
 
-                    <AButton variant="contained">
+                    <AButton variant="contained" onClick={handleSubmit}>
                         Valider la proposition
                     </AButton>
                 </Stack>
@@ -136,9 +176,9 @@ const OTableEnrichment = (props: { contacts: Contact[], nothing?: boolean }) => 
                         </TableCell>
                         <TableCell align="right">
                             <Checkbox
-                                checked={selectedRows?.length === filteredContacts.length}
+                                checked={selectedContacts?.length === filteredContacts.length}
                                 onChange={handleSelectAllChange}
-                                indeterminate={selectedRows.length > 0 && selectedRows.length < filteredContacts.length}
+                                indeterminate={selectedContacts.length > 0 && selectedContacts.length < filteredContacts.length}
                                 sx={{
                                     color: theme.palette.background.default,
                                     '&.Mui-checked': {
@@ -163,7 +203,7 @@ const OTableEnrichment = (props: { contacts: Contact[], nothing?: boolean }) => 
                                     background: open[index] || hovered === index ? theme.palette.secondary.light : 'none'
                                 }}
                             >
-                                <TableCell>
+                                {contact.contacts.map((c) => <TableCell key={c.hs_object_id}>
                                     <Stack spacing={2} direction="row" alignItems="center">
                                         {open[index] ?
                                             <FontAwesomeIcon icon={faChevronUp} /> :
@@ -171,23 +211,23 @@ const OTableEnrichment = (props: { contacts: Contact[], nothing?: boolean }) => 
                                         }
 
                                         <Typography>
-                                            {contact.jobTitle}
+                                            {c.role}
                                         </Typography>
                                     </Stack>
-                                </TableCell>
-                                {!nothing && <TableCell align="center">
+                                </TableCell>)}
+                                {!nothing && contact.contacts.map((c) => <TableCell key={c.hs_object_id} align="center">
                                     <Typography>
-                                        {contact.proposedPersona}
+                                        {c.persona}
                                     </Typography>
-                                </TableCell>}
+                                </TableCell>)}
                                 <TableCell align="center" width="50%">
                                     <Typography>
-                                        {contact.appearances}
+                                        {contact.occurence}
                                     </Typography>
                                 </TableCell>
                                 <TableCell align="right">
                                     <Checkbox
-                                        checked={selectedRows.includes(index)}
+                                        checked={selectedContacts.includes(contact)}
                                         onChange={() => handleSelectChange(index)}
                                     />
                                 </TableCell>
@@ -216,23 +256,23 @@ const OTableEnrichment = (props: { contacts: Contact[], nothing?: boolean }) => 
                                                 </TableRow>
                                             </TableHead>
                                             <TableBody>
-                                                <TableRow key={contact.hsObjectId}>
+                                                {contact.contacts.map((c) => <TableRow key={c.hs_object_id}>
                                                     <TableCell align="left">
                                                         <Typography>
-                                                            {contact.hsObjectId}
+                                                            {c.hs_object_id}
                                                         </Typography>
                                                     </TableCell>
                                                     <TableCell align="center">
                                                         <Typography>
-                                                            {contact.firstName}
+                                                            {c.firsname}
                                                         </Typography>
                                                     </TableCell>
                                                     <TableCell align="right">
                                                         <Typography>
-                                                            {contact.lastName}
+                                                            {c.lastname}
                                                         </Typography>
                                                     </TableCell>
-                                                </TableRow>
+                                                </TableRow>)}
                                             </TableBody>
                                         </Table>
                                     </Collapse>
