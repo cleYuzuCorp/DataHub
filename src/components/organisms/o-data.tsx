@@ -12,7 +12,6 @@ import html2canvas from "html2canvas"
 import * as XLSX from 'xlsx'
 import { acquireToken } from "../../App"
 import { useLocation } from "react-router-dom"
-import { log } from "console"
 
 const OData = (props: { instance: any }) => {
 
@@ -23,9 +22,10 @@ const OData = (props: { instance: any }) => {
     const isDesktop = useMediaQuery('(min-width:1000px)')
 
     const [dataInit, setDataInit] = useState(false)
+    const [fetchDataInit, setFetchDataInit] = useState(false)
     const [dbPersona, setDbPersona] = useState([{ description: "", value: "" }])
     const [associationsRoleKeywords, setAssociationsRoleKeywords] = useState([{ parent: "", childs: [""] }])
-    const [associationsPersonaRoles, setAssociationsPersonaRoles] = useState([{ parent: "", childs: [""] }])
+    const [associationsPersonaRoles, setAssociationsPersonaRoles] = useState([{ parent: "", childs: [{ id: 0, value: "" }] }])
 
     const [numberContacts, setNumberContacts] = useState()
     const [numberRoles, setNumberRoles] = useState()
@@ -44,59 +44,68 @@ const OData = (props: { instance: any }) => {
     const [filteredLinks, setFilteredLinks] = useState<JobTitle[]>()
 
     useEffect(() => {
+        setFetchDataInit(true)
+    }, [])
+
+    useEffect(() => {
         const fetchData = async () => {
-            try {
-                await instance.initialize()
-                const accessToken = await acquireToken(instance)
+            if (fetchDataInit) {
+                try {
+                    await instance.initialize()
+                    const accessToken = await acquireToken(instance)
 
-                const response = await fetch(`${process.env.REACT_APP_API_PERSONA}/persona/findAllAssociationsForTenant?IdTenant=${idTenant}`, {
-                    method: "GET",
-                    headers: {
-                        Authorization: `Bearer ${accessToken}`,
-                        "Content-Type": "application/json"
+                    const response = await fetch(`${process.env.REACT_APP_API_PERSONA}/persona/findAllAssociationsForTenant?IdTenant=${idTenant}`, {
+                        method: "GET",
+                        headers: {
+                            Authorization: `Bearer ${accessToken}`,
+                            "Content-Type": "application/json"
+                        }
+                    })
+
+                    const data = await response.json()
+
+                    if (data.personasRoles || data.rolesMotsClefs || data.dbPersona) {
+                        const associationsPersonaRolesData = Object.keys(data.personasRoles).map((personaKey) => {
+                            return {
+                                parent: personaKey,
+                                childs: data.personasRoles[personaKey].Roles.map((role: any, rolesIndex: number) => ({
+                                    id: rolesIndex + 1,
+                                    value: role,
+                                }))
+                            }
+                        })
+
+                        setAssociationsPersonaRoles(associationsPersonaRolesData)
+
+                        const associationsRoleKeywordsData = Object.keys(data.rolesMotsClefs).map((roleKey) => {
+                            return {
+                                parent: roleKey,
+                                childs: data.rolesMotsClefs[roleKey].MotsClefs.length !== 0 ? data.rolesMotsClefs[roleKey].MotsClefs : [""]
+                            }
+                        })
+
+                        setAssociationsRoleKeywords(associationsRoleKeywordsData)
+
+                        const personas = data.dbPersona.map((persona: { description: string, value: string }) => {
+                            return {
+                                description: persona.description,
+                                value: persona.value
+                            }
+                        })
+
+                        setDbPersona(personas)
+
+                        setDataInit(true)
                     }
-                })
 
-                const data = await response.json()
-
-                if (data.personasRoles || data.rolesMotsClefs || data.dbPersona) {
-                    const associationsPersonaRolesData = Object.keys(data.personasRoles).map((personaKey) => {
-                        return {
-                            parent: personaKey,
-                            childs: data.personasRoles[personaKey].Roles.length !== 0 ? data.personasRoles[personaKey].Roles : [""]
-                        }
-                    })
-
-                    setAssociationsPersonaRoles(associationsPersonaRolesData)
-
-                    const associationsRoleKeywordsData = Object.keys(data.rolesMotsClefs).map((roleKey) => {
-                        return {
-                            parent: roleKey,
-                            childs: data.rolesMotsClefs[roleKey].MotsClefs.length !== 0 ? data.rolesMotsClefs[roleKey].MotsClefs : [""]
-                        }
-                    })
-
-                    setAssociationsRoleKeywords(associationsRoleKeywordsData)
-
-                    const personas = data.dbPersona.map((persona: { description: string, value: string }) => {
-                        return {
-                            description: persona.description,
-                            value: persona.value
-                        }
-                    })
-
-                    setDbPersona(personas)
-
-                    setDataInit(true)
+                } catch (error) {
+                    console.error("Une erreur s'est produite lors de la requête :", error)
                 }
-
-            } catch (error) {
-                console.error("Une erreur s'est produite lors de la requête :", error)
             }
         }
 
         fetchData()
-    }, [])
+    }, [fetchDataInit])
 
     useEffect(() => {
         const fetchData = async () => {
@@ -117,7 +126,7 @@ const OData = (props: { instance: any }) => {
                         }
                     }).filter((association) => association !== undefined),
                     associationsPersonaRole: associationsPersonaRoles.map((personaRoles) => {
-                        if (personaRoles.parent !== "" && personaRoles.childs.every((child) => child !== "")) {
+                        if (personaRoles.parent !== "" && personaRoles.childs.every((child) => child.value !== "")) {
                             return {
                                 NomPersona: personaRoles.parent,
                                 NomRole: personaRoles.childs,

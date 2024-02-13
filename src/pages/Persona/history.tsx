@@ -6,66 +6,10 @@ import AButton from "../../components/atoms/a-button"
 import theme from "../../theme"
 import { useLocation } from "react-router-dom"
 import { acquireToken } from "../../App"
+import { HistoryRow } from "../../interfaces/history"
+import { format } from 'date-fns'
 
 const History = (props: { instance: any }) => {
-
-    const histories = [
-        {
-            idAsk: 4351,
-            idEdit: 4351,
-            emailEdit: "tgu@yuzucorp.com",
-            jobTitle: "SalesPerson",
-            persona: "-",
-            personaAsk: "manager",
-            personaEdit: "Manager",
-            date: "10/07/2023",
-            hour: "10:38:44"
-        },
-        {
-            idAsk: 4352,
-            idEdit: 4352,
-            emailEdit: "nhu@yuzucorp.com",
-            jobTitle: "Developer",
-            persona: "-",
-            personaAsk: "dev",
-            personaEdit: "Dev",
-            date: "20/05/2023",
-            hour: "10:38:44"
-        },
-        {
-            idAsk: 4353,
-            idEdit: 4353,
-            emailEdit: "mde@yuzucorp.com",
-            jobTitle: "SalesPerson",
-            persona: "-",
-            personaAsk: "manager",
-            personaEdit: "Manager",
-            date: "15/06/2023",
-            hour: "10:38:44"
-        },
-        {
-            idAsk: 4354,
-            idEdit: 4354,
-            emailEdit: "cgo@yuzucorp.com",
-            jobTitle: "Buisness Developer",
-            persona: "-",
-            personaAsk: "manager",
-            personaEdit: "Manager",
-            date: "25/10/2023",
-            hour: "10:38:44"
-        },
-        {
-            idAsk: 4355,
-            idEdit: 4355,
-            emailEdit: "cle@yuzucorp.com",
-            jobTitle: "Developer",
-            persona: "-",
-            personaAsk: "dev",
-            personaEdit: "Dev",
-            date: "06/09/2023",
-            hour: "10:38:44"
-        }
-    ]
 
     const { instance } = props
 
@@ -74,8 +18,51 @@ const History = (props: { instance: any }) => {
     const isDesktop = useMediaQuery('(min-width:1000px)')
 
     const [searchTerm, setSearchTerm] = useState("")
-    const [filteredHistory, setFilteredHistory] = useState(histories)
-    const [selectedRows, setSelectedRows] = useState<Array<number>>([])
+    const [histories, setHistories] = useState<Array<HistoryRow>>([])
+    const [filteredHistories, setFilteredHistories] = useState<HistoryRow[]>([])
+    const [selectedRows, setSelectedRows] = useState<HistoryRow[]>([])
+
+    const [fetchDataInit, setFetchDataInit] = useState(false)
+    const [dbPersona, setDbPersona] = useState([{ description: "", value: "" }])
+
+    useEffect(() => {
+        setFetchDataInit(true)
+    }, [])
+
+    useEffect(() => {
+        const fetchData = async () => {
+            if (fetchDataInit) {
+                try {
+                    await instance.initialize()
+                    const accessToken = await acquireToken(instance)
+
+                    const response = await fetch(`${process.env.REACT_APP_API_PERSONA}/persona/findAllAssociationsForTenant?IdTenant=${idTenant}`, {
+                        method: "GET",
+                        headers: {
+                            Authorization: `Bearer ${accessToken}`,
+                            "Content-Type": "application/json"
+                        }
+                    })
+
+                    const data = await response.json()
+
+                    const personas = data.dbPersona.map((persona: { description: string, value: string }) => {
+                        return {
+                            description: persona.description,
+                            value: persona.value
+                        }
+                    })
+
+                    setDbPersona(personas)
+                } catch (error) {
+                    console.error("Une erreur s'est produite lors de la requête :", error)
+                }
+            }
+        }
+
+        fetchData()
+
+    }, [fetchDataInit])
 
     useEffect(() => {
         const fetchData = async () => {
@@ -91,9 +78,10 @@ const History = (props: { instance: any }) => {
                     }
                 })
 
-                console.log(response, 'r')
-
                 const data = await response.json()
+
+                setHistories(data)
+
             } catch (error) {
                 console.error("Une erreur s'est produite lors de la requête :", error)
             }
@@ -104,36 +92,73 @@ const History = (props: { instance: any }) => {
 
     const handleFilteredChange = (value: string) => {
         setSearchTerm(value)
-
-        const filtered = histories.filter(history =>
-            history.idAsk.toString().includes(value) ||
-            history.idEdit.toString().includes(value) ||
-            history.emailEdit.toLowerCase().includes(value.toLowerCase()) ||
-            history.date.includes(value) ||
-            history.jobTitle.toLowerCase().includes(value.toLowerCase())
-        )
-
-        setFilteredHistory(filtered)
     }
 
+    useEffect(() => {
+        const filtered = histories.filter(history =>
+            history.IdObjectAsk.toString().includes(searchTerm) ||
+            history.IdObjectModifiedReal.toString().includes(searchTerm) ||
+            history.EmailModified.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            history.Date.includes(searchTerm) ||
+            history.IntitulePoste.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+
+        setFilteredHistories(filtered)
+    }, [searchTerm, histories])
+
     const handleSelectAllChange = () => {
-        if (selectedRows.length === filteredHistory.length) {
+        if (selectedRows.length === filteredHistories.length) {
             setSelectedRows([])
         } else {
-            setSelectedRows(Array.from({ length: filteredHistory.length }, (_, i) => i))
+            setSelectedRows(filteredHistories)
         }
     }
 
     const handleSelectChange = (index: number) => {
-        if (selectedRows.includes(index)) {
-            setSelectedRows(selectedRows.filter((history) => history !== index))
+        if (selectedRows.includes(filteredHistories[index])) {
+            setSelectedRows(selectedRows.filter((contact) => contact !== filteredHistories[index]))
         } else {
-            if (!selectedRows) {
-                setSelectedRows([index])
-            } else {
-                setSelectedRows([...selectedRows, index])
-            }
+            setSelectedRows([...selectedRows, filteredHistories[index]])
         }
+    }
+
+    const handleRestore = async () => {
+        const data = selectedRows.map((row) => ({
+            hs_object_id: row.IdObjectModifiedReal,
+            role: row.IntitulePoste,
+            persona: "restaured",
+            proposedPersona: row.PersonaBefore
+        }))
+
+        const account = instance.getActiveAccount()
+
+        const body = {
+            idTenant: idTenant,
+            emailModified: account.username,
+            tableOfValues: dbPersona,
+            propositions: [{ contacts: data }]
+        }
+
+        const accessToken = await acquireToken(instance)
+
+        console.log(body, 'b')
+
+        fetch(`${process.env.REACT_APP_API_PERSONA}/hubspot/enrich`, {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(body)
+        })
+    }
+
+    const formatDate = (dateString: string) => {
+        const date = new Date(dateString)
+
+        const formattedDate = format(date, 'yyyy-MM-dd HH:mm:ss')
+
+        return formattedDate
     }
 
     return (
@@ -164,7 +189,7 @@ const History = (props: { instance: any }) => {
                         />
 
                         <Stack width="100%">
-                            <AButton variant="contained">
+                            <AButton variant="contained" onClick={handleRestore}>
                                 Restaurer la séléction
                             </AButton>
                         </Stack>
@@ -215,9 +240,9 @@ const History = (props: { instance: any }) => {
                                 </TableCell>
                                 <TableCell align="right">
                                     <Checkbox
-                                        checked={selectedRows?.length === filteredHistory.length}
+                                        checked={selectedRows?.length === filteredHistories.length}
                                         onChange={handleSelectAllChange}
-                                        indeterminate={selectedRows.length > 0 && selectedRows.length < filteredHistory.length}
+                                        indeterminate={selectedRows.length > 0 && selectedRows.length < filteredHistories.length}
                                         sx={{
                                             color: theme.palette.background.default,
                                             '&.Mui-checked': {
@@ -232,8 +257,8 @@ const History = (props: { instance: any }) => {
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {filteredHistory.map((history, index) =>
-                                <TableRow>
+                            {filteredHistories.map((history, index) =>
+                                <TableRow key={index}>
                                     <TableCell>
                                         <Typography
                                             fontSize="11px"
@@ -241,11 +266,11 @@ const History = (props: { instance: any }) => {
                                             padding="10px"
                                             borderRadius="15px"
                                             sx={{
-                                                width: `${history.idAsk.toString().length}ch`,
+                                                width: `${history.IdObjectAsk.toString().length}ch`,
                                                 background: theme.palette.secondary.light
                                             }}
                                         >
-                                            {history.idAsk}
+                                            {history.IdObjectAsk}
                                         </Typography>
                                     </TableCell>
                                     <TableCell align="center">
@@ -255,51 +280,48 @@ const History = (props: { instance: any }) => {
                                             padding="10px"
                                             borderRadius="15px"
                                             sx={{
-                                                width: `${history.idEdit.toString().length}ch`,
+                                                width: `${history.IdObjectModifiedReal.toString().length}ch`,
                                                 background: theme.palette.info.light
                                             }}
                                         >
-                                            {history.idEdit}
+                                            {history.IdObjectModifiedReal}
                                         </Typography>
                                     </TableCell>
                                     <TableCell align="center">
                                         <Typography>
-                                            {history.emailEdit}
+                                            {history.EmailModified}
                                         </Typography>
                                     </TableCell>
                                     <TableCell align="center">
                                         <Typography>
-                                            {history.jobTitle}
+                                            {history.IntitulePoste}
                                         </Typography>
                                     </TableCell>
                                     <TableCell align="center">
                                         <Typography>
-                                            {history.persona}
+                                            {history.PersonaAfter}
                                         </Typography>
                                     </TableCell>
                                     <TableCell align="center">
                                         <Typography>
-                                            {history.personaAsk}
+                                            {history.PersonaAsk}
                                         </Typography>
                                     </TableCell>
                                     <TableCell align="center">
                                         <Typography>
-                                            {history.personaEdit}
+                                            {history.PersonaBefore}
                                         </Typography>
                                     </TableCell>
                                     <TableCell align="center">
                                         <Stack>
                                             <Typography>
-                                                {history.date}
-                                            </Typography>
-                                            <Typography>
-                                                {history.hour}
+                                                {formatDate(history.Date)}
                                             </Typography>
                                         </Stack>
                                     </TableCell>
                                     <TableCell align="right">
                                         <Checkbox
-                                            checked={selectedRows.includes(index)}
+                                            checked={selectedRows.includes(history)}
                                             onChange={() => handleSelectChange(index)}
                                         />
                                     </TableCell>
@@ -327,9 +349,9 @@ const History = (props: { instance: any }) => {
                                     </TableCell>
                                     <TableCell align="right">
                                         <Checkbox
-                                            checked={selectedRows?.length === filteredHistory.length}
+                                            checked={selectedRows?.length === filteredHistories.length}
                                             onChange={handleSelectAllChange}
-                                            indeterminate={selectedRows.length > 0 && selectedRows.length < filteredHistory.length}
+                                            indeterminate={selectedRows.length > 0 && selectedRows.length < filteredHistories.length}
                                             sx={{
                                                 color: theme.palette.background.default,
                                                 '&.Mui-checked': {
@@ -344,7 +366,7 @@ const History = (props: { instance: any }) => {
                                 </TableRow>
                             </TableHead>
                             <TableBody>
-                                {filteredHistory.map((history, index) =>
+                                {filteredHistories.map((history, index) =>
                                     <TableRow>
                                         <TableCell align="center">
                                             <Stack
@@ -352,43 +374,43 @@ const History = (props: { instance: any }) => {
                                                 padding="5px"
                                                 borderRadius="15px"
                                                 sx={{
-                                                    width: `${history.idEdit.toString().length}ch`,
+                                                    width: `${history.IdObjectModifiedReal.toString().length}ch`,
                                                     background: theme.palette.secondary.light
                                                 }}
                                             >
                                                 <Typography fontSize="11px">
-                                                    {history.idEdit}
+                                                    {history.IdObjectModifiedReal}
                                                 </Typography>
 
                                                 <Typography fontSize="11px">
-                                                    {history.idAsk}
+                                                    {history.IdObjectAsk}
                                                 </Typography>
                                             </Stack>
                                         </TableCell>
                                         <TableCell align="center">
                                             <Typography>
-                                                {history.jobTitle}
+                                                {history.IntitulePoste}
                                             </Typography>
                                             <Typography>
-                                                {history.emailEdit}
+                                                {history.EmailModified}
                                             </Typography>
                                         </TableCell>
                                         <TableCell align="center">
                                             <Typography>
-                                                {history.persona}
+                                                {history.PersonaAfter}
                                             </Typography>
 
                                             <Typography>
-                                                {history.personaAsk}
+                                                {history.PersonaAsk}
                                             </Typography>
 
                                             <Typography>
-                                                {history.personaEdit}
+                                                {history.PersonaBefore}
                                             </Typography>
                                         </TableCell>
                                         <TableCell align="right">
                                             <Checkbox
-                                                checked={selectedRows.includes(index)}
+                                                checked={selectedRows.includes(history)}
                                                 onChange={() => handleSelectChange(index)}
                                             />
                                         </TableCell>

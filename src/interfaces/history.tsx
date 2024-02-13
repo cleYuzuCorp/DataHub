@@ -1,11 +1,12 @@
-export interface History {
-    idAsk: number,
-    idEdit: number,
-    emailEdit: string,
-    jobTitle: string,
-    persona: string,
-    personaAsk: string,
-    personaEdit: string,
-    date: string,
-    hour: string
+export interface HistoryRow {
+    Id: number,
+    IdTenant: number,
+    IdObjectAsk: number,
+    IdObjectModifiedReal: number,
+    EmailModified: string,
+    IntitulePoste: string,
+    PersonaAfter: string,
+    PersonaAsk: string,
+    PersonaBefore: string,
+    Date: string
 }

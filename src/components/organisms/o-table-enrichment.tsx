@@ -203,7 +203,7 @@ const OTableEnrichment = (props: {
                                     background: open[index] || hovered === index ? theme.palette.secondary.light : 'none'
                                 }}
                             >
-                                {contact.contacts.map((c) => <TableCell key={c.hs_object_id}>
+                                <TableCell>
                                     <Stack spacing={2} direction="row" alignItems="center">
                                         {open[index] ?
                                             <FontAwesomeIcon icon={faChevronUp} /> :
@@ -211,13 +211,13 @@ const OTableEnrichment = (props: {
                                         }
 
                                         <Typography>
-                                            {c.role}
+                                            {contact.intituledePoste}
                                         </Typography>
                                     </Stack>
-                                </TableCell>)}
+                                </TableCell>
                                 {!nothing && contact.contacts.map((c) => <TableCell key={c.hs_object_id} align="center">
                                     <Typography>
-                                        {c.persona}
+                                        {contact.personaProposed}
                                     </Typography>
                                 </TableCell>)}
                                 <TableCell align="center" width="50%">

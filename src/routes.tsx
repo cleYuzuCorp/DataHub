@@ -1,11 +1,11 @@
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom'
-import Home from './pages'
 import THeader from './components/templates/t-header'
 import { Drawer, IconButton, Stack, ThemeProvider, useMediaQuery } from '@mui/material'
 import theme from './theme'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faBars } from '@fortawesome/free-solid-svg-icons'
 import { useState } from 'react'
+import CustomersAccounts from './pages'
 
 const AppRoutes = (props: { instance?: any }) => {
 
@@ -37,7 +37,7 @@ const AppRoutes = (props: { instance?: any }) => {
                 <THeader instance={instance} />
               </Drawer>
             </Stack>}
-            <Home />
+            <CustomersAccounts instance={instance} />
           </Stack>
         </ThemeProvider>} />
         {pagesContext.keys().map((modulePath: string) => {

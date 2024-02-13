@@ -69,9 +69,7 @@ const THeader = (props: { instance?: any }) => {
     }
 
     useEffect(() => {
-        if (active.includes("customers accounts")) {
-            navigate('/comptes-clients')
-        } else if (active.includes("Formulaire")) {
+        if (active.includes("Formulaire")) {
             navigate(`/persona/dashboard/form?id=${selectedCustomer?.IdTenant}`)
         } else if (active.includes("Données")) {
             navigate(`/persona/dashboard/data?id=${selectedCustomer?.IdTenant}`)
@@ -83,6 +81,8 @@ const THeader = (props: { instance?: any }) => {
             navigate(`/persona/enrichissement/no-change-found?id=${selectedCustomer?.IdTenant}`)
         } else if (active.includes("Historique")) {
             navigate(`/persona/history?id=${selectedCustomer?.IdTenant}`)
+        } else {
+            navigate('/')
         }
     }, [active])
 

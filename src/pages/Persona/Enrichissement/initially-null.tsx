@@ -14,63 +14,73 @@ const InitiallyNull = (props: { instance: any }) => {
     const [associationsRoleKeywords, setAssociationsRoleKeywords] = useState([{ parent: "", childs: [""] }])
     const [associationsPersonaRoles, setAssociationsPersonaRoles] = useState([{ parent: "", childs: [""] }])
 
+    const [fetchDataInit, setFetchDataInit] = useState(false)
     const [dataInit, setDataInit] = useState(false)
     const [contacts, setContacts] = useState([])
 
     useEffect(() => {
+        setFetchDataInit(true)
+    })
+
+    useEffect(() => {
         const fetchData = async () => {
-            try {
-                await instance.initialize()
-                const accessToken = await acquireToken(instance)
+            if (fetchDataInit) {
+                try {
+                    await instance.initialize()
+                    const accessToken = await acquireToken(instance)
 
-                const response = await fetch(`${process.env.REACT_APP_API_PERSONA}/persona/findAllAssociationsForTenant?IdTenant=${idTenant}`, {
-                    method: "GET",
-                    headers: {
-                        Authorization: `Bearer ${accessToken}`,
-                        "Content-Type": "application/json"
+                    const response = await fetch(`${process.env.REACT_APP_API_PERSONA}/persona/findAllAssociationsForTenant?IdTenant=${idTenant}`, {
+                        method: "GET",
+                        headers: {
+                            Authorization: `Bearer ${accessToken}`,
+                            "Content-Type": "application/json"
+                        }
+                    })
+
+                    const data = await response.json()
+
+                    if (data.personasRoles || data.rolesMotsClefs || data.dbPersona) {
+                        const associationsPersonaRolesData = Object.keys(data.personasRoles).map((personaKey) => {
+                            return {
+                                parent: personaKey,
+                                childs: data.personasRoles[personaKey].Roles.map((role: any, rolesIndex: number) => ({
+                                    id: rolesIndex + 1,
+                                    value: role,
+                                }))
+                            }
+                        })
+
+                        setAssociationsPersonaRoles(associationsPersonaRolesData)
+
+                        const associationsRoleKeywordsData = Object.keys(data.rolesMotsClefs).map((roleKey) => {
+                            return {
+                                parent: roleKey,
+                                childs: data.rolesMotsClefs[roleKey].MotsClefs.length !== 0 ? data.rolesMotsClefs[roleKey].MotsClefs : [""]
+                            }
+                        })
+
+                        setAssociationsRoleKeywords(associationsRoleKeywordsData)
+
+                        const personas = data.dbPersona.map((persona: { description: string, value: string }) => {
+                            return {
+                                description: persona.description,
+                                value: persona.value
+                            }
+                        })
+
+                        setDbPersona(personas)
+
+                        setDataInit(true)
                     }
-                })
 
-                const data = await response.json()
-
-                if (data.personasRoles || data.rolesMotsClefs || data.dbPersona) {
-                    const associationsPersonaRolesData = Object.keys(data.personasRoles).map((personaKey) => {
-                        return {
-                            parent: personaKey,
-                            childs: data.personasRoles[personaKey].Roles.length !== 0 ? data.personasRoles[personaKey].Roles : [""]
-                        }
-                    })
-
-                    setAssociationsPersonaRoles(associationsPersonaRolesData)
-
-                    const associationsRoleKeywordsData = Object.keys(data.rolesMotsClefs).map((roleKey) => {
-                        return {
-                            parent: roleKey,
-                            childs: data.rolesMotsClefs[roleKey].MotsClefs.length !== 0 ? data.rolesMotsClefs[roleKey].MotsClefs : [""]
-                        }
-                    })
-
-                    setAssociationsRoleKeywords(associationsRoleKeywordsData)
-
-                    const personas = data.dbPersona.map((persona: { description: string, value: string }) => {
-                        return {
-                            description: persona.description,
-                            value: persona.value
-                        }
-                    })
-
-                    setDbPersona(personas)
-
-                    setDataInit(true)
+                } catch (error) {
+                    console.error("Une erreur s'est produite lors de la requête :", error)
                 }
-
-            } catch (error) {
-                console.error("Une erreur s'est produite lors de la requête :", error)
             }
         }
 
         fetchData()
-    }, [])
+    }, [fetchDataInit])
 
     useEffect(() => {
         const fetchData = async () => {
@@ -115,9 +125,7 @@ const InitiallyNull = (props: { instance: any }) => {
 
                 const data = await response.json()
 
-                console.log(data)
-
-                setContacts(data.enrichment.contactsWithoutProposedPersona)
+                setContacts(data.enrichment.contactsWithProposedPersonaAndNull)
             }
         }
 
