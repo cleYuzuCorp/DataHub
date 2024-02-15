@@ -1,6 +1,6 @@
 import { faMagnifyingGlass, faChevronUp, faChevronDown, faArrowDown, faArrowUp } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { Checkbox, Collapse, Paper, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography, useMediaQuery } from "@mui/material"
+import { Checkbox, CircularProgress, Collapse, Paper, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography, useMediaQuery } from "@mui/material"
 import React, { useEffect, useState } from "react"
 import theme from "../../theme"
 import AButton from "../atoms/a-button"
@@ -18,6 +18,7 @@ const OTableEnrichment = (props: {
 
     const isDesktop = useMediaQuery('(min-width:1000px)')
 
+    const [loading, setLoading] = useState(false)
     const [searchTerm, setSearchTerm] = useState("")
     const [filteredContacts, setFilteredContacts] = useState<Contact[]>(contacts)
 
@@ -83,6 +84,7 @@ const OTableEnrichment = (props: {
     }
 
     const handleSubmit = async () => {
+        setLoading(true)
         const account = instance.getActiveAccount()
 
         const body = {
@@ -105,183 +107,184 @@ const OTableEnrichment = (props: {
         })
 
         handleIgnoreProposal()
-
-        console.log(response)
+        setLoading(false)
     }
 
     return (
-        <Stack spacing={4} width="100%">
-            <Stack spacing={4} direction={isDesktop ? "row" : "column"} alignItems="center" width="100%">
-                <TextField
-                    placeholder="Recherche par Intitulé de poste"
-                    value={searchTerm}
-                    onChange={(e) => handleFilteredChange(e.target.value)}
-                    sx={{
-                        width: "100%",
-                        borderColor: '#E0E0E0',
-                        boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)'
-                    }}
-                    InputProps={{
-                        endAdornment: <FontAwesomeIcon
-                            icon={faMagnifyingGlass}
-                            color={theme.palette.text.primary}
-                            opacity={0.5}
-                        />
-                    }}
-                />
-
-                <Stack spacing={2} direction="row" alignItems="center" justifyContent={isDesktop ? "flex-end" : "space-between"} width="100%">
-                    <AButton variant="outlined" color="error" onClick={handleIgnoreProposal}>
-                        Ignorer la proposition
-                    </AButton>
-
-                    <AButton variant="contained" onClick={handleSubmit}>
-                        Valider la proposition
-                    </AButton>
-                </Stack>
-            </Stack>
-
-            <Table component={Paper} sx={{ background: theme.palette.background.default }}>
-                <TableHead sx={{ background: theme.palette.text.primary }}>
-                    <TableRow>
-                        <TableCell align="left">
-                            <Typography variant="body2" color={theme.palette.background.default}>
-                                Intitulé de poste
-                            </Typography>
-                        </TableCell>
-                        {!nothing && <TableCell align="center">
-                            <Typography variant="body2" color={theme.palette.background.default}>
-                                Persona proposé
-                            </Typography>
-                        </TableCell>}
-                        <TableCell align="center">
-                            <Stack
-                                spacing={1}
-                                direction="row"
-                                alignItems="center"
-                                justifyContent="center"
-                                onClick={toggleSortOrder}
-                                sx={{
-                                    cursor: 'pointer'
-                                }}
-                            >
-                                <Typography variant="body2" color={theme.palette.background.default}>
-                                    Apparitions
-                                </Typography>
-                                {sortOrder === 'asc' ?
-                                    <FontAwesomeIcon icon={faArrowUp} color={theme.palette.background.default} /> :
-                                    <FontAwesomeIcon icon={faArrowDown} color={theme.palette.background.default} />
-                                }
-                            </Stack>
-                        </TableCell>
-                        <TableCell align="right">
-                            <Checkbox
-                                checked={selectedContacts?.length === filteredContacts.length}
-                                onChange={handleSelectAllChange}
-                                indeterminate={selectedContacts.length > 0 && selectedContacts.length < filteredContacts.length}
-                                sx={{
-                                    color: theme.palette.background.default,
-                                    '&.Mui-checked': {
-                                        color: theme.palette.background.default
-                                    },
-                                    '&.MuiCheckbox-indeterminate': {
-                                        color: theme.palette.background.default
-                                    }
-                                }}
+        <Stack>
+            {loading ? <CircularProgress /> : <Stack spacing={4} width="100%">
+                <Stack spacing={4} direction={isDesktop ? "row" : "column"} alignItems="center" width="100%">
+                    <TextField
+                        placeholder="Recherche par Intitulé de poste"
+                        value={searchTerm}
+                        onChange={(e) => handleFilteredChange(e.target.value)}
+                        sx={{
+                            width: "100%",
+                            borderColor: '#E0E0E0',
+                            boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)'
+                        }}
+                        InputProps={{
+                            endAdornment: <FontAwesomeIcon
+                                icon={faMagnifyingGlass}
+                                color={theme.palette.text.primary}
+                                opacity={0.5}
                             />
-                        </TableCell>
-                    </TableRow>
-                </TableHead>
-                <TableBody>
-                    {sortedContacts.map((contact, index) =>
-                        <React.Fragment key={index}>
-                            <TableRow
-                                onMouseEnter={() => setHovered(index)}
-                                onMouseLeave={() => setHovered(undefined)}
-                                onClick={() => toggleRow(index)}
-                                sx={{
-                                    background: open[index] || hovered === index ? theme.palette.secondary.light : 'none'
-                                }}
-                            >
-                                <TableCell>
-                                    <Stack spacing={2} direction="row" alignItems="center">
-                                        {open[index] ?
-                                            <FontAwesomeIcon icon={faChevronUp} /> :
-                                            <FontAwesomeIcon icon={faChevronDown} />
-                                        }
+                        }}
+                    />
 
+                    <Stack spacing={2} direction="row" alignItems="center" justifyContent={isDesktop ? "flex-end" : "space-between"} width="100%">
+                        <AButton variant="outlined" color="error" onClick={handleIgnoreProposal}>
+                            Ignorer la proposition
+                        </AButton>
+
+                        <AButton variant="contained" onClick={handleSubmit}>
+                            Valider la proposition
+                        </AButton>
+                    </Stack>
+                </Stack>
+
+                <Table component={Paper} sx={{ background: theme.palette.background.default }}>
+                    <TableHead sx={{ background: theme.palette.text.primary }}>
+                        <TableRow>
+                            <TableCell align="left">
+                                <Typography variant="body2" color={theme.palette.background.default}>
+                                    Intitulé de poste
+                                </Typography>
+                            </TableCell>
+                            {!nothing && <TableCell align="center">
+                                <Typography variant="body2" color={theme.palette.background.default}>
+                                    Persona proposé
+                                </Typography>
+                            </TableCell>}
+                            <TableCell align="center">
+                                <Stack
+                                    spacing={1}
+                                    direction="row"
+                                    alignItems="center"
+                                    justifyContent="center"
+                                    onClick={toggleSortOrder}
+                                    sx={{
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    <Typography variant="body2" color={theme.palette.background.default}>
+                                        Apparitions
+                                    </Typography>
+                                    {sortOrder === 'asc' ?
+                                        <FontAwesomeIcon icon={faArrowUp} color={theme.palette.background.default} /> :
+                                        <FontAwesomeIcon icon={faArrowDown} color={theme.palette.background.default} />
+                                    }
+                                </Stack>
+                            </TableCell>
+                            <TableCell align="right">
+                                <Checkbox
+                                    checked={selectedContacts?.length === filteredContacts.length}
+                                    onChange={handleSelectAllChange}
+                                    indeterminate={selectedContacts.length > 0 && selectedContacts.length < filteredContacts.length}
+                                    sx={{
+                                        color: theme.palette.background.default,
+                                        '&.Mui-checked': {
+                                            color: theme.palette.background.default
+                                        },
+                                        '&.MuiCheckbox-indeterminate': {
+                                            color: theme.palette.background.default
+                                        }
+                                    }}
+                                />
+                            </TableCell>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {sortedContacts.map((contact, index) =>
+                            <React.Fragment key={index}>
+                                <TableRow
+                                    onMouseEnter={() => setHovered(index)}
+                                    onMouseLeave={() => setHovered(undefined)}
+                                    onClick={() => toggleRow(index)}
+                                    sx={{
+                                        background: open[index] || hovered === index ? theme.palette.secondary.light : 'none'
+                                    }}
+                                >
+                                    <TableCell>
+                                        <Stack spacing={2} direction="row" alignItems="center">
+                                            {open[index] ?
+                                                <FontAwesomeIcon icon={faChevronUp} /> :
+                                                <FontAwesomeIcon icon={faChevronDown} />
+                                            }
+
+                                            <Typography>
+                                                {contact.intituledePoste}
+                                            </Typography>
+                                        </Stack>
+                                    </TableCell>
+                                    {!nothing && contact.contacts.map((c) => <TableCell key={c.hs_object_id} align="center">
                                         <Typography>
-                                            {contact.intituledePoste}
+                                            {contact.personaProposed}
                                         </Typography>
-                                    </Stack>
-                                </TableCell>
-                                {!nothing && contact.contacts.map((c) => <TableCell key={c.hs_object_id} align="center">
-                                    <Typography>
-                                        {contact.personaProposed}
-                                    </Typography>
-                                </TableCell>)}
-                                <TableCell align="center" width="50%">
-                                    <Typography>
-                                        {contact.occurence}
-                                    </Typography>
-                                </TableCell>
-                                <TableCell align="right">
-                                    <Checkbox
-                                        checked={selectedContacts.includes(contact)}
-                                        onChange={() => handleSelectChange(index)}
-                                    />
-                                </TableCell>
-                            </TableRow>
-                            <TableRow>
-                                <TableCell colSpan={nothing ? 3 : 4} padding="none">
-                                    <Collapse in={open[index]} timeout="auto" unmountOnExit>
-                                        <Table component={Paper} sx={{ background: theme.palette.background.default }}>
-                                            <TableHead>
-                                                <TableRow sx={{ background: theme.palette.info.light }}>
-                                                    <TableCell align="left">
-                                                        <Typography>
-                                                            hs_object_id
-                                                        </Typography>
-                                                    </TableCell>
-                                                    <TableCell align="center">
-                                                        <Typography>
-                                                            Prénom
-                                                        </Typography>
-                                                    </TableCell>
-                                                    <TableCell align="right">
-                                                        <Typography>
-                                                            Nom
-                                                        </Typography>
-                                                    </TableCell>
-                                                </TableRow>
-                                            </TableHead>
-                                            <TableBody>
-                                                {contact.contacts.map((c) => <TableRow key={c.hs_object_id}>
-                                                    <TableCell align="left">
-                                                        <Typography>
-                                                            {c.hs_object_id}
-                                                        </Typography>
-                                                    </TableCell>
-                                                    <TableCell align="center">
-                                                        <Typography>
-                                                            {c.firsname}
-                                                        </Typography>
-                                                    </TableCell>
-                                                    <TableCell align="right">
-                                                        <Typography>
-                                                            {c.lastname}
-                                                        </Typography>
-                                                    </TableCell>
-                                                </TableRow>)}
-                                            </TableBody>
-                                        </Table>
-                                    </Collapse>
-                                </TableCell>
-                            </TableRow>
-                        </React.Fragment>
-                    )}
-                </TableBody>
-            </Table>
+                                    </TableCell>)}
+                                    <TableCell align="center" width="50%">
+                                        <Typography>
+                                            {contact.occurence}
+                                        </Typography>
+                                    </TableCell>
+                                    <TableCell align="right">
+                                        <Checkbox
+                                            checked={selectedContacts.includes(contact)}
+                                            onChange={() => handleSelectChange(index)}
+                                        />
+                                    </TableCell>
+                                </TableRow>
+                                <TableRow>
+                                    <TableCell colSpan={nothing ? 3 : 4} padding="none">
+                                        <Collapse in={open[index]} timeout="auto" unmountOnExit>
+                                            <Table component={Paper} sx={{ background: theme.palette.background.default }}>
+                                                <TableHead>
+                                                    <TableRow sx={{ background: theme.palette.info.light }}>
+                                                        <TableCell align="left">
+                                                            <Typography>
+                                                                hs_object_id
+                                                            </Typography>
+                                                        </TableCell>
+                                                        <TableCell align="center">
+                                                            <Typography>
+                                                                Prénom
+                                                            </Typography>
+                                                        </TableCell>
+                                                        <TableCell align="right">
+                                                            <Typography>
+                                                                Nom
+                                                            </Typography>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                </TableHead>
+                                                <TableBody>
+                                                    {contact.contacts.map((c) => <TableRow key={c.hs_object_id}>
+                                                        <TableCell align="left">
+                                                            <Typography>
+                                                                {c.hs_object_id}
+                                                            </Typography>
+                                                        </TableCell>
+                                                        <TableCell align="center">
+                                                            <Typography>
+                                                                {c.firsname}
+                                                            </Typography>
+                                                        </TableCell>
+                                                        <TableCell align="right">
+                                                            <Typography>
+                                                                {c.lastname}
+                                                            </Typography>
+                                                        </TableCell>
+                                                    </TableRow>)}
+                                                </TableBody>
+                                            </Table>
+                                        </Collapse>
+                                    </TableCell>
+                                </TableRow>
+                            </React.Fragment>
+                        )}
+                    </TableBody>
+                </Table>
+            </Stack>}
         </Stack>
     )
 }

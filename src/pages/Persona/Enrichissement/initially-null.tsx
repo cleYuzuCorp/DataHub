@@ -1,4 +1,4 @@
-import { Container, Stack, Typography } from "@mui/material"
+import { CircularProgress, Container, Stack, Typography } from "@mui/material"
 import OTableEnrichment from "../../../components/organisms/o-table-enrichment"
 import { useState, useEffect } from "react"
 import { acquireToken } from "../../../App"
@@ -14,6 +14,7 @@ const InitiallyNull = (props: { instance: any }) => {
     const [associationsRoleKeywords, setAssociationsRoleKeywords] = useState([{ parent: "", childs: [""] }])
     const [associationsPersonaRoles, setAssociationsPersonaRoles] = useState([{ parent: "", childs: [""] }])
 
+    const [loading, setLoading] = useState(false)
     const [fetchDataInit, setFetchDataInit] = useState(false)
     const [dataInit, setDataInit] = useState(false)
     const [contacts, setContacts] = useState([])
@@ -23,6 +24,8 @@ const InitiallyNull = (props: { instance: any }) => {
     })
 
     useEffect(() => {
+        setLoading(true)
+
         const fetchData = async () => {
             if (fetchDataInit) {
                 try {
@@ -69,8 +72,8 @@ const InitiallyNull = (props: { instance: any }) => {
                         })
 
                         setDbPersona(personas)
-
                         setDataInit(true)
+                        setLoading(false)
                     }
 
                 } catch (error) {
@@ -83,6 +86,8 @@ const InitiallyNull = (props: { instance: any }) => {
     }, [fetchDataInit])
 
     useEffect(() => {
+        setLoading(true)
+
         const fetchData = async () => {
             if (idTenant && dataInit) {
                 const parsedId = parseInt(idTenant, 10)
@@ -126,6 +131,7 @@ const InitiallyNull = (props: { instance: any }) => {
                 const data = await response.json()
 
                 setContacts(data.enrichment.contactsWithProposedPersonaAndNull)
+                setLoading(false)
             }
         }
 
@@ -139,7 +145,7 @@ const InitiallyNull = (props: { instance: any }) => {
                     DataHub
                 </Typography>
 
-                <OTableEnrichment instance={instance} id={idTenant} contacts={contacts} dbPersona={dbPersona} />
+                {loading ? <CircularProgress /> : <OTableEnrichment instance={instance} id={idTenant} contacts={contacts} dbPersona={dbPersona} />}
             </Stack>
         </Container>
     )

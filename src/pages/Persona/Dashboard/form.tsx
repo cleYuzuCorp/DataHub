@@ -1,4 +1,4 @@
-import { Container, Stack, Typography } from "@mui/material"
+import { CircularProgress, Container, Stack, Typography } from "@mui/material"
 import OFormAssociation from "../../../components/organisms/o-form-association"
 import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
@@ -13,8 +13,8 @@ const AssociationPersonaRole = (props: { instance: any }) => {
 
     const idTenant = new URLSearchParams(useLocation().search).get('id')
 
+    const [loading, setLoading] = useState(false)
     const [isEditing, setIsEditing] = useState<number>()
-    const [isSubmit, setIsSumbit] = useState<boolean>(false)
 
     const [role, setRole] = useState<string>("")
     const [keywords, setKeywords] = useState<Array<string>>([""])
@@ -23,8 +23,8 @@ const AssociationPersonaRole = (props: { instance: any }) => {
 
     const [associationsRoleKeywords, setAssociationsRoleKeywords] = useState([{ parent: "", childs: [""] }])
     const [associationsPersonaRoles, setAssociationsPersonaRoles] = useState([{ parent: "", childs: [""] }])
-    const [associationsRoleKeywordsBackUp, setAssociationsRoleKeywordsBackUp] = useState([{ parent: "", childs: [""] }])
-    const [associationsPersonaRolesBackUp, setAssociationsPersonaRolesBackUp] = useState([{ parent: "", childs: [""] }])
+    const [backupAssociationsRoleKeywords, setBackupAssociationsRoleKeywords] = useState<{ parent: string; childs: string[] }[]>([])
+    const [backupAssociationsPersonaRoles, setBackupAssociationsPersonaRoles] = useState<{ parent: string; childs: string[] }[]>([])
 
     const schema = yup.object().shape({
         parent: yup.string().required('Le champ rôle est requis'),
@@ -38,6 +38,8 @@ const AssociationPersonaRole = (props: { instance: any }) => {
     })
 
     useEffect(() => {
+        setLoading(true)
+
         const fetchData = async () => {
             try {
                 await instance.initialize()
@@ -62,6 +64,7 @@ const AssociationPersonaRole = (props: { instance: any }) => {
                     })
 
                     setAssociationsPersonaRoles(associationsPersonaRolesData)
+                    setBackupAssociationsPersonaRoles(associationsPersonaRolesData)
 
                     const associationsRoleKeywordsData = Object.keys(data.rolesMotsClefs).map((roleKey) => {
                         return {
@@ -71,6 +74,8 @@ const AssociationPersonaRole = (props: { instance: any }) => {
                     })
 
                     setAssociationsRoleKeywords(associationsRoleKeywordsData)
+                    setBackupAssociationsRoleKeywords(associationsRoleKeywordsData)
+                    setLoading(false)
                 }
             } catch (error) {
                 console.error("Une erreur s'est produite lors de la requête :", error)
@@ -153,53 +158,39 @@ const AssociationPersonaRole = (props: { instance: any }) => {
     }
 
     const editAssociationRoleKeywords = (index: number) => {
+        setBackupAssociationsRoleKeywords([...associationsRoleKeywords])
         setIsEditing(index)
         setRole(associationsRoleKeywords[index].parent)
         setKeywords(associationsRoleKeywords[index].childs)
     }
 
     const editAssociationPersonaRoles = (index: number) => {
+        setBackupAssociationsPersonaRoles([...associationsPersonaRoles])
         setIsEditing(index)
         setPersona(associationsPersonaRoles[index].parent)
         setRoles(associationsPersonaRoles[index].childs)
     }
 
     const removeAssociationRoleKeywords = (index: number) => {
+        setBackupAssociationsRoleKeywords([...associationsRoleKeywords])
         const newAssociations = [...associationsRoleKeywords]
         newAssociations.splice(index, 1)
         setAssociationsRoleKeywords(newAssociations)
     }
 
     const removeAssociationPersonaRoles = (index: number) => {
+        setBackupAssociationsPersonaRoles([...associationsPersonaRoles])
         const newAssociations = [...associationsPersonaRoles]
         newAssociations.splice(index, 1)
         setAssociationsPersonaRoles(newAssociations)
     }
 
-    const backUpAssociationRoleKeywords = () => {
-        if (associationsRoleKeywords.length > 0) {
-            const lastBackup = [associationsRoleKeywordsBackUp[associationsRoleKeywordsBackUp.length - 1]]
-            setAssociationsRoleKeywords([...lastBackup])
-            setAssociationsRoleKeywordsBackUp(associationsRoleKeywordsBackUp.slice(0, -1))
-            setRole("")
-            setKeywords([""])
-            setIsEditing(undefined)
-        } else {
-            setAssociationsRoleKeywords([{ parent: "", childs: [""] }])
-        }
+    const restoreAssociationRoleKeywords = () => {
+        setAssociationsRoleKeywords([...backupAssociationsRoleKeywords])
     }
 
-    const backUpAssociationPersonaRoles = () => {
-        if (associationsRoleKeywords.length > 0) {
-            const lastBackup = [associationsRoleKeywordsBackUp[associationsRoleKeywordsBackUp.length - 1]]
-            setAssociationsRoleKeywords([...lastBackup])
-            setAssociationsRoleKeywordsBackUp(associationsRoleKeywordsBackUp.slice(0, -1))
-            setRole("")
-            setKeywords([""])
-            setIsEditing(undefined)
-        } else {
-            setAssociationsRoleKeywords([{ parent: "", childs: [""] }])
-        }
+    const restoreAssociationPersonaRoles = () => {
+        setAssociationsRoleKeywords([...backupAssociationsPersonaRoles])
     }
 
     const addRowRoleKeywords = async () => {
@@ -215,11 +206,11 @@ const AssociationPersonaRole = (props: { instance: any }) => {
                 if (isEditing !== undefined) {
                     const updatedAssociations = [...associationsRoleKeywords]
                     updatedAssociations[isEditing] = { parent: role, childs: keywords }
-                    setAssociationsRoleKeywordsBackUp([...associationsRoleKeywordsBackUp, ...associationsRoleKeywords])
                     setAssociationsRoleKeywords(updatedAssociations)
                     setRole("")
                     setKeywords([""])
                     setIsEditing(undefined)
+                    setBackupAssociationsRoleKeywords([...associationsRoleKeywords])
                 } else {
                     if (associationsRoleKeywords.length === 1 && associationsRoleKeywords[0].parent === "" && associationsRoleKeywords[0].childs[0] === "") {
                         setAssociationsRoleKeywords([{ parent: role, childs: keywords }, ...associationsRoleKeywords.slice(1)])
@@ -230,7 +221,6 @@ const AssociationPersonaRole = (props: { instance: any }) => {
                         setRole("")
                         setKeywords([""])
                     }
-                    setAssociationsRoleKeywordsBackUp([...associationsRoleKeywords, JSON.parse(JSON.stringify(associationsRoleKeywords))])
                 }
             }
         } catch (validationError: any) {
@@ -253,11 +243,11 @@ const AssociationPersonaRole = (props: { instance: any }) => {
                 if (isEditing !== undefined) {
                     const updatedAssociations = [...associationsPersonaRoles]
                     updatedAssociations[isEditing] = { parent: persona, childs: roles }
-                    setAssociationsPersonaRolesBackUp([...associationsPersonaRolesBackUp, ...associationsPersonaRoles])
                     setAssociationsPersonaRoles(updatedAssociations)
                     setPersona("")
                     setRoles([""])
                     setIsEditing(undefined)
+                    setBackupAssociationsPersonaRoles([...associationsPersonaRoles])
                 } else {
                     if (associationsPersonaRoles.length === 1 && associationsPersonaRoles[0].parent === "" && associationsPersonaRoles[0].childs[0] === "") {
                         setAssociationsPersonaRoles([{ parent: persona, childs: roles }, ...associationsPersonaRoles.slice(1)])
@@ -268,7 +258,6 @@ const AssociationPersonaRole = (props: { instance: any }) => {
                         setPersona("")
                         setRoles([""])
                     }
-                    setAssociationsPersonaRolesBackUp([...associationsPersonaRoles, JSON.parse(JSON.stringify(associationsPersonaRoles))])
                 }
             }
         } catch (validationError: any) {
@@ -279,6 +268,8 @@ const AssociationPersonaRole = (props: { instance: any }) => {
     }
 
     const handleSubmit = async () => {
+        setLoading(true)
+
         const fetchData = async () => {
             if (idTenant) {
                 const parsedId = parseInt(idTenant, 10)
@@ -311,13 +302,12 @@ const AssociationPersonaRole = (props: { instance: any }) => {
                     body: JSON.stringify(body)
                 })
             }
+
+            setLoading(false)
         }
 
         fetchData()
-        setIsSumbit(false)
     }
-
-    console.log(associationsRoleKeywords, 'roles0')
 
     return (
         <Container maxWidth="lg">
@@ -325,42 +315,47 @@ const AssociationPersonaRole = (props: { instance: any }) => {
                 <Typography variant="h3">
                     DataHub
                 </Typography>
-                <OFormAssociation
-                    parentLabel="Rôle"
-                    childLabel="Mot clé"
-                    parent={role}
-                    childs={keywords}
-                    associations={associationsRoleKeywords}
-                    errors={errors}
-                    addChilds={addKeywords}
-                    removeChilds={removeKeywords}
-                    handleParentChange={handleRoleChange}
-                    handleChildsChange={handleKeywordsChange}
-                    editAssociations={editAssociationRoleKeywords}
-                    removeAssociations={removeAssociationRoleKeywords}
-                    backUp={backUpAssociationRoleKeywords}
-                    addRow={addRowRoleKeywords}
-                    handleSubmit={handleSubmit}
-                />
 
-                <OFormAssociation
-                    parentLabel="Persona"
-                    childLabel="Rôle"
-                    parent={persona}
-                    childs={roles}
-                    roles={associationsRoleKeywords}
-                    associations={associationsPersonaRoles}
-                    errors={errors}
-                    addChilds={addRoles}
-                    removeChilds={removeRoles}
-                    handleParentChange={handlePersonaChange}
-                    handleChildsChange={handleRolesChange}
-                    editAssociations={editAssociationPersonaRoles}
-                    removeAssociations={removeAssociationPersonaRoles}
-                    backUp={backUpAssociationPersonaRoles}
-                    addRow={addRowPersonaRoles}
-                    handleSubmit={handleSubmit}
-                />
+                {loading ? <CircularProgress /> : <Stack spacing={8} alignItems="center" width="100%">
+                    <OFormAssociation
+                        parentLabel="Rôle"
+                        childLabel="Mot clé"
+                        parent={role}
+                        childs={keywords}
+                        associations={associationsRoleKeywords}
+                        errors={errors}
+                        setAssociations={setAssociationsRoleKeywords}
+                        addChilds={addKeywords}
+                        removeChilds={removeKeywords}
+                        handleParentChange={handleRoleChange}
+                        handleChildsChange={handleKeywordsChange}
+                        editAssociations={editAssociationRoleKeywords}
+                        removeAssociations={removeAssociationRoleKeywords}
+                        backUp={restoreAssociationRoleKeywords}
+                        addRow={addRowRoleKeywords}
+                        handleSubmit={handleSubmit}
+                    />
+
+                    <OFormAssociation
+                        parentLabel="Persona"
+                        childLabel="Rôle"
+                        parent={persona}
+                        childs={roles}
+                        roles={associationsRoleKeywords}
+                        associations={associationsPersonaRoles}
+                        errors={errors}
+                        setAssociations={setAssociationsPersonaRoles}
+                        addChilds={addRoles}
+                        removeChilds={removeRoles}
+                        handleParentChange={handlePersonaChange}
+                        handleChildsChange={handleRolesChange}
+                        editAssociations={editAssociationPersonaRoles}
+                        removeAssociations={removeAssociationPersonaRoles}
+                        backUp={restoreAssociationPersonaRoles}
+                        addRow={addRowPersonaRoles}
+                        handleSubmit={handleSubmit}
+                    />
+                </Stack>}
             </Stack>
         </Container>
     )

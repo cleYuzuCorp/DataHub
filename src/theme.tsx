@@ -74,6 +74,13 @@ export const theme = createTheme({
         }
     },
     components: {
+        MuiCircularProgress: {
+            styleOverrides: {
+                root: {
+                    color: customColors.darkBlue,
+                }
+            }
+        },
         MuiCheckbox: {
             styleOverrides: {
                 root: {

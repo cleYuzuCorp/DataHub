@@ -1,4 +1,4 @@
-import { Stack, TextField, Typography, useMediaQuery } from "@mui/material"
+import { CircularProgress, Stack, TextField, Typography, useMediaQuery } from "@mui/material"
 import { useEffect, useState } from "react"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons"
@@ -21,7 +21,9 @@ const OData = (props: { instance: any }) => {
 
     const isDesktop = useMediaQuery('(min-width:1000px)')
 
+    const [loading, setLoading] = useState(false)
     const [dataInit, setDataInit] = useState(false)
+
     const [fetchDataInit, setFetchDataInit] = useState(false)
     const [dbPersona, setDbPersona] = useState([{ description: "", value: "" }])
     const [associationsRoleKeywords, setAssociationsRoleKeywords] = useState([{ parent: "", childs: [""] }])
@@ -48,6 +50,8 @@ const OData = (props: { instance: any }) => {
     }, [])
 
     useEffect(() => {
+        setLoading(true)
+
         const fetchData = async () => {
             if (fetchDataInit) {
                 try {
@@ -96,6 +100,7 @@ const OData = (props: { instance: any }) => {
                         setDbPersona(personas)
 
                         setDataInit(true)
+                        setLoading(false)
                     }
 
                 } catch (error) {
@@ -108,6 +113,8 @@ const OData = (props: { instance: any }) => {
     }, [fetchDataInit])
 
     useEffect(() => {
+        setLoading(true)
+
         const fetchData = async () => {
             if (idTenant && dataInit) {
                 const parsedId = parseInt(idTenant, 10)
@@ -174,6 +181,7 @@ const OData = (props: { instance: any }) => {
                 }))
 
                 setLinks(linksData)
+                setLoading(false)
             }
         }
 
@@ -334,121 +342,123 @@ const OData = (props: { instance: any }) => {
     }
 
     return (
-        <Stack spacing={8} width="100%">
-            <Stack spacing={2} direction={isDesktop ? "row" : "column"} alignItems="center" width="100%">
-                <Stack spacing={2} justifyContent="flex-end" alignItems="center" maxWidth="350px" width="100%">
-                    <Stack
-                        spacing={2}
-                        alignItems="center"
-                        justifyContent="center"
-                        maxWidth="350px"
-                        width="100%"
-                        height="200px"
-                        sx={{
-                            borderRadius: '15px',
-                            background: theme.palette.text.primary
-                        }}
-                    >
-                        <Typography variant="h3" color={theme.palette.background.default}>
-                            {numberContacts}
-                        </Typography>
+        <Stack>
+            {loading ? <CircularProgress /> : <Stack spacing={8} width="100%">
+                <Stack spacing={2} direction={isDesktop ? "row" : "column"} alignItems="center" width="100%">
+                    <Stack spacing={2} justifyContent="flex-end" alignItems="center" maxWidth="350px" width="100%">
+                        <Stack
+                            spacing={2}
+                            alignItems="center"
+                            justifyContent="center"
+                            maxWidth="350px"
+                            width="100%"
+                            height="200px"
+                            sx={{
+                                borderRadius: '15px',
+                                background: theme.palette.text.primary
+                            }}
+                        >
+                            <Typography variant="h3" color={theme.palette.background.default}>
+                                {numberContacts}
+                            </Typography>
 
-                        <Typography color={theme.palette.background.default}>
-                            Contacts
-                        </Typography>
+                            <Typography color={theme.palette.background.default}>
+                                Contacts
+                            </Typography>
+                        </Stack>
+
+                        <TextField
+                            placeholder="Recherche par Intitulé de poste"
+                            value={searchTerm}
+                            onChange={(e) => handleFilteredChange(e.target.value)}
+                            sx={{
+                                width: "100%",
+                                borderColor: '#E0E0E0',
+                                boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)'
+                            }}
+                            InputProps={{
+                                endAdornment: <FontAwesomeIcon
+                                    icon={faMagnifyingGlass}
+                                    color={theme.palette.text.primary}
+                                    opacity={0.5}
+                                />
+                            }}
+                        />
                     </Stack>
 
-                    <TextField
-                        placeholder="Recherche par Intitulé de poste"
-                        value={searchTerm}
-                        onChange={(e) => handleFilteredChange(e.target.value)}
-                        sx={{
-                            width: "100%",
-                            borderColor: '#E0E0E0',
-                            boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)'
-                        }}
-                        InputProps={{
-                            endAdornment: <FontAwesomeIcon
-                                icon={faMagnifyingGlass}
-                                color={theme.palette.text.primary}
-                                opacity={0.5}
-                            />
-                        }}
-                    />
-                </Stack>
-
-                <Stack width="100%" height="100%">
-                    <Chart
-                        id="chart-container"
-                        type="bar"
-                        width="100%"
-                        height="350px"
-                        series={[{
-                            name: 'Occurences',
-                            data: contactsOccurences
-                        }]}
-                        options={{
-                            chart: {
-                                toolbar: {
-                                    show: false
-                                }
-                            },
-                            xaxis: {
-                                categories: contactsJobTitles,
-                                labels: {
-                                    style: {
-                                        fontFamily: theme.typography.body1.fontFamily,
-                                        fontWeight: theme.typography.body1.fontWeight,
-                                        colors: theme.typography.body1.color
+                    <Stack width="100%" height="100%">
+                        <Chart
+                            id="chart-container"
+                            type="bar"
+                            width="100%"
+                            height="350px"
+                            series={[{
+                                name: 'Occurences',
+                                data: contactsOccurences
+                            }]}
+                            options={{
+                                chart: {
+                                    toolbar: {
+                                        show: false
                                     }
-                                }
-                            },
-                            yaxis: {
-                                labels: {
-                                    style: {
-                                        fontFamily: theme.typography.body1.fontFamily,
-                                        fontWeight: theme.typography.body1.fontWeight,
-                                        colors: theme.typography.body1.color
+                                },
+                                xaxis: {
+                                    categories: contactsJobTitles,
+                                    labels: {
+                                        style: {
+                                            fontFamily: theme.typography.body1.fontFamily,
+                                            fontWeight: theme.typography.body1.fontWeight,
+                                            colors: theme.typography.body1.color
+                                        }
                                     }
-                                }
-                            },
-                            colors: [theme.palette.info.main]
-                        }}
-                    />
-                </Stack>
-            </Stack>
-
-            <Stack spacing={2}>
-                <Stack spacing={4} direction={isDesktop ? "row" : "column"} justifyContent="space-between" width="100%">
-                    <MCardData
-                        number={filteredRoles ? filteredRoles.length : roles.length}
-                        label="Nombre d'intitulé de poste différents"
-                        jobTitles={filteredRoles ? filteredRoles : roles}
-                    />
-
-                    <MCardData
-                        number={filteredPersonas ? filteredPersonas.length : personas.length}
-                        label="Nombre de persona différents"
-                        jobTitles={filteredPersonas ? filteredPersonas : personas}
-                    />
-
-                    <MCardData
-                        number={filteredLinks ? filteredLinks.length : links.length}
-                        label="Nombre de liaisons différentes"
-                        jobTitles={filteredLinks ? filteredLinks : links}
-                    />
+                                },
+                                yaxis: {
+                                    labels: {
+                                        style: {
+                                            fontFamily: theme.typography.body1.fontFamily,
+                                            fontWeight: theme.typography.body1.fontWeight,
+                                            colors: theme.typography.body1.color
+                                        }
+                                    }
+                                },
+                                colors: [theme.palette.info.main]
+                            }}
+                        />
+                    </Stack>
                 </Stack>
 
-                <Stack spacing={2} direction="row" justifyContent="flex-end">
-                    <AButton variant="contained" color="white" onClick={generatePDF}>
-                        Télécharger le PDF
-                    </AButton>
+                <Stack spacing={2}>
+                    <Stack spacing={4} direction={isDesktop ? "row" : "column"} justifyContent="space-between" width="100%">
+                        <MCardData
+                            number={filteredRoles ? filteredRoles.length : roles.length}
+                            label="Nombre d'intitulé de poste différents"
+                            jobTitles={filteredRoles ? filteredRoles : roles}
+                        />
 
-                    <AButton variant="contained" onClick={generateExcel}>
-                        Télécharger l'Excel
-                    </AButton>
+                        <MCardData
+                            number={filteredPersonas ? filteredPersonas.length : personas.length}
+                            label="Nombre de persona différents"
+                            jobTitles={filteredPersonas ? filteredPersonas : personas}
+                        />
+
+                        <MCardData
+                            number={filteredLinks ? filteredLinks.length : links.length}
+                            label="Nombre de liaisons différentes"
+                            jobTitles={filteredLinks ? filteredLinks : links}
+                        />
+                    </Stack>
+
+                    <Stack spacing={2} direction="row" justifyContent="flex-end">
+                        <AButton variant="contained" color="white" onClick={generatePDF}>
+                            Télécharger le PDF
+                        </AButton>
+
+                        <AButton variant="contained" onClick={generateExcel}>
+                            Télécharger l'Excel
+                        </AButton>
+                    </Stack>
                 </Stack>
-            </Stack>
+            </Stack>}
         </Stack>
     )
 }

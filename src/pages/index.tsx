@@ -1,6 +1,6 @@
 import { faGear, faTrash, faXmark } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { Container, IconButton, Modal, Paper, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography } from "@mui/material"
+import { CircularProgress, Container, IconButton, Modal, Paper, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography } from "@mui/material"
 import theme from "../theme"
 import AButton from "../components/atoms/a-button"
 import { useEffect, useState } from "react"
@@ -11,11 +11,14 @@ const CustomersAccounts = (props: { instance: any }) => {
 
     const { instance } = props
 
+    const [loading, setLoading] = useState(false)
     const [open, setOpen] = useState(false)
     const [customers, setCustomers] = useState<Customer[]>([])
     const [selectedCustomer, setSelectedCustomer] = useState<Customer>()
 
     useEffect(() => {
+        setLoading(true)
+
         const fetchData = async () => {
             try {
                 await instance.initialize()
@@ -54,6 +57,7 @@ const CustomersAccounts = (props: { instance: any }) => {
                     )
 
                     setCustomers(updatedCustomers)
+                    setLoading(false)
                 }
             } catch (error) {
                 console.log("Erreur:", error)
@@ -117,12 +121,6 @@ const CustomersAccounts = (props: { instance: any }) => {
             body: JSON.stringify(payloadSettings)
         })
 
-        // const editCustomer: Customer[] = customers.map((customer) => {
-        //     customer.IdTenant === selectedCustomer?.IdTenant ? {payloadName, payloadSettings} : customer
-        // })
-
-        // setCustomers(editCustomer)
-
         setCustomers((prevCustomers) =>
             prevCustomers.map((customer) =>
                 customer.IdTenant === selectedCustomer?.IdTenant ? { ...payloadName, ...payloadSettings } : customer
@@ -161,81 +159,83 @@ const CustomersAccounts = (props: { instance: any }) => {
                     DataHub
                 </Typography>
 
-                <Stack spacing={2} width="100%">
-                    <Table component={Paper} sx={{ background: theme.palette.background.default }}>
-                        <TableHead sx={{ background: theme.palette.text.primary }}>
-                            <TableRow>
-                                <TableCell align="left">
-                                    <Typography variant="body2" color={theme.palette.background.default}>
-                                        Id du tenant
-                                    </Typography>
-                                </TableCell>
-                                <TableCell align="center">
-                                    <Typography variant="body2" color={theme.palette.background.default}>
-                                        Nom
-                                    </Typography>
-                                </TableCell>
-                                <TableCell align="right">
-                                    <Typography variant="body2" color={theme.palette.background.default}>
-                                        Actions
-                                    </Typography>
-                                </TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {customers.map((customer) =>
-                                <TableRow key={customer.IdTenant}>
-                                    <TableCell>
-                                        <Typography
-                                            fontSize="11px"
-                                            textAlign="center"
-                                            padding="10px"
-                                            borderRadius="15px"
-                                            sx={{
-                                                width: `${customer.IdTenant.toString().length}ch`,
-                                                background: theme.palette.secondary.light
-                                            }}
-                                        >
-                                            {customer.IdTenant}
+                {loading ? <CircularProgress /> : <Stack spacing={8} width="100%">
+                    <Stack spacing={2} width="100%">
+                        <Table component={Paper} sx={{ background: theme.palette.background.default }}>
+                            <TableHead sx={{ background: theme.palette.text.primary }}>
+                                <TableRow>
+                                    <TableCell align="left">
+                                        <Typography variant="body2" color={theme.palette.background.default}>
+                                            Id du tenant
                                         </Typography>
                                     </TableCell>
                                     <TableCell align="center">
-                                        <Typography>
-                                            {customer.NomClient}
+                                        <Typography variant="body2" color={theme.palette.background.default}>
+                                            Nom
                                         </Typography>
                                     </TableCell>
-                                    <TableCell>
-                                        <Stack spacing={1} direction="row" justifyContent="flex-end">
-                                            <IconButton
-                                                onClick={() => handleOpen(customer)}
-                                                sx={{
-                                                    width: '50px',
-                                                    height: '50px'
-                                                }}
-                                            >
-                                                <FontAwesomeIcon icon={faGear} color={theme.palette.text.primary} />
-                                            </IconButton>
-
-                                            <IconButton
-                                                onClick={() => deleteCustomer(customer.IdTenant)}
-                                                sx={{
-                                                    width: '50px',
-                                                    height: '50px'
-                                                }}
-                                            >
-                                                <FontAwesomeIcon icon={faTrash} color={theme.palette.error.main} />
-                                            </IconButton>
-                                        </Stack>
+                                    <TableCell align="right">
+                                        <Typography variant="body2" color={theme.palette.background.default}>
+                                            Actions
+                                        </Typography>
                                     </TableCell>
                                 </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
+                            </TableHead>
+                            <TableBody>
+                                {customers.map((customer) =>
+                                    <TableRow key={customer.IdTenant}>
+                                        <TableCell>
+                                            <Typography
+                                                fontSize="11px"
+                                                textAlign="center"
+                                                padding="10px"
+                                                borderRadius="15px"
+                                                sx={{
+                                                    width: `${customer.IdTenant.toString().length}ch`,
+                                                    background: theme.palette.secondary.light
+                                                }}
+                                            >
+                                                {customer.IdTenant}
+                                            </Typography>
+                                        </TableCell>
+                                        <TableCell align="center">
+                                            <Typography>
+                                                {customer.NomClient}
+                                            </Typography>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Stack spacing={1} direction="row" justifyContent="flex-end">
+                                                <IconButton
+                                                    onClick={() => handleOpen(customer)}
+                                                    sx={{
+                                                        width: '50px',
+                                                        height: '50px'
+                                                    }}
+                                                >
+                                                    <FontAwesomeIcon icon={faGear} color={theme.palette.text.primary} />
+                                                </IconButton>
 
-                    <AButton variant="outlined" size="large" onClick={addCustomers}>
-                        +
-                    </AButton>
-                </Stack>
+                                                <IconButton
+                                                    onClick={() => deleteCustomer(customer.IdTenant)}
+                                                    sx={{
+                                                        width: '50px',
+                                                        height: '50px'
+                                                    }}
+                                                >
+                                                    <FontAwesomeIcon icon={faTrash} color={theme.palette.error.main} />
+                                                </IconButton>
+                                            </Stack>
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+
+                        <AButton variant="outlined" size="large" onClick={addCustomers}>
+                            +
+                        </AButton>
+                    </Stack>
+                </Stack>}
 
                 {selectedCustomer ? <Modal open={open} onClose={handleClose}>
                     <Stack

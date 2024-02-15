@@ -28,6 +28,7 @@
         "msal": "^1.4.18",
         "react": "^18.2.0",
         "react-apexcharts": "^1.4.1",
+        "react-beautiful-dnd": "^13.1.1",
         "react-dom": "^18.2.0",
         "react-hook-form": "^7.49.3",
         "react-router-dom": "^6.21.1",
@@ -62,6 +63,7 @@
         ]
     },
     "devDependencies": {
+        "@types/react-beautiful-dnd": "^13.1.8",
         "@types/webpack-env": "^1.18.4"
     }
 }

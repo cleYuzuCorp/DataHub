@@ -1,6 +1,6 @@
 import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { Checkbox, Container, Paper, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography, useMediaQuery } from "@mui/material"
+import { Checkbox, CircularProgress, Container, Paper, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography, useMediaQuery } from "@mui/material"
 import { useEffect, useState } from "react"
 import AButton from "../../components/atoms/a-button"
 import theme from "../../theme"
@@ -17,12 +17,14 @@ const History = (props: { instance: any }) => {
 
     const isDesktop = useMediaQuery('(min-width:1000px)')
 
+    const [loading, setLoading] = useState(false)
+    const [fetchDataInit, setFetchDataInit] = useState(false)
+
     const [searchTerm, setSearchTerm] = useState("")
     const [histories, setHistories] = useState<Array<HistoryRow>>([])
     const [filteredHistories, setFilteredHistories] = useState<HistoryRow[]>([])
     const [selectedRows, setSelectedRows] = useState<HistoryRow[]>([])
 
-    const [fetchDataInit, setFetchDataInit] = useState(false)
     const [dbPersona, setDbPersona] = useState([{ description: "", value: "" }])
 
     useEffect(() => {
@@ -30,6 +32,8 @@ const History = (props: { instance: any }) => {
     }, [])
 
     useEffect(() => {
+        setLoading(true)
+
         const fetchData = async () => {
             if (fetchDataInit) {
                 try {
@@ -54,6 +58,7 @@ const History = (props: { instance: any }) => {
                     })
 
                     setDbPersona(personas)
+                    setLoading(false)
                 } catch (error) {
                     console.error("Une erreur s'est produite lors de la requête :", error)
                 }
@@ -61,10 +66,11 @@ const History = (props: { instance: any }) => {
         }
 
         fetchData()
-
     }, [fetchDataInit])
 
     useEffect(() => {
+        setLoading(true)
+
         const fetchData = async () => {
             try {
                 await instance.initialize()
@@ -81,7 +87,7 @@ const History = (props: { instance: any }) => {
                 const data = await response.json()
 
                 setHistories(data)
-
+                setLoading(false)
             } catch (error) {
                 console.error("Une erreur s'est produite lors de la requête :", error)
             }
@@ -123,6 +129,8 @@ const History = (props: { instance: any }) => {
     }
 
     const handleRestore = async () => {
+        setLoading(true)
+
         const data = selectedRows.map((row) => ({
             hs_object_id: row.IdObjectModifiedReal,
             role: row.IntitulePoste,
@@ -141,8 +149,6 @@ const History = (props: { instance: any }) => {
 
         const accessToken = await acquireToken(instance)
 
-        console.log(body, 'b')
-
         fetch(`${process.env.REACT_APP_API_PERSONA}/hubspot/enrich`, {
             method: "POST",
             headers: {
@@ -151,6 +157,8 @@ const History = (props: { instance: any }) => {
             },
             body: JSON.stringify(body)
         })
+
+        setLoading(false)
     }
 
     const formatDate = (dateString: string) => {
@@ -168,7 +176,7 @@ const History = (props: { instance: any }) => {
                     DataHub
                 </Typography>
 
-                <Stack spacing={4} width="100%">
+                {loading ? <CircularProgress /> : <Stack spacing={4} width="100%">
                     <Stack spacing={4} direction="row" alignItems="center" width="100%">
                         <TextField
                             placeholder="Recherche par ID, Date, Utilisateur ou Intitulé de poste"
@@ -418,7 +426,7 @@ const History = (props: { instance: any }) => {
                                 )}
                             </TableBody>
                         </Table>}
-                </Stack>
+                </Stack>}
             </Stack>
         </Container >
     )

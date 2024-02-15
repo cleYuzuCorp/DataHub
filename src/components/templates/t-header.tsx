@@ -1,4 +1,4 @@
-import { faRightToBracket, faUser } from "@fortawesome/free-solid-svg-icons"
+import { faRightFromBracket, faRightToBracket, faUser } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { Stack, Typography } from "@mui/material"
 import AAccordion from "../atoms/a-accordion"
@@ -17,6 +17,7 @@ const THeader = (props: { instance?: any }) => {
 
     const [hovered, setHovered] = useState("")
     const [active, setActive] = useState([""])
+    const [account, setAccount] = useState()
     const [customers, setCustomers] = useState<Customer[]>([])
     const [customersNames, setCustomersNames] = useState<Array<string>>()
     const [selectedCustomer, setSelectedCustomer] = useState<Customer>()
@@ -66,6 +67,8 @@ const THeader = (props: { instance?: any }) => {
         if (accounts.length === 0) {
             await instance.loginRedirect({ ...loginRequest, prompt: "select_account" }).catch((error: any) => console.log(error))
         }
+
+        setAccount(accounts[0].name)
     }
 
     useEffect(() => {
@@ -180,15 +183,29 @@ const THeader = (props: { instance?: any }) => {
                 direction="row"
                 alignItems="center"
                 paddingBottom="50px"
-                onClick={handleSubmit}
                 sx={{
                     cursor: 'pointer'
                 }}
             >
-                <FontAwesomeIcon icon={faRightToBracket} />
-                <Typography>
-                    Sign In
-                </Typography>
+                {account ? <Stack spacing={2} alignItems="center">
+                    <Stack>
+                        <Typography>
+                            {account}
+                        </Typography>
+                    </Stack>
+
+                    <Stack spacing={1} direction="row" alignItems="center" onClick={handleSubmit}>
+                        <FontAwesomeIcon icon={faRightFromBracket} color={theme.palette.text.primary} />
+                        <Typography>
+                            Sign Out
+                        </Typography>
+                    </Stack>
+                </Stack> : <Stack spacing={1} direction="row" alignItems="center" onClick={handleSubmit}>
+                    <FontAwesomeIcon icon={faRightToBracket} color={theme.palette.text.primary} />
+                    <Typography>
+                        Sign In
+                    </Typography>
+                </Stack>}
             </Stack>
         </Stack>
     )
