@@ -315,8 +315,6 @@ const Form = (props: { instance: any }) => {
 
                     body: JSON.stringify(body)
                 })
-
-                console.log(response)
             }
 
             setLoading(false)

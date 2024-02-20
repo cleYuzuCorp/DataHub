@@ -9,9 +9,9 @@ import { useNavigate } from "react-router-dom"
 import { Customer } from "../../interfaces/customer"
 import { acquireToken } from "../../App"
 
-const THeader = (props: { instance?: any, customers: Customer[], setCustomers: (value: Customer[]) => void, loading: boolean, setLoading: (value: boolean) => void }) => {
+const THeader = (props: { instance?: any, customers: Customer[], setCustomers: (value: Customer[]) => void, setLoading: (value: boolean) => void }) => {
 
-    const { instance, customers, setCustomers, loading, setLoading } = props
+    const { instance, customers, setCustomers, setLoading } = props
 
     const navigate = useNavigate()
 

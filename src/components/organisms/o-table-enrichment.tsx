@@ -9,8 +9,8 @@ import { acquireToken } from "../../App"
 
 const OTableEnrichment = (props: {
     instance: any, id: string | null, contacts: Contact[], nothing?: boolean, dbPersona: {
-        description: string;
-        value: string;
+        description: string
+        value: string
     }[]
 }) => {
 
@@ -74,22 +74,22 @@ const OTableEnrichment = (props: {
     }
 
     const handleSelectAllPageChange = () => {
-        const pageItems = filteredContacts.slice(startIndex, endIndex);
+        const pageItems = filteredContacts.slice(startIndex, endIndex)
 
         if (selectedContacts.length === pageItems.length) {
-            setSelectedContacts([]);
+            setSelectedContacts([])
         } else {
-            setSelectedContacts(pageItems);
+            setSelectedContacts(pageItems)
         }
     }
 
     const handleSelectChange = (index: number) => {
-        const pageItems = filteredContacts.slice(startIndex, endIndex);
+        const pageItems = filteredContacts.slice(startIndex, endIndex)
 
         if (selectedContacts.includes(pageItems[index])) {
-            setSelectedContacts(selectedContacts.filter((contact) => contact !== pageItems[index]));
+            setSelectedContacts(selectedContacts.filter((contact) => contact !== pageItems[index]))
         } else {
-            setSelectedContacts([...selectedContacts, pageItems[index]]);
+            setSelectedContacts([...selectedContacts, pageItems[index]])
         }
     }
 
@@ -317,8 +317,8 @@ const OTableEnrichment = (props: {
                     page={page}
                     onPageChange={(event, newPage) => setPage(newPage)}
                     onRowsPerPageChange={(event) => {
-                        setRowsPerPage(parseInt(event.target.value, 10));
-                        setPage(0);
+                        setRowsPerPage(parseInt(event.target.value, 10))
+                        setPage(0)
                     }}
                 />
             </Stack>}

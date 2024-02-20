@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { CircularProgress, Container, IconButton, Modal, Paper, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography } from "@mui/material"
 import theme from "../theme"
 import AButton from "../components/atoms/a-button"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { acquireToken } from "../App"
 import { Customer } from "../interfaces/customer"
 

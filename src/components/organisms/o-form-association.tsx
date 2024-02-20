@@ -14,7 +14,7 @@ const OFormAssociation = (props: {
     childs: string[],
     roles?: { parent: string, childs: string[] }[],
     associations: { parent: string, childs: string[] }[],
-    errors: FieldErrors<{ childs?: string[] | undefined; parent: string; }>,
+    errors: FieldErrors<{ childs?: string[] | undefined; parent: string }>,
     setIsRestore: (value: boolean) => void,
     setAssociations: (associations: { parent: string; childs: string[] }[]) => void,
     addChilds: () => void,
@@ -279,7 +279,12 @@ const OFormAssociation = (props: {
                 ) && <DragDropContext onDragEnd={handleDragEnd}>
                         <Droppable droppableId="associations">
                             {provided =>
-                                <Table component={Paper} sx={{ background: theme.palette.background.default }} {...provided.droppableProps} ref={provided.innerRef}>
+                                <Table
+                                    component={Paper}
+                                    sx={{ background: theme.palette.background.default }}
+                                    {...provided.droppableProps}
+                                    ref={provided.innerRef}
+                                >
                                     <TableHead sx={{ background: theme.palette.text.primary }}>
                                         <TableRow>
                                             <TableCell align="left">
@@ -303,7 +308,11 @@ const OFormAssociation = (props: {
                                         {associations.map((association, index) =>
                                             <Draggable key={association.parent} draggableId={association.parent} index={index}>
                                                 {provided =>
-                                                    <TableRow {...provided.draggableProps} {...provided.dragHandleProps} ref={provided.innerRef}>
+                                                    <TableRow
+                                                        {...provided.draggableProps}
+                                                        {...provided.dragHandleProps}
+                                                        ref={provided.innerRef}
+                                                    >
                                                         <TableCell>
                                                             <Stack spacing={2} direction="row" alignItems="center">
                                                                 <FontAwesomeIcon icon={faGripVertical} />

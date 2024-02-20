@@ -29,7 +29,6 @@ const AppRoutes = (props: { instance?: any }) => {
               instance={instance}
               customers={customers}
               setCustomers={setCustomers}
-              loading={loading}
               setLoading={setLoading}
             /> : <Stack>
               <IconButton
@@ -47,7 +46,6 @@ const AppRoutes = (props: { instance?: any }) => {
                   instance={instance}
                   customers={customers}
                   setCustomers={setCustomers}
-                  loading={loading}
                   setLoading={setLoading}
                 />
               </Drawer>
@@ -67,7 +65,6 @@ const AppRoutes = (props: { instance?: any }) => {
                   instance={instance}
                   customers={customers}
                   setCustomers={setCustomers}
-                  loading={loading}
                   setLoading={setLoading}
                 /> : <Stack>
                   <IconButton
@@ -85,7 +82,6 @@ const AppRoutes = (props: { instance?: any }) => {
                       instance={instance}
                       customers={customers}
                       setCustomers={setCustomers}
-                      loading={loading}
                       setLoading={setLoading}
                     />
                   </Drawer>

@@ -88,8 +88,6 @@ const History = (props: { instance: any }) => {
 
                 const data = await response.json()
 
-                console.log(data)
-
                 const sortedHistories = data.sort((a: { Date: string }, b: { Date: string }) => {
                     return new Date(b.Date as string).getTime() - new Date(a.Date as string).getTime()
                 })
@@ -132,22 +130,22 @@ const History = (props: { instance: any }) => {
     }
 
     const handleSelectAllPageChange = () => {
-        const pageItems = filteredHistories.slice(startIndex, endIndex);
+        const pageItems = filteredHistories.slice(startIndex, endIndex)
 
         if (selectedRows.length === pageItems.length) {
-            setSelectedRows([]);
+            setSelectedRows([])
         } else {
-            setSelectedRows(pageItems);
+            setSelectedRows(pageItems)
         }
     }
 
     const handleSelectChange = (index: number) => {
-        const pageItems = filteredHistories.slice(startIndex, endIndex);
+        const pageItems = filteredHistories.slice(startIndex, endIndex)
 
         if (selectedRows.includes(pageItems[index])) {
-            setSelectedRows(selectedRows.filter((contact) => contact !== pageItems[index]));
+            setSelectedRows(selectedRows.filter((contact) => contact !== pageItems[index]))
         } else {
-            setSelectedRows([...selectedRows, pageItems[index]]);
+            setSelectedRows([...selectedRows, pageItems[index]])
         }
     }
 
@@ -463,8 +461,8 @@ const History = (props: { instance: any }) => {
                             page={page}
                             onPageChange={(event, newPage) => setPage(newPage)}
                             onRowsPerPageChange={(event) => {
-                                setRowsPerPage(parseInt(event.target.value, 10));
-                                setPage(0);
+                                setRowsPerPage(parseInt(event.target.value, 10))
+                                setPage(0)
                             }}
                         />
                     </Stack>
