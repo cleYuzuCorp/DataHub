@@ -1,23 +1,25 @@
 import { createTheme } from '@mui/material/styles'
-export {}
 
 const customColors = {
     darkYellow: '#F7E13D',
     lightYellow: '#FFF080',
+    lightYellowMid: 'rgba(255, 240, 128, 0.50)',
     darkBlue: '#1B255F',
     lightBlue: '#001FD0',
     orange: '#F37962',
+    lightOrange: 'rgba(243, 121, 98, 0.50)',
     grey: '#F4F5FD',
     white: '#FFFFFF'
 }
 
-const theme = createTheme({
+export const theme = createTheme({
     palette: {
         primary: {
             main: customColors.darkYellow,
         },
         secondary: {
             main: customColors.lightYellow,
+            light: customColors.lightYellowMid
         },
         text: {
             primary: customColors.darkBlue,
@@ -25,6 +27,7 @@ const theme = createTheme({
         },
         info: {
             main: customColors.orange,
+            light: customColors.lightOrange
         },
         background: {
             default: customColors.white,
@@ -71,6 +74,13 @@ const theme = createTheme({
         }
     },
     components: {
+        MuiCircularProgress: {
+            styleOverrides: {
+                root: {
+                    color: customColors.darkBlue,
+                }
+            }
+        },
         MuiCheckbox: {
             styleOverrides: {
                 root: {
@@ -136,34 +146,62 @@ const theme = createTheme({
         MuiTextField: {
             styleOverrides: {
                 root: {
-                    minWidth: '240px',
+                    minWidth: '120px',
+                    border: '1px solid',
+                    borderRadius: '15px',
+                    background: customColors.white,
                     "& label.Mui-focused": {
                         color: customColors.darkBlue
                     },
+                    "&:hover": {
+                        "& label": {
+                            color: customColors.darkBlue
+                        },
+                        "& .MuiInput-underline:before": {
+                            borderBottomColor: 'transparent'
+                        },
+                        "& .MuiInput-underline:after": {
+                            borderBottomColor: 'transparent'
+                        },
+                        "& .MuiFilledInput-underline:before": {
+                            borderBottomColor: 'transparent'
+                        },
+                        "& .MuiFilledInput-underline:after": {
+                            borderBottomColor: 'transparent'
+                        },
+                        "& .MuiOutlinedInput-root": {
+                            "&.Mui-focused fieldset": {
+                                borderColor: 'transparent'
+                            },
+                            "& fieldset": {
+                                borderColor: 'transparent'
+                            }
+                        },
+                    },
                     "& .MuiInput-underline:before": {
-                        borderBottomColor: customColors.darkBlue
+                        borderBottomColor: 'transparent'
                     },
                     "& .MuiInput-underline:after": {
-                        borderBottomColor: customColors.darkBlue
+                        borderBottomColor: 'transparent'
                     },
                     "& .MuiFilledInput-underline:before": {
-                        borderBottomColor: customColors.darkBlue
+                        borderBottomColor: 'transparent'
                     },
                     "& .MuiFilledInput-underline:after": {
-                        borderBottomColor: customColors.darkBlue
+                        borderBottomColor: 'transparent'
                     },
                     "& .MuiOutlinedInput-root": {
                         "&.Mui-focused fieldset": {
-                            borderColor: customColors.darkBlue
+                            borderColor: 'transparent'
                         },
                         "& fieldset": {
-                            borderColor: customColors.darkBlue
+                            borderColor: 'transparent'
                         }
                     },
                     "& .MuiInputLabel-root": {
                         color: customColors.darkBlue
                     }
-                }
+                },
             }
         },
         MuiStepLabel: {
