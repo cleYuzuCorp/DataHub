@@ -7,13 +7,14 @@ import { acquireToken } from "../../../App"
 import * as yup from "yup"
 import { yupResolver } from "@hookform/resolvers/yup"
 
-const AssociationPersonaRole = (props: { instance: any }) => {
+const Form = (props: { instance: any }) => {
 
     const { instance } = props
 
     const idTenant = new URLSearchParams(useLocation().search).get('id')
 
     const [loading, setLoading] = useState(false)
+    const [isRestore, setIsRestore] = useState(false)
     const [isEditing, setIsEditing] = useState<number>()
 
     const [role, setRole] = useState<string>("")
@@ -82,8 +83,9 @@ const AssociationPersonaRole = (props: { instance: any }) => {
             }
         }
 
+        setIsRestore(false)
         fetchData()
-    }, [])
+    }, [isRestore])
 
     const addKeywords = () => {
         setKeywords((prevchilds) => [...prevchilds, ""])
@@ -140,6 +142,18 @@ const AssociationPersonaRole = (props: { instance: any }) => {
 
     const handlePersonaChange = (value: string) => {
         setPersona(value)
+
+        const personaIndex = associationsPersonaRoles.findIndex((association) => association.parent === value)
+        setIsEditing(personaIndex)
+
+        if (personaIndex !== -1) {
+            const personaAssociations = associationsPersonaRoles[personaIndex]
+            setRoles(personaAssociations.childs)
+            clearErrors('childs')
+        } else {
+            setRoles([])
+        }
+
         clearErrors('parent')
     }
 
@@ -301,6 +315,8 @@ const AssociationPersonaRole = (props: { instance: any }) => {
 
                     body: JSON.stringify(body)
                 })
+
+                console.log(response)
             }
 
             setLoading(false)
@@ -324,6 +340,7 @@ const AssociationPersonaRole = (props: { instance: any }) => {
                         childs={keywords}
                         associations={associationsRoleKeywords}
                         errors={errors}
+                        setIsRestore={setIsRestore}
                         setAssociations={setAssociationsRoleKeywords}
                         addChilds={addKeywords}
                         removeChilds={removeKeywords}
@@ -344,6 +361,7 @@ const AssociationPersonaRole = (props: { instance: any }) => {
                         roles={associationsRoleKeywords}
                         associations={associationsPersonaRoles}
                         errors={errors}
+                        setIsRestore={setIsRestore}
                         setAssociations={setAssociationsPersonaRoles}
                         addChilds={addRoles}
                         removeChilds={removeRoles}
@@ -361,4 +379,4 @@ const AssociationPersonaRole = (props: { instance: any }) => {
     )
 }
 
-export default AssociationPersonaRole
+export default Form

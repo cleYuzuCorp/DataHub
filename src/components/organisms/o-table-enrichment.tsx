@@ -1,6 +1,6 @@
 import { faMagnifyingGlass, faChevronUp, faChevronDown, faArrowDown, faArrowUp } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { Checkbox, CircularProgress, Collapse, Paper, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography, useMediaQuery } from "@mui/material"
+import { Checkbox, CircularProgress, Collapse, Paper, Stack, Table, TableBody, TableCell, TableHead, TablePagination, TableRow, TextField, Typography, useMediaQuery } from "@mui/material"
 import React, { useEffect, useState } from "react"
 import theme from "../../theme"
 import AButton from "../atoms/a-button"
@@ -27,6 +27,9 @@ const OTableEnrichment = (props: {
     const [selectedContacts, setSelectedContacts] = useState<Array<Contact>>([])
     const [ignoredContacts, setIgnoredContacts] = useState<Array<Contact>>([])
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
+
+    const [page, setPage] = useState(0)
+    const [rowsPerPage, setRowsPerPage] = useState(10)
 
     const toggleSortOrder = () => {
         setSortOrder((prevOrder) => (prevOrder === 'asc' ? 'desc' : 'asc'))
@@ -59,6 +62,9 @@ const OTableEnrichment = (props: {
         }))
     }
 
+    const startIndex = page * rowsPerPage
+    const endIndex = startIndex + rowsPerPage
+
     const handleSelectAllChange = () => {
         if (selectedContacts.length === filteredContacts.length) {
             setSelectedContacts([])
@@ -67,11 +73,23 @@ const OTableEnrichment = (props: {
         }
     }
 
-    const handleSelectChange = (index: number) => {
-        if (selectedContacts.includes(filteredContacts[index])) {
-            setSelectedContacts(selectedContacts.filter((contact) => contact !== filteredContacts[index]))
+    const handleSelectAllPageChange = () => {
+        const pageItems = filteredContacts.slice(startIndex, endIndex);
+
+        if (selectedContacts.length === pageItems.length) {
+            setSelectedContacts([]);
         } else {
-            setSelectedContacts([...selectedContacts, filteredContacts[index]])
+            setSelectedContacts(pageItems);
+        }
+    }
+
+    const handleSelectChange = (index: number) => {
+        const pageItems = filteredContacts.slice(startIndex, endIndex);
+
+        if (selectedContacts.includes(pageItems[index])) {
+            setSelectedContacts(selectedContacts.filter((contact) => contact !== pageItems[index]));
+        } else {
+            setSelectedContacts([...selectedContacts, pageItems[index]]);
         }
     }
 
@@ -106,12 +124,14 @@ const OTableEnrichment = (props: {
             body: JSON.stringify(body)
         })
 
+        console.log(response)
+
         handleIgnoreProposal()
         setLoading(false)
     }
 
     return (
-        <Stack>
+        <Stack width="100%">
             {loading ? <CircularProgress /> : <Stack spacing={4} width="100%">
                 <Stack spacing={4} direction={isDesktop ? "row" : "column"} alignItems="center" width="100%">
                     <TextField
@@ -132,15 +152,19 @@ const OTableEnrichment = (props: {
                         }}
                     />
 
-                    <Stack spacing={2} direction="row" alignItems="center" justifyContent={isDesktop ? "flex-end" : "space-between"} width="100%">
+                    {!nothing ? <Stack spacing={2} width="100%">
+                        <AButton variant="contained" onClick={handleSubmit}>
+                            Valider la proposition
+                        </AButton>
+
                         <AButton variant="outlined" color="error" onClick={handleIgnoreProposal}>
                             Ignorer la proposition
                         </AButton>
 
-                        <AButton variant="contained" onClick={handleSubmit}>
-                            Valider la proposition
+                        <AButton variant="outlined" onClick={handleSelectAllChange}>
+                            Tout séléctionner
                         </AButton>
-                    </Stack>
+                    </Stack> : null}
                 </Stack>
 
                 <Table component={Paper} sx={{ background: theme.palette.background.default }}>
@@ -178,9 +202,9 @@ const OTableEnrichment = (props: {
                             </TableCell>
                             <TableCell align="right">
                                 <Checkbox
-                                    checked={selectedContacts?.length === filteredContacts.length}
-                                    onChange={handleSelectAllChange}
-                                    indeterminate={selectedContacts.length > 0 && selectedContacts.length < filteredContacts.length}
+                                    checked={selectedContacts?.length === filteredContacts.slice(startIndex, endIndex).length || selectedContacts?.length === filteredContacts.length}
+                                    onChange={handleSelectAllPageChange}
+                                    indeterminate={selectedContacts.length > 0 && selectedContacts.length < filteredContacts.slice(startIndex, endIndex).length}
                                     sx={{
                                         color: theme.palette.background.default,
                                         '&.Mui-checked': {
@@ -284,6 +308,19 @@ const OTableEnrichment = (props: {
                         )}
                     </TableBody>
                 </Table>
+
+                <TablePagination
+                    rowsPerPageOptions={[10, 25, 50, 100]}
+                    component="div"
+                    count={filteredContacts.length}
+                    rowsPerPage={rowsPerPage}
+                    page={page}
+                    onPageChange={(event, newPage) => setPage(newPage)}
+                    onRowsPerPageChange={(event) => {
+                        setRowsPerPage(parseInt(event.target.value, 10));
+                        setPage(0);
+                    }}
+                />
             </Stack>}
         </Stack>
     )

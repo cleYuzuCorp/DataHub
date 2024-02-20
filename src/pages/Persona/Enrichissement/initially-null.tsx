@@ -21,7 +21,7 @@ const InitiallyNull = (props: { instance: any }) => {
 
     useEffect(() => {
         setFetchDataInit(true)
-    })
+    }, [])
 
     useEffect(() => {
         setLoading(true)

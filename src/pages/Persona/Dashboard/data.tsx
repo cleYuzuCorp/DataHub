@@ -1,8 +1,7 @@
 import { Container, Stack, Typography } from "@mui/material"
-import OFormAssociation from "../../../components/organisms/o-form-association"
 import OData from "../../../components/organisms/o-data"
 
-const AssociationRoleKeywords = (props: { instance: any }) => {
+const Data = (props: { instance: any }) => {
 
     const { instance } = props
 
@@ -18,4 +17,4 @@ const AssociationRoleKeywords = (props: { instance: any }) => {
     )
 }
 
-export default AssociationRoleKeywords
+export default Data

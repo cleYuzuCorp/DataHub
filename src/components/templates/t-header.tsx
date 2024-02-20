@@ -16,11 +16,19 @@ const THeader = (props: { instance?: any }) => {
     const navigate = useNavigate()
 
     const [hovered, setHovered] = useState("")
+    const [interactionInProgress, setInteractionInProgress] = useState(false)
     const [active, setActive] = useState([""])
     const [account, setAccount] = useState()
     const [customers, setCustomers] = useState<Customer[]>([])
     const [customersNames, setCustomersNames] = useState<Array<string>>()
     const [selectedCustomer, setSelectedCustomer] = useState<Customer>()
+
+    useEffect(() => {
+        const accounts = instance.getAllAccounts()
+        if (accounts.length !== 0) {
+            setAccount(accounts[0].name)
+        }
+    }, [customers])
 
     useEffect(() => {
         const names = customers.map((customer) => customer.NomClient as string)
@@ -58,8 +66,7 @@ const THeader = (props: { instance?: any }) => {
         fetchData()
     }, [instance])
 
-    const handleSubmit = async () => {
-
+    const handleSignIn = async () => {
         const loginRequest = {
             scopes: ["openid", "user.read"],
         }
@@ -69,6 +76,18 @@ const THeader = (props: { instance?: any }) => {
         }
 
         setAccount(accounts[0].name)
+    }
+
+    const handleSignOut = async () => {
+        if (interactionInProgress) return
+        setInteractionInProgress(true)
+        try {
+            await instance.logoutRedirect()
+        } catch (error) {
+            console.error(error)
+        } finally {
+            setInteractionInProgress(false)
+        }
     }
 
     useEffect(() => {
@@ -182,6 +201,7 @@ const THeader = (props: { instance?: any }) => {
                 spacing={1}
                 direction="row"
                 alignItems="center"
+                paddingTop="50px"
                 paddingBottom="50px"
                 sx={{
                     cursor: 'pointer'
@@ -194,13 +214,13 @@ const THeader = (props: { instance?: any }) => {
                         </Typography>
                     </Stack>
 
-                    <Stack spacing={1} direction="row" alignItems="center" onClick={handleSubmit}>
+                    <Stack spacing={1} direction="row" alignItems="center" onClick={handleSignOut}>
                         <FontAwesomeIcon icon={faRightFromBracket} color={theme.palette.text.primary} />
                         <Typography>
                             Sign Out
                         </Typography>
                     </Stack>
-                </Stack> : <Stack spacing={1} direction="row" alignItems="center" onClick={handleSubmit}>
+                </Stack> : <Stack spacing={1} direction="row" alignItems="center" onClick={handleSignIn}>
                     <FontAwesomeIcon icon={faRightToBracket} color={theme.palette.text.primary} />
                     <Typography>
                         Sign In

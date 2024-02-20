@@ -1,11 +1,11 @@
-import { IconButton, MenuItem, Paper, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography, useMediaQuery } from "@mui/material"
+import { IconButton, MenuItem, Modal, Paper, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography, useMediaQuery } from "@mui/material"
 import { useState } from "react"
 import theme from "../../theme"
 import { faTrash, faGear, faPlus, faXmark, faArrowRotateRight, faGripVertical } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import AButton from "../atoms/a-button"
 import { FieldErrors } from "react-hook-form"
-import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
+import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd"
 
 const OFormAssociation = (props: {
     parentLabel: string,
@@ -15,6 +15,7 @@ const OFormAssociation = (props: {
     roles?: { parent: string, childs: string[] }[],
     associations: { parent: string, childs: string[] }[],
     errors: FieldErrors<{ childs?: string[] | undefined; parent: string; }>,
+    setIsRestore: (value: boolean) => void,
     setAssociations: (associations: { parent: string; childs: string[] }[]) => void,
     addChilds: () => void,
     removeChilds: (indexToRemove: number) => void,
@@ -27,32 +28,53 @@ const OFormAssociation = (props: {
     handleSubmit: () => void
 }) => {
 
-    const { parentLabel, childLabel, parent, childs, roles, associations, errors, setAssociations, addChilds, removeChilds, handleParentChange, handleChildsChange, editAssociations, removeAssociations, backUp, addRow, handleSubmit } = props
+    const { parentLabel, childLabel, parent, childs, roles, associations, errors, setIsRestore, setAssociations, addChilds, removeChilds, handleParentChange, handleChildsChange, editAssociations, removeAssociations, backUp, addRow, handleSubmit } = props
 
     const isDesktop = useMediaQuery('(min-width:1000px)')
 
     const [hovered, setHovered] = useState<number>()
+    const [indexToRemove, setIndexToRemove] = useState<number>()
+    const [open, setOpen] = useState('')
 
-    const onDragEnd = (result: DropResult) => {
-        if (!result.destination) {
-            return
+    const remove = (index: number) => {
+        setOpen('Delete')
+        setIndexToRemove(index)
+    }
+
+    const handleClose = () => {
+        setOpen('')
+    }
+
+    const validate = () => {
+        if (open === 'Delete' && indexToRemove !== undefined) {
+            removeAssociations(indexToRemove)
+        } else if (open === 'Save') {
+            handleSubmit()
+        } else {
+            console.log("Une erreur est survenu dans la validation d'une action")
         }
 
-        const updatedAssociations = Array.from(associations)
-        const [movedItem] = updatedAssociations.splice(result.source.index, 1)
-        updatedAssociations.splice(result.destination.index, 0, movedItem)
+        handleClose()
+    }
 
-        setAssociations(updatedAssociations)
+    const handleDragEnd = (result: any) => {
+        if (!result.destination) return
+
+        const items = Array.from(associations)
+        const [reorderedAssociations] = items.splice(result.source.index, 1)
+        items.splice(result.destination.index, 0, reorderedAssociations)
+
+        setAssociations(items)
     }
 
     return (
         <Stack spacing={8} alignItems="center" width="100%">
             <Stack spacing={4} direction={isDesktop ? "row" : "column"} width="100%">
                 <Stack spacing={4} justifyContent="flex-end">
-                    <AButton variant="outlined" color="error" onClick={backUp}>
+                    <AButton variant="outlined" color="error" onClick={() => setIsRestore(true)}>
                         Restaurer
                     </AButton>
-                    <AButton variant="contained" onClick={handleSubmit}>
+                    <AButton variant="contained" onClick={() => setOpen('Save')}>
                         Sauvegarder
                     </AButton>
                 </Stack>
@@ -77,7 +99,8 @@ const OFormAssociation = (props: {
                                 borderColor: errors.parent ? theme.palette.error.main : '#E0E0E0',
                                 '& .MuiFormHelperText-root': {
                                     color: errors.parent ? theme.palette.error.main : 'inherit'
-                                }
+                                },
+                                width: '100%'
                             }}
                         >
                             {associations?.map((association) => <MenuItem key={association.parent} value={association.parent}>
@@ -250,114 +273,149 @@ const OFormAssociation = (props: {
             </Stack>
 
             <Stack width="100%">
-                <DragDropContext onDragEnd={onDragEnd}>
-                    <Droppable droppableId={associations[0].parent}>
-                        {(provided) => (
-                            <Stack ref={provided.innerRef} {...provided.droppableProps}>
-                                {associations.length > 0 && !(
-                                    associations[0].parent === "" &&
-                                    associations[0].childs[0] === ""
-                                ) && <Table component={Paper} sx={{ background: theme.palette.background.default }}>
-                                        <TableHead sx={{ background: theme.palette.text.primary }}>
-                                            <TableRow>
-                                                <TableCell align="left">
-                                                    <Typography variant="body2" color={theme.palette.background.default}>
-                                                        {parentLabel}
-                                                    </Typography>
-                                                </TableCell>
-                                                <TableCell align="center">
-                                                    <Typography variant="body2" color={theme.palette.background.default}>
-                                                        {childLabel}
-                                                    </Typography>
-                                                </TableCell>
-                                                <TableCell align="right">
-                                                    <Typography variant="body2" color={theme.palette.background.default}>
-                                                        Actions
-                                                    </Typography>
-                                                </TableCell>
-                                            </TableRow>
-                                        </TableHead>
-                                        <TableBody>
-                                            {associations.map((association, index) =>
-                                                <Draggable key={association.parent} draggableId={association.parent} index={index}>
-                                                    {(provided) => (
-                                                        <TableRow
-                                                            key={association.parent}
-                                                            ref={provided.innerRef}
-                                                            {...provided.draggableProps}
-                                                            {...provided.dragHandleProps}
-                                                        >
-                                                            <TableCell>
-                                                                <Stack spacing={2} direction="row" alignItems="center">
-                                                                    <FontAwesomeIcon icon={faGripVertical} />
-                                                                    <Typography
-                                                                        fontSize="11px"
-                                                                        textAlign="center"
-                                                                        padding="10px"
-                                                                        borderRadius="15px"
-                                                                        sx={{
-                                                                            width: isDesktop ? `${association.parent.length}ch` : "100%",
-                                                                            background: theme.palette.secondary.light,
-                                                                        }}
-                                                                    >
-                                                                        {association.parent}
-                                                                    </Typography>
-                                                                </Stack>
-                                                            </TableCell>
-                                                            <TableCell align="center">
-                                                                <Stack
-                                                                    spacing={1}
-                                                                    direction={isDesktop ? "row" : "column"}
-                                                                    justifyContent="center"
-                                                                    alignItems="center"
-                                                                    width="100%"
+                {associations.length > 0 && !(
+                    associations[0].parent === "" &&
+                    associations[0].childs[0] === ""
+                ) && <DragDropContext onDragEnd={handleDragEnd}>
+                        <Droppable droppableId="associations">
+                            {provided =>
+                                <Table component={Paper} sx={{ background: theme.palette.background.default }} {...provided.droppableProps} ref={provided.innerRef}>
+                                    <TableHead sx={{ background: theme.palette.text.primary }}>
+                                        <TableRow>
+                                            <TableCell align="left">
+                                                <Typography variant="body2" color={theme.palette.background.default}>
+                                                    {parentLabel}
+                                                </Typography>
+                                            </TableCell>
+                                            <TableCell align="center">
+                                                <Typography variant="body2" color={theme.palette.background.default}>
+                                                    {childLabel}
+                                                </Typography>
+                                            </TableCell>
+                                            <TableCell align="right">
+                                                <Typography variant="body2" color={theme.palette.background.default}>
+                                                    Actions
+                                                </Typography>
+                                            </TableCell>
+                                        </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                        {associations.map((association, index) =>
+                                            <Draggable key={association.parent} draggableId={association.parent} index={index}>
+                                                {provided =>
+                                                    <TableRow {...provided.draggableProps} {...provided.dragHandleProps} ref={provided.innerRef}>
+                                                        <TableCell>
+                                                            <Stack spacing={2} direction="row" alignItems="center">
+                                                                <FontAwesomeIcon icon={faGripVertical} />
+                                                                <Typography
+                                                                    fontSize="11px"
+                                                                    textAlign="center"
+                                                                    padding="10px"
+                                                                    borderRadius="15px"
+                                                                    sx={{
+                                                                        width: isDesktop ? `${association.parent.length}ch` : "100%",
+                                                                        background: theme.palette.secondary.light,
+                                                                    }}
                                                                 >
-                                                                    {association.childs.map((keyWord, index) => <Stack key={index} spacing={1} direction="row">
-                                                                        <Typography>
-                                                                            {keyWord}
-                                                                        </Typography>
-                                                                        {isDesktop ? <Typography>
-                                                                            {association.childs.length < 2 || association.childs.length - 1 === index ? null : "-"}
-                                                                        </Typography> : null}
-                                                                    </Stack>)}
-                                                                </Stack>
-                                                            </TableCell>
-                                                            <TableCell>
-                                                                <Stack direction="row" justifyContent="flex-end" alignItems="flex-end">
-                                                                    <IconButton
-                                                                        onClick={() => editAssociations(index)}
-                                                                        sx={{
-                                                                            width: '50px',
-                                                                            height: '50px'
-                                                                        }}
-                                                                    >
-                                                                        <FontAwesomeIcon icon={faGear} color={theme.palette.text.primary} />
-                                                                    </IconButton>
+                                                                    {association.parent}
+                                                                </Typography>
+                                                            </Stack>
+                                                        </TableCell>
+                                                        <TableCell align="center">
+                                                            <Stack
+                                                                spacing={1}
+                                                                direction={isDesktop ? "row" : "column"}
+                                                                justifyContent="center"
+                                                                alignItems="center"
+                                                                width="100%"
+                                                            >
+                                                                {association.childs.map((keyWord, innerIndex) => <Stack key={innerIndex} spacing={1} direction="row">
+                                                                    <Typography>
+                                                                        {keyWord}
+                                                                    </Typography>
+                                                                    {isDesktop ? <Typography>
+                                                                        {association.childs.length < 2 || association.childs.length - 1 === innerIndex ? null : "-"}
+                                                                    </Typography> : null}
+                                                                </Stack>)}
+                                                            </Stack>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <Stack direction="row" justifyContent="flex-end" alignItems="flex-end">
+                                                                <IconButton
+                                                                    onClick={() => editAssociations(index)}
+                                                                    sx={{
+                                                                        width: '50px',
+                                                                        height: '50px'
+                                                                    }}
+                                                                >
+                                                                    <FontAwesomeIcon icon={faGear} color={theme.palette.text.primary} />
+                                                                </IconButton>
 
-                                                                    {parentLabel !== "Persona" ? <IconButton
-                                                                        onClick={() => removeAssociations(index)}
-                                                                        sx={{
-                                                                            width: '50px',
-                                                                            height: '50px'
-                                                                        }}
-                                                                    >
-                                                                        <FontAwesomeIcon icon={faTrash} color={theme.palette.error.main} />
-                                                                    </IconButton> : null}
-                                                                </Stack>
-                                                            </TableCell>
-                                                        </TableRow>
-                                                    )}
-                                                </Draggable>
-                                            )}
-                                        </TableBody>
-                                    </Table>}
-                                {provided.placeholder}
-                            </Stack>
-                        )}
-                    </Droppable>
-                </DragDropContext>
-            </Stack>
-        </Stack>
+                                                                {parentLabel !== "Persona" ? <IconButton
+                                                                    onClick={() => remove(index)}
+                                                                    sx={{
+                                                                        width: '50px',
+                                                                        height: '50px'
+                                                                    }}
+                                                                >
+                                                                    <FontAwesomeIcon icon={faTrash} color={theme.palette.error.main} />
+                                                                </IconButton> : null}
+                                                            </Stack>
+                                                        </TableCell>
+                                                    </TableRow>}
+                                            </Draggable>
+                                        )}
+                                        {provided.placeholder}
+                                    </TableBody>
+                                </Table>
+                            }
+                        </Droppable>
+                    </DragDropContext>
+                }
+            </Stack >
+
+            <Modal open={open !== '' ? true : false} onClose={handleClose}>
+                <Stack
+                    spacing={4}
+                    alignItems="center"
+                    sx={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        borderRadius: '15px',
+                        background: theme.palette.background.default,
+                        padding: '30px 50px 30px 50px'
+                    }}
+                >
+                    <IconButton
+                        sx={{
+                            position: 'absolute',
+                            top: '10px',
+                            right: '10px',
+                            width: '40px',
+                            height: '40px'
+                        }}
+                        onClick={handleClose}
+                    >
+                        <FontAwesomeIcon icon={faXmark} color={theme.palette.text.primary} />
+                    </IconButton>
+                    <Typography variant="h4">
+                        Êtes vous sûr de vouloir réaliser cette action ?
+                    </Typography>
+
+                    <Stack spacing={4} direction="row">
+                        <AButton variant="outlined" color="error" onClick={handleClose}>
+                            Annuler
+                        </AButton>
+
+                        <AButton variant="contained" onClick={validate}>
+                            Confirmer
+                        </AButton>
+                    </Stack>
+                </Stack>
+            </Modal>
+        </Stack >
     )
 }
 

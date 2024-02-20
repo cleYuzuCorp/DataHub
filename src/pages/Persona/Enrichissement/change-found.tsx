@@ -21,7 +21,7 @@ const ChangeFound = (props: { instance: any }) => {
 
     useEffect(() => {
         setFetchDataInit(true)
-    })
+    }, [])
 
     useEffect(() => {
         setLoading(true)

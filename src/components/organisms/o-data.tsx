@@ -23,6 +23,7 @@ const OData = (props: { instance: any }) => {
 
     const [loading, setLoading] = useState(false)
     const [dataInit, setDataInit] = useState(false)
+    const [pdfGenerate, setPdfGenerate] = useState(false)
 
     const [fetchDataInit, setFetchDataInit] = useState(false)
     const [dbPersona, setDbPersona] = useState([{ description: "", value: "" }])
@@ -194,13 +195,17 @@ const OData = (props: { instance: any }) => {
 
         if (filteredPersonas) {
             filteredPersonas.map((persona) => {
-                jobTitles.push(persona.jobTitle)
-                occurences.push(persona.occurences)
+                return (
+                    jobTitles.push(persona.jobTitle),
+                    occurences.push(persona.occurences)
+                )
             })
         } else {
             personas.map((persona) => {
-                jobTitles.push(persona.jobTitle)
-                occurences.push(persona.occurences)
+                return (
+                    jobTitles.push(persona.jobTitle),
+                    occurences.push(persona.occurences)
+                )
             })
         }
 
@@ -210,25 +215,33 @@ const OData = (props: { instance: any }) => {
 
     const handleFilteredChange = (value: string) => {
         setSearchTerm(value)
+    }
 
+    useEffect(() => {
         const filteredRole = roles.filter(role =>
-            role.jobTitle.toLowerCase().includes(value.toLowerCase())
+            role.jobTitle.toLowerCase().includes(searchTerm.toLowerCase())
         )
 
         const filteredPersona = personas.filter(persona =>
-            persona.jobTitle.toLowerCase().includes(value.toLowerCase())
+            persona.jobTitle.toLowerCase().includes(searchTerm.toLowerCase())
         )
 
         const filteredLink = links.filter(link =>
-            link.jobTitle.toLowerCase().includes(value.toLowerCase())
+            link.jobTitle.toLowerCase().includes(searchTerm.toLowerCase())
         )
 
         setFilteredRoles(filteredRole)
         setFilteredPersonas(filteredPersona)
         setFilteredLinks(filteredLink)
-    }
+    }, [searchTerm, roles, personas, links])
 
     const generateExcel = () => {
+        const currentDate = new Date()
+        const formattedDate = currentDate.toLocaleDateString().split('/').join('-')
+        const formattedTime = currentDate.toLocaleTimeString().split(':').join('-')
+
+        const fileName = `Bilan_Datahub_Persona_${idTenant}_${formattedDate}_${formattedTime}.xlsx`
+
         const rolesData = roles.map(role => ({ Role: role.jobTitle, Occurences: role.occurences }))
         const personasData = personas.map(persona => ({ Persona: persona.jobTitle, Occurences: persona.occurences }))
         const liaisonsData = links.map(link => ({ Liaisons: link.jobTitle, Occurences: link.occurences }))
@@ -242,95 +255,116 @@ const OData = (props: { instance: any }) => {
         XLSX.utils.book_append_sheet(wb, personasSheet, 'Personas')
         XLSX.utils.book_append_sheet(wb, liaisonsSheet, 'Liaisons')
 
-        XLSX.writeFile(wb, 'contacts_data.xlsx')
+        XLSX.writeFile(wb, fileName)
     }
 
+    const generatePDF = () => {
+        setSearchTerm("")
 
-    const generatePDF = async () => {
-        const pdf = new jsPDF()
+        setTimeout(() => {
+            setPdfGenerate(true)
+        }, 100)
+    }
 
-        const maxWidth = 150
-        const lineHeight = 10
+    useEffect(() => {
+        const generate = async () => {
+            if (pdfGenerate) {
+                const pdf = new jsPDF()
 
-        const splitOptions = { maxWidth, lineHeight }
+                const currentDate = new Date()
+                const formattedDate = currentDate.toLocaleDateString().split('/').join('-')
+                const formattedTime = currentDate.toLocaleTimeString().split(':').join('-')
 
-        const addTextWithWrap = (text: string, x: number, y: number) => {
-            const splitText = pdf.splitTextToSize(text, maxWidth, splitOptions)
-            pdf.text(splitText, x, y)
-        }
+                const fileName = `Bilan_Datahub_Persona_${idTenant}_${formattedDate}_${formattedTime}.pdf`
 
-        pdf.addImage('/images/logo/logo_yuzu.png', 'PNG', 30, 20, 150, 75)
+                const maxWidth = 150
+                const lineHeight = 10
 
-        pdf.setFont('BD Supper, sans serif', 'bold')
-        pdf.setFontSize(40)
-        addTextWithWrap('Bilan Datahub Persona', 30, 100)
+                const splitOptions = { maxWidth, lineHeight }
 
-        pdf.setFont('BD Supper, sans serif', 'normal')
-        pdf.setFontSize(16)
-        addTextWithWrap(`Au total, 974 contacts sont présents sur HubSpot. Parmis eux, ${numberRoles} intitulés de postes distincts`, 20, 130)
-
-        pdf.setFont('BD Supper, sans serif', 'bold')
-        pdf.setFontSize(19)
-        addTextWithWrap(`Répartition entre les ${numberPersonas} personas présents sur Hubspot`, 20, 150)
-
-        const chartImage = await convertChartToImage()
-        if (chartImage) {
-            pdf.addImage(chartImage, 'PNG', 30, 180, 160, 80)
-        }
-
-        pdf.addPage()
-
-        const tableHeaders = ['Nom', 'Poste', 'Pourcentage']
-        const tableData = roles.map(role => [role.jobTitle, role.occurences, 0])
-
-        const startY = 20
-        const margin = 10
-        const cellWidth = (pdf.internal.pageSize.width - 2 * margin - 20) / tableHeaders.length
-        const cellHeight = lineHeight + 5
-
-        pdf.rect(margin, startY, pdf.internal.pageSize.width - 2 * margin, (tableData.length + 2) * cellHeight)
-
-        pdf.setFont('BD Supper, sans serif', 'bold')
-        tableHeaders.forEach((header, i) => {
-            if (i === 0) {
-                pdf.text(header, margin + i * cellWidth + 10, startY + cellHeight)
-            } else if (i === 1) {
-                pdf.text(header, margin + i * cellWidth + 40, startY + cellHeight)
-            } else {
-                pdf.text(header, margin + i * cellWidth + 30, startY + cellHeight)
-            }
-        })
-
-        pdf.line(margin, startY + cellHeight + 5, pdf.internal.pageSize.width - margin, startY + cellHeight + 5)
-
-        pdf.setFont('BD Supper, sans serif', 'normal')
-        tableData.forEach((rowData, rowIndex) => {
-            rowData.forEach((cellData, colIndex) => {
-                if (colIndex === 0) {
-                    pdf.text(String(cellData), margin + colIndex * cellWidth + 10, startY + (rowIndex + 2) * cellHeight)
-                } else if (colIndex === 1) {
-                    pdf.text(String(cellData), margin + colIndex * cellWidth + 40, startY + (rowIndex + 2) * cellHeight)
-                } else {
-                    pdf.text(String(cellData), margin + colIndex * cellWidth + 30, startY + (rowIndex + 2) * cellHeight)
+                const addTextWithWrap = (text: string, x: number, y: number) => {
+                    const splitText = pdf.splitTextToSize(text, maxWidth, splitOptions)
+                    pdf.text(splitText, x, y)
                 }
-            })
 
-            pdf.line(margin, startY + (rowIndex + 2) * cellHeight + 5, pdf.internal.pageSize.width - margin, startY + (rowIndex + 2) * cellHeight + 5)
+                pdf.addImage('/images/logo/logo_yuzu.png', 'PNG', 30, 20, 150, 75)
 
-            pdf.line(margin + cellWidth + 30, startY, margin + cellWidth + 30, startY + (tableData.length + 2) * cellHeight)
-        })
+                pdf.setFont('BD Supper, sans serif', 'bold')
+                pdf.setFontSize(40)
+                addTextWithWrap('Bilan Datahub Persona', 30, 100)
 
-        const totalOccurences = roles.reduce((sum, role) => sum + role.occurences, 0)
+                pdf.setFont('BD Supper, sans serif', 'normal')
+                pdf.setFontSize(16)
+                addTextWithWrap(`Au total, 974 contacts sont présents sur HubSpot. Parmis eux, ${numberRoles} intitulés de postes distincts`, 20, 130)
 
-        tableData.forEach((rowData, rowIndex) => {
-            const percentage = (rowData[1] as number / totalOccurences) * 100
-            rowData[2] = `${percentage.toFixed(2)}%`
-        })
+                pdf.setFont('BD Supper, sans serif', 'bold')
+                pdf.setFontSize(19)
+                addTextWithWrap(`Répartition entre les ${numberPersonas} personas présents sur Hubspot`, 20, 150)
 
-        pdf.line(margin + cellWidth + 80, startY, margin + cellWidth + 80, startY + (tableData.length + 2) * cellHeight)
+                const chartImage = await convertChartToImage()
+                if (chartImage) {
+                    pdf.addImage(chartImage, 'PNG', 30, 180, 160, 80)
+                }
 
-        pdf.save()
-    }
+                pdf.addPage()
+
+                const tableHeaders = ['Nom', 'Poste', 'Pourcentage']
+                const tableData = roles.map(role => [role.jobTitle, role.occurences, 0])
+
+                const startY = 20
+                const margin = 10
+                const cellWidth = (pdf.internal.pageSize.width - 2 * margin - 20) / tableHeaders.length
+                const cellHeight = lineHeight + 5
+
+                pdf.rect(margin, startY, pdf.internal.pageSize.width - 2 * margin, (tableData.length + 2) * cellHeight)
+
+                pdf.setFont('BD Supper, sans serif', 'bold')
+                tableHeaders.forEach((header, i) => {
+                    if (i === 0) {
+                        pdf.text(header, margin + i * cellWidth + 10, startY + cellHeight)
+                    } else if (i === 1) {
+                        pdf.text(header, margin + i * cellWidth + 40, startY + cellHeight)
+                    } else {
+                        pdf.text(header, margin + i * cellWidth + 30, startY + cellHeight)
+                    }
+                })
+
+                pdf.line(margin, startY + cellHeight + 5, pdf.internal.pageSize.width - margin, startY + cellHeight + 5)
+
+                pdf.setFont('BD Supper, sans serif', 'normal')
+                tableData.forEach((rowData, rowIndex) => {
+                    rowData.forEach((cellData, colIndex) => {
+                        if (colIndex === 0) {
+                            pdf.text(String(cellData), margin + colIndex * cellWidth + 10, startY + (rowIndex + 2) * cellHeight)
+                        } else if (colIndex === 1) {
+                            pdf.text(String(cellData), margin + colIndex * cellWidth + 40, startY + (rowIndex + 2) * cellHeight)
+                        } else {
+                            pdf.text(String(cellData), margin + colIndex * cellWidth + 30, startY + (rowIndex + 2) * cellHeight)
+                        }
+                    })
+
+                    pdf.line(margin, startY + (rowIndex + 2) * cellHeight + 5, pdf.internal.pageSize.width - margin, startY + (rowIndex + 2) * cellHeight + 5)
+
+                    pdf.line(margin + cellWidth + 30, startY, margin + cellWidth + 30, startY + (tableData.length + 2) * cellHeight)
+                })
+
+                const totalOccurences = roles.reduce((sum, role) => sum + role.occurences, 0)
+
+                tableData.forEach((rowData, rowIndex) => {
+                    const percentage = (rowData[1] as number / totalOccurences) * 100
+                    rowData[2] = `${percentage.toFixed(2)}%`
+                })
+
+                pdf.line(margin + cellWidth + 80, startY, margin + cellWidth + 80, startY + (tableData.length + 2) * cellHeight)
+
+                pdf.save(fileName)
+
+                setPdfGenerate(false)
+            }
+        }
+
+        generate()
+    }, [pdfGenerate])
 
     const convertChartToImage = async () => {
         const chartContainer = document.getElementById('chart-container')

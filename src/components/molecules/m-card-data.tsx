@@ -1,4 +1,4 @@
-import { Paper, Stack, Table, TableBody, TableCell, TableFooter, TableHead, TablePagination, TableRow, Typography } from "@mui/material"
+import { Paper, Stack, Table, TableBody, TableCell, TableHead, TableRow, Typography } from "@mui/material"
 import theme from "../../theme"
 import { JobTitle } from "../../interfaces/job-title"
 import { useState } from "react"
