@@ -6,6 +6,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faBars } from '@fortawesome/free-solid-svg-icons'
 import { useState } from 'react'
 import CustomersAccounts from './pages'
+import { Customer } from './interfaces/customer'
 
 const AppRoutes = (props: { instance?: any }) => {
 
@@ -13,7 +14,9 @@ const AppRoutes = (props: { instance?: any }) => {
 
   const isDesktop = useMediaQuery('(min-width:1000px)')
 
+  const [loading, setLoading] = useState(false)
   const [open, setOpen] = useState(false)
+  const [customers, setCustomers] = useState<Customer[]>([])
 
   const pagesContext = (require as any).context('./pages', true, /\.(tsx|jsx)$/)
 
@@ -22,7 +25,13 @@ const AppRoutes = (props: { instance?: any }) => {
       <Routes>
         <Route path="/" element={<ThemeProvider theme={theme}>
           <Stack direction="row">
-            {isDesktop ? <THeader instance={instance} /> : <Stack>
+            {isDesktop ? <THeader
+              instance={instance}
+              customers={customers}
+              setCustomers={setCustomers}
+              loading={loading}
+              setLoading={setLoading}
+            /> : <Stack>
               <IconButton
                 onClick={() => setOpen(true)}
                 sx={{
@@ -34,10 +43,16 @@ const AppRoutes = (props: { instance?: any }) => {
                 <FontAwesomeIcon icon={faBars} color={theme.palette.text.primary} />
               </IconButton>
               <Drawer anchor="left" open={open} onClose={() => setOpen(false)}>
-                <THeader instance={instance} />
+                <THeader
+                  instance={instance}
+                  customers={customers}
+                  setCustomers={setCustomers}
+                  loading={loading}
+                  setLoading={setLoading}
+                />
               </Drawer>
             </Stack>}
-            <CustomersAccounts instance={instance} />
+            <CustomersAccounts instance={instance} customers={customers} setCustomers={setCustomers} loading={loading} />
           </Stack>
         </ThemeProvider>} />
         {pagesContext.keys().map((modulePath: string) => {
@@ -48,7 +63,13 @@ const AppRoutes = (props: { instance?: any }) => {
           return (
             <Route key={pageName} path={`/${pageName}`} element={<ThemeProvider theme={theme}>
               <Stack direction="row">
-                {isDesktop ? <THeader instance={instance} /> : <Stack>
+                {isDesktop ? <THeader
+                  instance={instance}
+                  customers={customers}
+                  setCustomers={setCustomers}
+                  loading={loading}
+                  setLoading={setLoading}
+                /> : <Stack>
                   <IconButton
                     onClick={() => setOpen(true)}
                     sx={{
@@ -60,10 +81,16 @@ const AppRoutes = (props: { instance?: any }) => {
                     <FontAwesomeIcon icon={faBars} color={theme.palette.text.primary} />
                   </IconButton>
                   <Drawer anchor="left" open={open} onClose={() => setOpen(false)}>
-                    <THeader instance={instance} />
+                    <THeader
+                      instance={instance}
+                      customers={customers}
+                      setCustomers={setCustomers}
+                      loading={loading}
+                      setLoading={setLoading}
+                    />
                   </Drawer>
                 </Stack>}
-                <PageComponent instance={instance} />
+                <PageComponent instance={instance} customers={customers} loading={loading} />
               </Stack>
             </ThemeProvider>} />
           )

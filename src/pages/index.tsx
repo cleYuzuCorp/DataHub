@@ -7,65 +7,12 @@ import { useEffect, useState } from "react"
 import { acquireToken } from "../App"
 import { Customer } from "../interfaces/customer"
 
-const CustomersAccounts = (props: { instance: any }) => {
+const CustomersAccounts = (props: { instance: any, customers: Customer[], setCustomers: (value: Customer[]) => void, loading: boolean }) => {
 
-    const { instance } = props
+    const { instance, customers, setCustomers, loading } = props
 
-    const [loading, setLoading] = useState(false)
     const [open, setOpen] = useState(false)
-    const [customers, setCustomers] = useState<Customer[]>([])
     const [selectedCustomer, setSelectedCustomer] = useState<Customer>()
-
-    useEffect(() => {
-        setLoading(true)
-
-        const fetchData = async () => {
-            try {
-                await instance.initialize()
-                const accessToken = await acquireToken(instance)
-
-                const response = await fetch(`${process.env.REACT_APP_API_URL}/tenant/getAll`, {
-                    headers: {
-                        Authorization: `Bearer ${accessToken}`,
-                        "Content-Type": "application/json",
-                    },
-                })
-
-                const responseData = await response.json()
-                if (responseData.statusCode !== 401) {
-                    const updatedCustomers = await Promise.all(
-                        responseData.map(async (tenant: { IdTenant: number; NomClient: string }) => {
-                            const tenantDetailsResponse = await fetch(
-                                `${process.env.REACT_APP_API_PERSONA}/persona/settingsTenant/?idTenant=${tenant.IdTenant}`,
-                                {
-                                    headers: {
-                                        Authorization: `Bearer ${accessToken}`,
-                                        "Content-Type": "application/json",
-                                    },
-                                }
-                            )
-
-                            const tenantDetails = await tenantDetailsResponse.json()
-
-                            return {
-                                IdTenant: tenant.IdTenant,
-                                NomClient: tenant.NomClient,
-                                IntitulePoste_NomInterne: tenantDetails.IntitulePoste_NomInterne,
-                                Persona_NomInterne: tenantDetails.Persona_NomInterne,
-                            }
-                        })
-                    )
-
-                    setCustomers(updatedCustomers)
-                    setLoading(false)
-                }
-            } catch (error) {
-                console.log("Erreur:", error)
-            }
-        }
-
-        fetchData()
-    }, [instance])
 
     const handleOpen = (customer: Customer) => {
         setSelectedCustomer(customer)
@@ -121,11 +68,9 @@ const CustomersAccounts = (props: { instance: any }) => {
             body: JSON.stringify(payloadSettings)
         })
 
-        setCustomers((prevCustomers) =>
-            prevCustomers.map((customer) =>
-                customer.IdTenant === selectedCustomer?.IdTenant ? { ...payloadName, ...payloadSettings } : customer
-            ) as Customer[]
-        )
+        setCustomers(customers.map((customer) =>
+            customer.IdTenant === selectedCustomer?.IdTenant ? { ...payloadName, ...payloadSettings } : customer
+        ) as Customer[])
 
         setOpen(false)
     }

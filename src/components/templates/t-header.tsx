@@ -9,9 +9,9 @@ import { useNavigate } from "react-router-dom"
 import { Customer } from "../../interfaces/customer"
 import { acquireToken } from "../../App"
 
-const THeader = (props: { instance?: any }) => {
+const THeader = (props: { instance?: any, customers: Customer[], setCustomers: (value: Customer[]) => void, loading: boolean, setLoading: (value: boolean) => void }) => {
 
-    const { instance } = props
+    const { instance, customers, setCustomers, loading, setLoading } = props
 
     const navigate = useNavigate()
 
@@ -19,7 +19,6 @@ const THeader = (props: { instance?: any }) => {
     const [interactionInProgress, setInteractionInProgress] = useState(false)
     const [active, setActive] = useState([""])
     const [account, setAccount] = useState()
-    const [customers, setCustomers] = useState<Customer[]>([])
     const [customersNames, setCustomersNames] = useState<Array<string>>()
     const [selectedCustomer, setSelectedCustomer] = useState<Customer>()
 
@@ -42,6 +41,8 @@ const THeader = (props: { instance?: any }) => {
     }, [active, customers])
 
     useEffect(() => {
+        setLoading(true)
+
         const fetchData = async () => {
             try {
                 await instance.initialize()
@@ -55,9 +56,12 @@ const THeader = (props: { instance?: any }) => {
                 })
 
                 const responseData = await response.json()
+
                 if (responseData.statusCode !== 401) {
                     setCustomers(responseData)
                 }
+
+                setLoading(false)
             } catch (error) {
                 console.log("Erreur:", error)
             }
