@@ -130,8 +130,8 @@ const THeader = (props: { instance?: any, customers: Customer[], setCustomers: (
 
     const enrichissement = [
         "Initialement nul",
-        "Modification trouvé",
-        "Aucune modification trouvé"
+        "Modification trouvée",
+        "Aucune modification trouvée"
     ]
 
     return (

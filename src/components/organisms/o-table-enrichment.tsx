@@ -241,11 +241,11 @@ const OTableEnrichment = (props: {
                                             </Typography>
                                         </Stack>
                                     </TableCell>
-                                    {!nothing && contact.contacts.map((c) => <TableCell key={c.hs_object_id} align="center">
+                                    {!nothing && <TableCell align="center">
                                         <Typography>
                                             {contact.personaProposed}
                                         </Typography>
-                                    </TableCell>)}
+                                    </TableCell>}
                                     <TableCell align={nothing ? "right" : "center"} width="50%">
                                         <Typography>
                                             {contact.occurence}

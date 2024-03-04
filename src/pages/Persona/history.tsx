@@ -19,6 +19,7 @@ const History = (props: { instance: any }) => {
 
     const [loading, setLoading] = useState(false)
     const [fetchDataInit, setFetchDataInit] = useState(false)
+    const [isRestored, setIsRestored] = useState(false)
 
     const [searchTerm, setSearchTerm] = useState("")
     const [histories, setHistories] = useState<Array<HistoryRow>>([])
@@ -92,6 +93,8 @@ const History = (props: { instance: any }) => {
                     return new Date(b.Date as string).getTime() - new Date(a.Date as string).getTime()
                 })
 
+                console.log(sortedHistories, 'sh')
+
                 setHistories(sortedHistories)
                 setLoading(false)
             } catch (error) {
@@ -100,7 +103,7 @@ const History = (props: { instance: any }) => {
         }
 
         fetchData()
-    }, [])
+    }, [isRestored])
 
     const handleFilteredChange = (value: string) => {
         setSearchTerm(value)
@@ -170,7 +173,7 @@ const History = (props: { instance: any }) => {
 
         const accessToken = await acquireToken(instance)
 
-        fetch(`${process.env.REACT_APP_API_PERSONA}/hubspot/enrich`, {
+        const response = fetch(`${process.env.REACT_APP_API_PERSONA}/hubspot/enrich`, {
             method: "POST",
             headers: {
                 Authorization: `Bearer ${accessToken}`,
@@ -179,6 +182,9 @@ const History = (props: { instance: any }) => {
             body: JSON.stringify(body)
         })
 
+        if ((await response).status) {
+            setIsRestored(!isRestored)
+        }
         setLoading(false)
     }
 

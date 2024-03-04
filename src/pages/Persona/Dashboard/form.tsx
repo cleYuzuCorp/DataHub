@@ -87,8 +87,6 @@ const Form = (props: { instance: any }) => {
         fetchData()
     }, [isRestore])
 
-    console.log(backupAssociationsRoleKeywords, 'ba')
-
     const addKeywords = () => {
         setKeywords((prevchilds) => [...prevchilds, ""])
         setTimeout(() => {
