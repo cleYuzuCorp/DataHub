@@ -24,8 +24,8 @@ const Form = (props: { instance: any }) => {
 
     const [associationsRoleKeywords, setAssociationsRoleKeywords] = useState([{ parent: "", childs: [""] }])
     const [associationsPersonaRoles, setAssociationsPersonaRoles] = useState([{ parent: "", childs: [""] }])
-    const [backupAssociationsRoleKeywords, setBackupAssociationsRoleKeywords] = useState<{ parent: string; childs: string[] }[]>([])
-    const [backupAssociationsPersonaRoles, setBackupAssociationsPersonaRoles] = useState<{ parent: string; childs: string[] }[]>([])
+    const [backupAssociationsRoleKeywords, setBackupAssociationsRoleKeywords] = useState<{ parent: string; childs: string[] }[][]>([])
+    const [backupAssociationsPersonaRoles, setBackupAssociationsPersonaRoles] = useState<{ parent: string; childs: string[] }[][]>([])
 
     const schema = yup.object().shape({
         parent: yup.string().required('Le champ rôle est requis'),
@@ -65,7 +65,7 @@ const Form = (props: { instance: any }) => {
                     })
 
                     setAssociationsPersonaRoles(associationsPersonaRolesData)
-                    setBackupAssociationsPersonaRoles(associationsPersonaRolesData)
+                    setBackupAssociationsPersonaRoles([...backupAssociationsPersonaRoles, associationsPersonaRolesData])
 
                     const associationsRoleKeywordsData = Object.keys(data.rolesMotsClefs).map((roleKey) => {
                         return {
@@ -75,7 +75,7 @@ const Form = (props: { instance: any }) => {
                     })
 
                     setAssociationsRoleKeywords(associationsRoleKeywordsData)
-                    setBackupAssociationsRoleKeywords(associationsRoleKeywordsData)
+                    setBackupAssociationsRoleKeywords([...backupAssociationsRoleKeywords, associationsRoleKeywordsData])
                     setLoading(false)
                 }
             } catch (error) {
@@ -86,6 +86,8 @@ const Form = (props: { instance: any }) => {
         setIsRestore(false)
         fetchData()
     }, [isRestore])
+
+    console.log(backupAssociationsRoleKeywords, 'ba')
 
     const addKeywords = () => {
         setKeywords((prevchilds) => [...prevchilds, ""])
@@ -172,114 +174,120 @@ const Form = (props: { instance: any }) => {
     }
 
     const editAssociationRoleKeywords = (index: number) => {
-        setBackupAssociationsRoleKeywords([...associationsRoleKeywords])
+        setBackupAssociationsRoleKeywords([...backupAssociationsRoleKeywords, [...associationsRoleKeywords]])
         setIsEditing(index)
         setRole(associationsRoleKeywords[index].parent)
         setKeywords(associationsRoleKeywords[index].childs)
     }
 
     const editAssociationPersonaRoles = (index: number) => {
-        setBackupAssociationsPersonaRoles([...associationsPersonaRoles])
+        setBackupAssociationsPersonaRoles([...backupAssociationsPersonaRoles, [...associationsPersonaRoles]])
         setIsEditing(index)
         setPersona(associationsPersonaRoles[index].parent)
         setRoles(associationsPersonaRoles[index].childs)
     }
 
     const removeAssociationRoleKeywords = (index: number) => {
-        setBackupAssociationsRoleKeywords([...associationsRoleKeywords])
+        setBackupAssociationsRoleKeywords([...backupAssociationsRoleKeywords, [...associationsRoleKeywords]])
         const newAssociations = [...associationsRoleKeywords]
         newAssociations.splice(index, 1)
         setAssociationsRoleKeywords(newAssociations)
     }
 
     const removeAssociationPersonaRoles = (index: number) => {
-        setBackupAssociationsPersonaRoles([...associationsPersonaRoles])
+        setBackupAssociationsPersonaRoles([...backupAssociationsPersonaRoles, [...associationsPersonaRoles]])
         const newAssociations = [...associationsPersonaRoles]
         newAssociations.splice(index, 1)
         setAssociationsPersonaRoles(newAssociations)
     }
 
     const restoreAssociationRoleKeywords = () => {
-        setAssociationsRoleKeywords([...backupAssociationsRoleKeywords])
+        if (backupAssociationsRoleKeywords.length > 1) {
+            const previousBackups = [...backupAssociationsRoleKeywords]
+            previousBackups.pop()
+            setAssociationsRoleKeywords(previousBackups[previousBackups.length - 1])
+            setBackupAssociationsRoleKeywords(previousBackups)
+        }
     }
 
     const restoreAssociationPersonaRoles = () => {
-        setAssociationsRoleKeywords([...backupAssociationsPersonaRoles])
+        if (backupAssociationsPersonaRoles.length > 1) {
+            const previousBackups = [...backupAssociationsPersonaRoles]
+            previousBackups.pop()
+            setAssociationsPersonaRoles(previousBackups[previousBackups.length - 1])
+            setBackupAssociationsPersonaRoles(previousBackups)
+        }
     }
 
     const addRowRoleKeywords = async () => {
         try {
-            clearErrors()
+            clearErrors();
 
             const isValid = await schema.validate({
                 parent: role,
-                childs: keywords
-            }, { abortEarly: false })
+                childs: keywords,
+            }, { abortEarly: false });
 
             if (isValid) {
                 if (isEditing !== undefined) {
-                    const updatedAssociations = [...associationsRoleKeywords]
-                    updatedAssociations[isEditing] = { parent: role, childs: keywords }
-                    setAssociationsRoleKeywords(updatedAssociations)
-                    setRole("")
-                    setKeywords([""])
-                    setIsEditing(undefined)
-                    setBackupAssociationsRoleKeywords([...associationsRoleKeywords])
+                    const updatedAssociations = [...associationsRoleKeywords];
+                    updatedAssociations[isEditing] = { parent: role, childs: keywords };
+                    setAssociationsRoleKeywords(updatedAssociations);
+                    setRole("");
+                    setKeywords([""]);
+                    setIsEditing(undefined);
+                    setBackupAssociationsRoleKeywords([...backupAssociationsRoleKeywords, [...associationsRoleKeywords]]);
                 } else {
-                    if (associationsRoleKeywords.length === 1 && associationsRoleKeywords[0].parent === "" && associationsRoleKeywords[0].childs[0] === "") {
-                        setAssociationsRoleKeywords([{ parent: role, childs: keywords }, ...associationsRoleKeywords.slice(1)])
-                        setRole("")
-                        setKeywords([""])
-                    } else {
-                        setAssociationsRoleKeywords([...associationsRoleKeywords, { parent: role, childs: keywords }])
-                        setRole("")
-                        setKeywords([""])
-                    }
+                    setAssociationsRoleKeywords((prevAssociations) => {
+                        const newAssociations = [...prevAssociations, { parent: role, childs: keywords }];
+                        setBackupAssociationsRoleKeywords([...backupAssociationsRoleKeywords, [...newAssociations]]);
+                        return newAssociations;
+                    });
+                    setRole("");
+                    setKeywords([""]);
                 }
             }
         } catch (validationError: any) {
             validationError.inner.forEach((error: { path: any; message: string }) => {
-                setError(error.path, { type: 'manual', message: error.message })
-            })
+                setError(error.path, { type: 'manual', message: error.message });
+            });
         }
-    }
+    };
 
     const addRowPersonaRoles = async () => {
         try {
-            clearErrors()
+            clearErrors();
 
             const isValid = await schema.validate({
                 parent: persona,
-                childs: roles
-            }, { abortEarly: false })
+                childs: roles,
+            }, { abortEarly: false });
 
             if (isValid) {
                 if (isEditing !== undefined) {
-                    const updatedAssociations = [...associationsPersonaRoles]
-                    updatedAssociations[isEditing] = { parent: persona, childs: roles }
-                    setAssociationsPersonaRoles(updatedAssociations)
-                    setPersona("")
-                    setRoles([""])
-                    setIsEditing(undefined)
-                    setBackupAssociationsPersonaRoles([...associationsPersonaRoles])
+                    const updatedAssociations = [...associationsPersonaRoles];
+                    updatedAssociations[isEditing] = { parent: persona, childs: roles };
+                    setAssociationsPersonaRoles(updatedAssociations);
+                    setPersona("");
+                    setRoles([""]);
+                    setIsEditing(undefined);
+                    setBackupAssociationsPersonaRoles([...backupAssociationsPersonaRoles, [...associationsPersonaRoles]]);
                 } else {
-                    if (associationsPersonaRoles.length === 1 && associationsPersonaRoles[0].parent === "" && associationsPersonaRoles[0].childs[0] === "") {
-                        setAssociationsPersonaRoles([{ parent: persona, childs: roles }, ...associationsPersonaRoles.slice(1)])
-                        setRole("")
-                        setKeywords([""])
-                    } else {
-                        setAssociationsPersonaRoles([...associationsPersonaRoles, { parent: persona, childs: roles }])
-                        setPersona("")
-                        setRoles([""])
-                    }
+                    setAssociationsPersonaRoles((prevAssociations) => {
+                        const newAssociations = [...prevAssociations, { parent: persona, childs: roles }];
+                        setBackupAssociationsPersonaRoles([...backupAssociationsPersonaRoles, [...newAssociations]]);
+                        return newAssociations;
+                    });
+                    setPersona("");
+                    setRoles([""]);
                 }
             }
         } catch (validationError: any) {
             validationError.inner.forEach((error: { path: any; message: string }) => {
-                setError(error.path, { type: 'manual', message: error.message })
-            })
+                setError(error.path, { type: 'manual', message: error.message });
+            });
         }
-    }
+    };
 
     const handleSubmit = async () => {
         setLoading(true)

@@ -180,12 +180,12 @@ const OTableEnrichment = (props: {
                                     Persona proposé
                                 </Typography>
                             </TableCell>}
-                            <TableCell align="center">
+                            <TableCell align={nothing ? "right" : "center"}>
                                 <Stack
                                     spacing={1}
                                     direction="row"
                                     alignItems="center"
-                                    justifyContent="center"
+                                    justifyContent={nothing ? "right" : "center"}
                                     onClick={toggleSortOrder}
                                     sx={{
                                         cursor: 'pointer'
@@ -200,7 +200,7 @@ const OTableEnrichment = (props: {
                                     }
                                 </Stack>
                             </TableCell>
-                            <TableCell align="right">
+                            {!nothing && <TableCell align="right">
                                 <Checkbox
                                     checked={selectedContacts?.length === filteredContacts.slice(startIndex, endIndex).length || selectedContacts?.length === filteredContacts.length}
                                     onChange={handleSelectAllPageChange}
@@ -215,7 +215,7 @@ const OTableEnrichment = (props: {
                                         }
                                     }}
                                 />
-                            </TableCell>
+                            </TableCell>}
                         </TableRow>
                     </TableHead>
                     <TableBody>
@@ -246,17 +246,17 @@ const OTableEnrichment = (props: {
                                             {contact.personaProposed}
                                         </Typography>
                                     </TableCell>)}
-                                    <TableCell align="center" width="50%">
+                                    <TableCell align={nothing ? "right" : "center"} width="50%">
                                         <Typography>
                                             {contact.occurence}
                                         </Typography>
                                     </TableCell>
-                                    <TableCell align="right">
+                                    {!nothing && <TableCell align="right">
                                         <Checkbox
                                             checked={selectedContacts.includes(contact)}
                                             onChange={() => handleSelectChange(index)}
                                         />
-                                    </TableCell>
+                                    </TableCell>}
                                 </TableRow>
                                 <TableRow>
                                     <TableCell colSpan={nothing ? 3 : 4} padding="none">
