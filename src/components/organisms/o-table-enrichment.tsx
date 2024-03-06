@@ -219,7 +219,7 @@ const OTableEnrichment = (props: {
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {sortedContacts.map((contact, index) =>
+                        {sortedContacts.slice(startIndex, endIndex).map((contact, index) =>
                             <React.Fragment key={index}>
                                 <TableRow
                                     onMouseEnter={() => setHovered(index)}
