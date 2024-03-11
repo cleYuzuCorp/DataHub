@@ -93,8 +93,6 @@ const History = (props: { instance: any }) => {
                     return new Date(b.Date as string).getTime() - new Date(a.Date as string).getTime()
                 })
 
-                console.log(sortedHistories, 'sh')
-
                 setHistories(sortedHistories)
                 setLoading(false)
             } catch (error) {

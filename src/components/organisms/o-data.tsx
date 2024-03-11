@@ -242,9 +242,13 @@ const OData = (props: { instance: any }) => {
 
         const fileName = `Bilan_Datahub_Persona_${idTenant}_${formattedDate}_${formattedTime}.xlsx`
 
-        const rolesData = roles.map(role => ({ Role: role.jobTitle, Occurences: role.occurences }))
-        const personasData = personas.map(persona => ({ Persona: persona.jobTitle, Occurences: persona.occurences }))
-        const liaisonsData = links.map(link => ({ Liaisons: link.jobTitle, Occurences: link.occurences }))
+        const sortedRoles = roles.sort((a, b) => b.occurences - a.occurences)
+        const sortedPersonas = personas.sort((a, b) => b.occurences - a.occurences)
+        const sortedLiaisons = links.sort((a, b) => b.occurences - a.occurences)
+
+        const rolesData = sortedRoles.map(role => ({ Role: role.jobTitle, Occurences: role.occurences }))
+        const personasData = sortedPersonas.map(persona => ({ Persona: persona.jobTitle, Occurences: persona.occurences }))
+        const liaisonsData = sortedLiaisons.map(link => ({ Liaisons: link.jobTitle, Occurences: link.occurences }))
 
         const rolesSheet = XLSX.utils.json_to_sheet(rolesData)
         const personasSheet = XLSX.utils.json_to_sheet(personasData)
@@ -263,7 +267,7 @@ const OData = (props: { instance: any }) => {
 
         setTimeout(() => {
             setPdfGenerate(true)
-        }, 100)
+        }, 2000)
     }
 
     useEffect(() => {
@@ -282,8 +286,8 @@ const OData = (props: { instance: any }) => {
 
                 const splitOptions = { maxWidth, lineHeight }
 
-                const addTextWithWrap = (text: string, x: number, y: number) => {
-                    const splitText = pdf.splitTextToSize(text, maxWidth, splitOptions)
+                const addTextWithWrap = (text: string, x: number, y: number, width: number) => {
+                    const splitText = pdf.splitTextToSize(text, width, splitOptions)
                     pdf.text(splitText, x, y)
                 }
 
@@ -291,15 +295,15 @@ const OData = (props: { instance: any }) => {
 
                 pdf.setFont('BD Supper, sans serif', 'bold')
                 pdf.setFontSize(40)
-                addTextWithWrap('Bilan Datahub Persona', 30, 100)
+                addTextWithWrap('Bilan Datahub Persona', 30, 100, 175)
 
                 pdf.setFont('BD Supper, sans serif', 'normal')
                 pdf.setFontSize(16)
-                addTextWithWrap(`Au total, 974 contacts sont présents sur HubSpot. Parmis eux, ${numberRoles} intitulés de postes distincts`, 20, 130)
+                addTextWithWrap(`Au total, 974 contacts sont présents sur HubSpot. Parmis eux, ${numberRoles} intitulés de postes distincts`, 20, 130, 175)
 
                 pdf.setFont('BD Supper, sans serif', 'bold')
                 pdf.setFontSize(19)
-                addTextWithWrap(`Répartition entre les ${numberPersonas} personas présents sur Hubspot`, 20, 150)
+                addTextWithWrap(`Répartition entre les ${numberPersonas} personas présents sur Hubspot`, 20, 150, 175)
 
                 const chartImage = await convertChartToImage()
                 if (chartImage) {
@@ -309,12 +313,20 @@ const OData = (props: { instance: any }) => {
                 pdf.addPage()
 
                 const tableHeaders = ['Nom', 'Poste', 'Pourcentage']
-                const tableData = roles.map(role => [role.jobTitle, role.occurences, 0])
+                const sortedPersonas = personas.sort((a, b) => b.occurences - a.occurences)
+                const tableData = sortedPersonas.map(persona => [persona.jobTitle, persona.occurences, 0])
+
+                const totalOccurrences = roles.reduce((sum, role) => sum + role.occurences, 0)
+
+                tableData.forEach((rowData) => {
+                    const percentage = (rowData[1] as number / totalOccurrences) * 100
+                    rowData[2] = `${percentage.toFixed(2)}%`
+                })
 
                 const startY = 20
                 const margin = 10
                 const cellWidth = (pdf.internal.pageSize.width - 2 * margin - 20) / tableHeaders.length
-                const cellHeight = lineHeight + 5
+                const cellHeight = lineHeight + 20
 
                 pdf.rect(margin, startY, pdf.internal.pageSize.width - 2 * margin, (tableData.length + 2) * cellHeight)
 
@@ -334,12 +346,15 @@ const OData = (props: { instance: any }) => {
                 pdf.setFont('BD Supper, sans serif', 'normal')
                 tableData.forEach((rowData, rowIndex) => {
                     rowData.forEach((cellData, colIndex) => {
+                        const textHeight = lineHeight * (pdf.splitTextToSize(String(cellData), cellWidth, { maxWidth: cellWidth, lineHeight: lineHeight }).length - 1)
+                        const cellY = startY + (rowIndex + 2) * cellHeight + (cellHeight - textHeight) / 2
+
                         if (colIndex === 0) {
-                            pdf.text(String(cellData), margin + colIndex * cellWidth + 10, startY + (rowIndex + 2) * cellHeight)
+                            addTextWithWrap(String(cellData), margin + colIndex * cellWidth + 10, cellY, cellWidth - 10)
                         } else if (colIndex === 1) {
-                            pdf.text(String(cellData), margin + colIndex * cellWidth + 40, startY + (rowIndex + 2) * cellHeight)
+                            addTextWithWrap(String(cellData), margin + colIndex * cellWidth + 40, cellY, cellWidth - 10)
                         } else {
-                            pdf.text(String(cellData), margin + colIndex * cellWidth + 30, startY + (rowIndex + 2) * cellHeight)
+                            addTextWithWrap(String(cellData), margin + colIndex * cellWidth + 30, cellY, cellWidth - 10)
                         }
                     })
 
@@ -399,6 +414,16 @@ const OData = (props: { instance: any }) => {
                             <Typography color={theme.palette.background.default}>
                                 Contacts
                             </Typography>
+                        </Stack>
+
+                        <Stack spacing={2} direction="row">
+                            <AButton variant="contained" color="white" onClick={generatePDF}>
+                                Télécharger le PDF
+                            </AButton>
+
+                            <AButton variant="contained" onClick={generateExcel}>
+                                Télécharger l'Excel
+                            </AButton>
                         </Stack>
 
                         <TextField
@@ -480,16 +505,6 @@ const OData = (props: { instance: any }) => {
                             label="Nombre de liaisons différentes"
                             jobTitles={filteredLinks ? filteredLinks : links}
                         />
-                    </Stack>
-
-                    <Stack spacing={2} direction="row" justifyContent="flex-end">
-                        <AButton variant="contained" color="white" onClick={generatePDF}>
-                            Télécharger le PDF
-                        </AButton>
-
-                        <AButton variant="contained" onClick={generateExcel}>
-                            Télécharger l'Excel
-                        </AButton>
                     </Stack>
                 </Stack>
             </Stack>}

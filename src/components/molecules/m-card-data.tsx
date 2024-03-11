@@ -9,7 +9,7 @@ const MCardData = (props: { number: number, label: string, jobTitles: JobTitle[]
 
     const { number, label, jobTitles } = props
 
-    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
+    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
 
     const toggleSortOrder = () => {
         setSortOrder((prevOrder) => (prevOrder === 'asc' ? 'desc' : 'asc'))

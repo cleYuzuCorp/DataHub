@@ -26,7 +26,7 @@ const OTableEnrichment = (props: {
     const [open, setOpen] = useState<Array<boolean>>([])
     const [selectedContacts, setSelectedContacts] = useState<Array<Contact>>([])
     const [ignoredContacts, setIgnoredContacts] = useState<Array<Contact>>([])
-    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
+    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
 
     const [page, setPage] = useState(0)
     const [rowsPerPage, setRowsPerPage] = useState(10)
