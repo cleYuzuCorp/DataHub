@@ -50,7 +50,7 @@ const CustomersAccounts = (props: { instance: any, customers: Customer[], setCus
             Persona_NomInterne: selectedCustomer?.Persona_NomInterne
         }
 
-        await fetch(`${process.env.REACT_APP_API_URL}/tenant/patch/${selectedCustomer?.IdTenant}`, {
+        await fetch(`${process.env.REACT_APP_API}/tenant/${selectedCustomer?.IdTenant}`, {
             method: "PATCH",
             headers: {
                 Authorization: `Bearer ${accessToken}`,
@@ -59,7 +59,7 @@ const CustomersAccounts = (props: { instance: any, customers: Customer[], setCus
             body: JSON.stringify(payloadName)
         })
 
-        await fetch(`${process.env.REACT_APP_API_PERSONA}/persona/upsertSettingsTenant`, {
+        await fetch(`${process.env.REACT_APP_API}/module-persona/settings`, {
             method: "POST",
             headers: {
                 Authorization: `Bearer ${accessToken}`,
@@ -84,7 +84,7 @@ const CustomersAccounts = (props: { instance: any, customers: Customer[], setCus
 
         const isConfirmed = window.confirm("Êtes-vous sûr de vouloir supprimer ce client ?")
         if (isConfirmed) {
-            await fetch(`${process.env.REACT_APP_API_URL}/tenant/delete`, {
+            await fetch(`${process.env.REACT_APP_API}/tenant/delete`, {
                 method: "DELETE",
                 headers: {
                     Authorization: `Bearer ${accessToken}`,
@@ -95,6 +95,7 @@ const CustomersAccounts = (props: { instance: any, customers: Customer[], setCus
             const newClients = customers.filter((customer) => customer.IdTenant !== id)
             setCustomers(newClients)
         }
+
     }
 
     return (

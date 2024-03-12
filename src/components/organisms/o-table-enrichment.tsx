@@ -115,7 +115,7 @@ const OTableEnrichment = (props: {
         await instance.initialize()
         const accessToken = await acquireToken(instance)
 
-        const response = await fetch(`${process.env.REACT_APP_API_PERSONA}/hubspot/enrich`, {
+        const response = await fetch(`${process.env.REACT_APP_API}/hubspot/enrich`, {
             method: "POST",
             headers: {
                 Authorization: `Bearer ${accessToken}`,

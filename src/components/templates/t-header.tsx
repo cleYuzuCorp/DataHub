@@ -48,7 +48,7 @@ const THeader = (props: { instance?: any, customers: Customer[], setCustomers: (
                 await instance.initialize()
                 const accessToken = await acquireToken(instance)
 
-                const response = await fetch(`${process.env.REACT_APP_API_URL}/tenant/getAll`, {
+                const response = await fetch(`${process.env.REACT_APP_API}/tenant/`, {
                     headers: {
                         Authorization: `Bearer ${accessToken}`,
                         "Content-Type": "application/json",

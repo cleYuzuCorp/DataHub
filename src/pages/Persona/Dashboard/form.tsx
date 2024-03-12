@@ -46,7 +46,7 @@ const Form = (props: { instance: any }) => {
                 await instance.initialize()
                 const accessToken = await acquireToken(instance)
 
-                const response = await fetch(`${process.env.REACT_APP_API_PERSONA}/persona/findAllAssociationsForTenant?IdTenant=${idTenant}`, {
+                const response = await fetch(`${process.env.REACT_APP_API}/persona/findAllAssociationsForTenant?IdTenant=${idTenant}`, {
                     method: "GET",
                     headers: {
                         Authorization: `Bearer ${accessToken}`,
@@ -312,7 +312,7 @@ const Form = (props: { instance: any }) => {
 
                 const accessToken = await acquireToken(instance)
 
-                const response = await fetch(`${process.env.REACT_APP_API_PERSONA}/persona/save`, {
+                const response = await fetch(`${process.env.REACT_APP_API}/persona/save`, {
                     method: "POST",
                     headers: {
                         Authorization: `Bearer ${accessToken}`,

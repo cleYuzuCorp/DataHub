@@ -32,7 +32,7 @@ const InitiallyNull = (props: { instance: any }) => {
                     await instance.initialize()
                     const accessToken = await acquireToken(instance)
 
-                    const response = await fetch(`${process.env.REACT_APP_API_PERSONA}/persona/findAllAssociationsForTenant?IdTenant=${idTenant}`, {
+                    const response = await fetch(`${process.env.REACT_APP_API}/persona/findAllAssociationsForTenant?IdTenant=${idTenant}`, {
                         method: "GET",
                         headers: {
                             Authorization: `Bearer ${accessToken}`,
@@ -119,7 +119,7 @@ const InitiallyNull = (props: { instance: any }) => {
 
                 const accessToken = await acquireToken(instance)
 
-                const response = await fetch(`${process.env.REACT_APP_API_PERSONA}/hubspot/processPersona`, {
+                const response = await fetch(`${process.env.REACT_APP_API}/hubspot/processPersona`, {
                     method: "POST",
                     headers: {
                         Authorization: `Bearer ${accessToken}`,
