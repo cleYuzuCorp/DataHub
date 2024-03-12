@@ -101,9 +101,9 @@ const THeader = (props: { instance?: any, customers: Customer[], setCustomers: (
             navigate(`/persona/dashboard/data?id=${selectedCustomer?.IdTenant}`)
         } else if (active.includes("Initialement nul")) {
             navigate(`/persona/enrichissement/initially-null?id=${selectedCustomer?.IdTenant}`)
-        } else if (active.includes("Modification trouvé")) {
+        } else if (active.includes("Modification trouvée")) {
             navigate(`/persona/enrichissement/change-found?id=${selectedCustomer?.IdTenant}`)
-        } else if (active.includes("Aucune modification trouvé")) {
+        } else if (active.includes("Aucune modification trouvée")) {
             navigate(`/persona/enrichissement/no-change-found?id=${selectedCustomer?.IdTenant}`)
         } else if (active.includes("Historique")) {
             navigate(`/persona/history?id=${selectedCustomer?.IdTenant}`)
