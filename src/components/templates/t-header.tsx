@@ -1,6 +1,6 @@
-import { faRightFromBracket, faRightToBracket, faUser } from "@fortawesome/free-solid-svg-icons"
+import { faRightFromBracket, faRightToBracket, faUser, faXmark } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { Stack, Typography } from "@mui/material"
+import { IconButton, Modal, Stack, TextField, Typography } from "@mui/material"
 import AAccordion from "../atoms/a-accordion"
 import AHeaderSelect from "../atoms/a-header-select"
 import { useEffect, useState } from "react"
@@ -10,6 +10,7 @@ import { Customer } from "../../interfaces/customer"
 import { acquireToken } from "../../App"
 import { JobTitle } from "../../interfaces/job-title"
 import { Contact } from "../../interfaces/contact"
+import AButton from "../atoms/a-button"
 
 const THeader = (props: {
     instance?: any,
@@ -38,7 +39,7 @@ const THeader = (props: {
     const navigate = useNavigate()
 
     const [hovered, setHovered] = useState("")
-    const [dataLoading, setDataLoading] = useState(false)
+    const [open, setOpen] = useState(false)
     const [dataInit, setDataInit] = useState(false)
     const [interactionInProgress, setInteractionInProgress] = useState(false)
     const [active, setActive] = useState([""])
@@ -46,7 +47,16 @@ const THeader = (props: {
     const [customersNames, setCustomersNames] = useState<Array<string>>()
     const [selectedCustomer, setSelectedCustomer] = useState<Customer>()
 
-    console.log(active)
+    const handleOpen = () => {
+        if (dataInit === false) {
+            setOpen(true)
+        }
+    }
+
+    const handleClose = () => {
+        setActive((prevActive) => prevActive.filter((value) => value !== "Enrichissement"))
+        setOpen(false)
+    }
 
     useEffect(() => {
         const accounts = instance.getAllAccounts()
@@ -120,68 +130,67 @@ const THeader = (props: {
         }
     }
 
-    useEffect(() => {
+    const validate = () => {
+        setOpen(false)
         setLoading(true)
 
         const fetchData = async () => {
-            if (dataLoading) {
-                try {
-                    await instance.initialize()
-                    const accessToken = await acquireToken(instance)
+            try {
+                await instance.initialize()
+                const accessToken = await acquireToken(instance)
 
-                    const response = await fetch(`${process.env.REACT_APP_API}/proposition-persona/associations-settings?IdTenant=${selectedCustomer?.IdTenant}`, {
-                        method: "GET",
-                        headers: {
-                            Authorization: `Bearer ${accessToken}`,
-                            "Content-Type": "application/json"
+                const response = await fetch(`${process.env.REACT_APP_API}/proposition-persona/associations-settings?IdTenant=${selectedCustomer?.IdTenant}`, {
+                    method: "GET",
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`,
+                        "Content-Type": "application/json"
+                    }
+                })
+
+                const data = await response.json()
+
+                if (data.personasRoles || data.rolesMotsClefs || data.dbPersona) {
+                    const associationsPersonaRolesData = Object.keys(data.personasRoles).map((personaKey) => {
+                        return {
+                            parent: personaKey,
+                            childs: data.personasRoles[personaKey].Roles.map((role: any, rolesIndex: number) => ({
+                                id: rolesIndex + 1,
+                                value: role,
+                            }))
                         }
                     })
 
-                    const data = await response.json()
+                    setAssociationsPersonaRoles(associationsPersonaRolesData)
 
-                    if (data.personasRoles || data.rolesMotsClefs || data.dbPersona) {
-                        const associationsPersonaRolesData = Object.keys(data.personasRoles).map((personaKey) => {
-                            return {
-                                parent: personaKey,
-                                childs: data.personasRoles[personaKey].Roles.map((role: any, rolesIndex: number) => ({
-                                    id: rolesIndex + 1,
-                                    value: role,
-                                }))
-                            }
-                        })
+                    const associationsRoleKeywordsData = Object.keys(data.rolesMotsClefs).map((roleKey) => {
+                        return {
+                            parent: roleKey,
+                            childs: data.rolesMotsClefs[roleKey].MotsClefs.length !== 0 ? data.rolesMotsClefs[roleKey].MotsClefs : [""]
+                        }
+                    })
 
-                        setAssociationsPersonaRoles(associationsPersonaRolesData)
+                    setAssociationsRoleKeywords(associationsRoleKeywordsData)
 
-                        const associationsRoleKeywordsData = Object.keys(data.rolesMotsClefs).map((roleKey) => {
-                            return {
-                                parent: roleKey,
-                                childs: data.rolesMotsClefs[roleKey].MotsClefs.length !== 0 ? data.rolesMotsClefs[roleKey].MotsClefs : [""]
-                            }
-                        })
+                    const personas = data.dbPersona.map((persona: { description: string, value: string }) => {
+                        return {
+                            description: persona.description,
+                            value: persona.value
+                        }
+                    })
 
-                        setAssociationsRoleKeywords(associationsRoleKeywordsData)
+                    setDbPersona(personas)
 
-                        const personas = data.dbPersona.map((persona: { description: string, value: string }) => {
-                            return {
-                                description: persona.description,
-                                value: persona.value
-                            }
-                        })
-
-                        setDbPersona(personas)
-
-                        setDataInit(true)
-                        setLoading(false)
-                    }
-
-                } catch (error) {
-                    console.error("Une erreur s'est produite lors de la requête :", error)
+                    setDataInit(true)
+                    setLoading(false)
                 }
+
+            } catch (error) {
+                console.error("Une erreur s'est produite lors de la requête :", error)
             }
         }
 
         fetchData()
-    }, [dataLoading])
+    }
 
     useEffect(() => {
         setLoading(true)
@@ -232,11 +241,9 @@ const THeader = (props: {
                 setNumberRoles(data.dashboard.totalOfDifferentRoles)
                 setNumberPersonas(data.dashboard.totalOfDifferentPersonas)
 
-                console.log(data.enrichment, 'data')
-
-                setInitiallyNull(data.enrichment.contactsWithProposedPersonaAndValue)
+                setInitiallyNull(data.enrichment.contactsWithProposedPersonaAndNull)
                 setChangeFound(data.enrichment.contactsWithProposedPersonaAndValue)
-                setNoChangeFound(data.enrichment.contactsWithProposedPersonaAndValue)
+                setNoChangeFound(data.enrichment.contactsWithoutProposedPersona)
 
                 const rolesData = Object.entries(data.dashboard.occurencesByRoles).map(([jobTitle, occurences]) => ({
                     jobTitle: jobTitle as string,
@@ -279,7 +286,7 @@ const THeader = (props: {
         } else if (active.includes("Historique")) {
             navigate(`/persona/history?id=${selectedCustomer?.IdTenant}`)
         } else if (active.includes("Enrichissement")) {
-            setDataLoading(true)
+            handleOpen()
         } else {
             navigate('/')
         }
@@ -397,6 +404,48 @@ const THeader = (props: {
                     </Typography>
                 </Stack>}
             </Stack>
+
+            <Modal open={open} onClose={handleClose}>
+                <Stack
+                    spacing={4}
+                    alignItems="center"
+                    sx={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        borderRadius: '15px',
+                        background: theme.palette.background.default,
+                        padding: '30px 50px 30px 50px'
+                    }}
+                >
+                    <IconButton
+                        sx={{
+                            position: 'absolute',
+                            top: '10px',
+                            right: '10px',
+                            width: '40px',
+                            height: '40px'
+                        }}
+                        onClick={handleClose}
+                    >
+                        <FontAwesomeIcon icon={faXmark} color={theme.palette.text.primary} />
+                    </IconButton>
+                    <Typography variant="h4">
+                        En vous dirigeant ici cela va lancer un chargement en fond, êtes vous sûr ?
+                    </Typography>
+
+                    <Stack spacing={4} direction="row">
+                        <AButton variant="outlined" color="error" onClick={handleClose}>
+                            Annuler
+                        </AButton>
+
+                        <AButton variant="contained" onClick={validate}>
+                            Confirmer
+                        </AButton>
+                    </Stack>
+                </Stack>
+            </Modal>
         </Stack>
     )
 }

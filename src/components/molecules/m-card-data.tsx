@@ -1,4 +1,4 @@
-import { Paper, Stack, Table, TableBody, TableCell, TableHead, TableRow, Typography } from "@mui/material"
+import { Paper, Stack, Table, TableBody, TableCell, TableHead, TablePagination, TableRow, Typography } from "@mui/material"
 import theme from "../../theme"
 import { JobTitle } from "../../interfaces/job-title"
 import { useState } from "react"
@@ -10,6 +10,12 @@ const MCardData = (props: { number: number, label: string, jobTitles: JobTitle[]
     const { number, label, jobTitles } = props
 
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
+
+    const [page, setPage] = useState(0)
+    const [rowsPerPage, setRowsPerPage] = useState(10)
+
+    const startIndex = page * rowsPerPage
+    const endIndex = startIndex + rowsPerPage
 
     const toggleSortOrder = () => {
         setSortOrder((prevOrder) => (prevOrder === 'asc' ? 'desc' : 'asc'))
@@ -75,7 +81,7 @@ const MCardData = (props: { number: number, label: string, jobTitles: JobTitle[]
                     </TableRow>
                 </TableHead>
                 <TableBody>
-                    {sortedJobTitle.map((jobTitle) =>
+                    {sortedJobTitle.slice(startIndex, endIndex).map((jobTitle) =>
                         <TableRow key={jobTitle.jobTitle}>
                             <TableCell align="left">
                                 <Typography>
@@ -91,6 +97,20 @@ const MCardData = (props: { number: number, label: string, jobTitles: JobTitle[]
                     )}
                 </TableBody>
             </Table>
+
+            {sortedJobTitle.length > 9 && <TablePagination
+                rowsPerPageOptions={[10, 25, 50, 100]}
+                component="div"
+                count={sortedJobTitle.length}
+                rowsPerPage={rowsPerPage}
+                page={page}
+                onPageChange={(event, newPage) => setPage(newPage)}
+                onRowsPerPageChange={(event) => {
+                    setRowsPerPage(parseInt(event.target.value, 10))
+                    setPage(0)
+                }}
+                labelRowsPerPage={""}
+            />}
         </Stack>
     )
 }
