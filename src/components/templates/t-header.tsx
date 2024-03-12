@@ -106,7 +106,7 @@ const THeader = (props: { instance?: any, customers: Customer[], setCustomers: (
         } else if (active.includes("Aucune modification trouvé")) {
             navigate(`/persona/enrichissement/no-change-found?id=${selectedCustomer?.IdTenant}`)
         } else if (active.includes("Historique")) {
-            navigate(`/persona/history?id=${selectedCustomer?.IdTenant}`)
+            navigate(`/historique?id=${selectedCustomer?.IdTenant}`)
         } else {
             navigate('/')
         }
