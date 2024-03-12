@@ -59,7 +59,7 @@ const OData = (props: { instance: any }) => {
                     await instance.initialize()
                     const accessToken = await acquireToken(instance)
 
-                    const response = await fetch(`${process.env.REACT_APP_API}/persona/findAllAssociationsForTenant?IdTenant=${idTenant}`, {
+                    const response = await fetch(`${process.env.REACT_APP_API}/enrichment?IdTenant=${idTenant}`, {
                         method: "GET",
                         headers: {
                             Authorization: `Bearer ${accessToken}`,
