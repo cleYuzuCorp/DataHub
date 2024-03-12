@@ -1,13 +1,13 @@
 import { CircularProgress, Container, Stack, Typography } from "@mui/material"
-import OFormAssociation from "../../../components/organisms/o-form-association"
+import OFormAssociation from "../../components/organisms/o-form-association"
 import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { useLocation } from "react-router-dom"
-import { acquireToken } from "../../../App"
+import { acquireToken } from "../../App"
 import * as yup from "yup"
 import { yupResolver } from "@hookform/resolvers/yup"
 
-const Form = (props: { instance: any }) => {
+const Dashboard = (props: { instance: any }) => {
 
     const { instance } = props
 
@@ -383,4 +383,4 @@ const Form = (props: { instance: any }) => {
     )
 }
 
-export default Form
+export default Dashboard

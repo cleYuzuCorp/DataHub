@@ -8,19 +8,45 @@ import theme from "../../theme"
 import { useNavigate } from "react-router-dom"
 import { Customer } from "../../interfaces/customer"
 import { acquireToken } from "../../App"
+import { JobTitle } from "../../interfaces/job-title"
+import { Contact } from "../../interfaces/contact"
 
-const THeader = (props: { instance?: any, customers: Customer[], setCustomers: (value: Customer[]) => void, setLoading: (value: boolean) => void }) => {
+const THeader = (props: {
+    instance?: any,
+    customers: Customer[]
+    setCustomers: (value: Customer[]) => void
+    setLoading: (value: boolean) => void
+    dbPersona: { description: string, value: string }[]
+    setDbPersona: (value: { description: string, value: string }[]) => void
+    associationsRoleKeywords: { parent: string, childs: string[] }[]
+    setAssociationsRoleKeywords: (value: { parent: string, childs: string[] }[]) => void
+    associationsPersonaRoles: { parent: string, childs: { id: number, value: string }[] }[]
+    setAssociationsPersonaRoles: (value: { parent: string, childs: { id: number, value: string }[] }[]) => void
+    setNumberContacts: (value: number) => void
+    setNumberRoles: (value: number) => void
+    setNumberPersonas: (value: number) => void
+    setRoles: (value: JobTitle[]) => void
+    setPersonas: (value: JobTitle[]) => void
+    setLinks: (value: JobTitle[]) => void
+    setInitiallyNull: (value: [Contact]) => void
+    setChangeFound: (value: Contact[]) => void
+    setNoChangeFound: (value: Contact[]) => void
+}) => {
 
-    const { instance, customers, setCustomers, setLoading } = props
+    const { instance, customers, setCustomers, setLoading, dbPersona, setDbPersona, associationsRoleKeywords, setAssociationsRoleKeywords, associationsPersonaRoles, setAssociationsPersonaRoles, setNumberContacts, setNumberRoles, setNumberPersonas, setRoles, setPersonas, setLinks, setInitiallyNull, setChangeFound, setNoChangeFound } = props
 
     const navigate = useNavigate()
 
     const [hovered, setHovered] = useState("")
+    const [dataLoading, setDataLoading] = useState(false)
+    const [dataInit, setDataInit] = useState(false)
     const [interactionInProgress, setInteractionInProgress] = useState(false)
     const [active, setActive] = useState([""])
     const [account, setAccount] = useState()
     const [customersNames, setCustomersNames] = useState<Array<string>>()
     const [selectedCustomer, setSelectedCustomer] = useState<Customer>()
+
+    console.log(active)
 
     useEffect(() => {
         const accounts = instance.getAllAccounts()
@@ -95,10 +121,155 @@ const THeader = (props: { instance?: any, customers: Customer[], setCustomers: (
     }
 
     useEffect(() => {
-        if (active.includes("Formulaire")) {
-            navigate(`/persona/dashboard/form?id=${selectedCustomer?.IdTenant}`)
+        setLoading(true)
+
+        const fetchData = async () => {
+            if (dataLoading) {
+                try {
+                    await instance.initialize()
+                    const accessToken = await acquireToken(instance)
+
+                    const response = await fetch(`${process.env.REACT_APP_API}/enrichment?IdTenant=${selectedCustomer?.IdTenant}`, {
+                        method: "GET",
+                        headers: {
+                            Authorization: `Bearer ${accessToken}`,
+                            "Content-Type": "application/json"
+                        }
+                    })
+
+                    const data = await response.json()
+
+                    if (data.personasRoles || data.rolesMotsClefs || data.dbPersona) {
+                        const associationsPersonaRolesData = Object.keys(data.personasRoles).map((personaKey) => {
+                            return {
+                                parent: personaKey,
+                                childs: data.personasRoles[personaKey].Roles.map((role: any, rolesIndex: number) => ({
+                                    id: rolesIndex + 1,
+                                    value: role,
+                                }))
+                            }
+                        })
+
+                        setAssociationsPersonaRoles(associationsPersonaRolesData)
+
+                        const associationsRoleKeywordsData = Object.keys(data.rolesMotsClefs).map((roleKey) => {
+                            return {
+                                parent: roleKey,
+                                childs: data.rolesMotsClefs[roleKey].MotsClefs.length !== 0 ? data.rolesMotsClefs[roleKey].MotsClefs : [""]
+                            }
+                        })
+
+                        setAssociationsRoleKeywords(associationsRoleKeywordsData)
+
+                        const personas = data.dbPersona.map((persona: { description: string, value: string }) => {
+                            return {
+                                description: persona.description,
+                                value: persona.value
+                            }
+                        })
+
+                        setDbPersona(personas)
+
+                        setDataInit(true)
+                        setLoading(false)
+                    }
+
+                } catch (error) {
+                    console.error("Une erreur s'est produite lors de la requête :", error)
+                }
+            }
+        }
+
+        fetchData()
+    }, [dataLoading])
+
+    useEffect(() => {
+        setLoading(true)
+
+        const fetchData = async () => {
+            if (selectedCustomer?.IdTenant && dataInit) {
+                const parsedId = selectedCustomer?.IdTenant
+
+                const body = {
+                    idTenant: parsedId,
+                    dbPersona: dbPersona,
+                    associationsRoleMotClef: associationsRoleKeywords.map((roleKeywords) => {
+                        if (roleKeywords.parent !== "" && roleKeywords.childs.every((child) => child !== "")) {
+                            return {
+                                NomRole: roleKeywords.parent,
+                                NomMotClef: roleKeywords.childs,
+                            }
+                        } else {
+                            return undefined
+                        }
+                    }).filter((association) => association !== undefined),
+                    associationsPersonaRole: associationsPersonaRoles.map((personaRoles) => {
+                        if (personaRoles.parent !== "" && personaRoles.childs.every((child) => child.value !== "")) {
+                            return {
+                                NomPersona: personaRoles.parent,
+                                NomRole: personaRoles.childs,
+                            }
+                        } else {
+                            return undefined
+                        }
+                    }).filter((association) => association !== undefined)
+                }
+
+                const accessToken = await acquireToken(instance)
+
+                const response = await fetch(`${process.env.REACT_APP_API}/enrichment/processPersona`, {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(body)
+                })
+
+                const data = await response.json()
+
+                setNumberContacts(data.dashboard.totalOfDifferentContacts)
+                setNumberRoles(data.dashboard.totalOfDifferentRoles)
+                setNumberPersonas(data.dashboard.totalOfDifferentPersonas)
+
+                console.log(data.enrichment, 'data')
+
+                setInitiallyNull(data.enrichment.contactsWithProposedPersonaAndValue)
+                setChangeFound(data.enrichment.contactsWithProposedPersonaAndValue)
+                setNoChangeFound(data.enrichment.contactsWithProposedPersonaAndValue)
+
+                const rolesData = Object.entries(data.dashboard.occurencesByRoles).map(([jobTitle, occurences]) => ({
+                    jobTitle: jobTitle as string,
+                    occurences: occurences as number
+                }))
+
+                setRoles(rolesData)
+
+                const personasData = Object.entries(data.dashboard.occurencesByPersonas).map(([jobTitle, occurences]) => ({
+                    jobTitle: jobTitle as string,
+                    occurences: occurences as number
+                }))
+
+                setPersonas(personasData)
+
+                const linksData = Object.entries(data.dashboard.occurencesByLiaisons).map(([jobTitle, occurences]) => ({
+                    jobTitle: jobTitle as string,
+                    occurences: occurences as number
+                }))
+
+                setLinks(linksData)
+                setLoading(false)
+            }
+        }
+
+        fetchData()
+    }, [dataInit])
+
+    useEffect(() => {
+        if (active.includes("Dashboard")) {
+            navigate(`/persona/dashboard?id=${selectedCustomer?.IdTenant}`)
         } else if (active.includes("Données")) {
-            navigate(`/persona/dashboard/data?id=${selectedCustomer?.IdTenant}`)
+            navigate(`/persona/enrichissement/data?id=${selectedCustomer?.IdTenant}`)
         } else if (active.includes("Initialement nul")) {
             navigate(`/persona/enrichissement/initially-null?id=${selectedCustomer?.IdTenant}`)
         } else if (active.includes("Modification trouvée")) {
@@ -107,6 +278,8 @@ const THeader = (props: { instance?: any, customers: Customer[], setCustomers: (
             navigate(`/persona/enrichissement/no-change-found?id=${selectedCustomer?.IdTenant}`)
         } else if (active.includes("Historique")) {
             navigate(`/persona/history?id=${selectedCustomer?.IdTenant}`)
+        } else if (active.includes("Enrichissement")) {
+            setDataLoading(true)
         } else {
             navigate('/')
         }
@@ -123,12 +296,8 @@ const THeader = (props: { instance?: any, customers: Customer[], setCustomers: (
         "Historique"
     ]
 
-    const dashboard = [
-        "Formulaire",
-        "Données"
-    ]
-
     const enrichissement = [
+        "Données",
         "Initialement nul",
         "Modification trouvée",
         "Aucune modification trouvée"
@@ -191,9 +360,6 @@ const THeader = (props: { instance?: any, customers: Customer[], setCustomers: (
                     }
                     {active.includes("Persona") &&
                         <AHeaderSelect values={persona} active={active} setActive={setActive} />
-                    }
-                    {active.includes("Dashboard") &&
-                        <AHeaderSelect values={dashboard} active={active} setActive={setActive} />
                     }
                     {active.includes("Enrichissement") &&
                         <AHeaderSelect values={enrichissement} active={active} setActive={setActive} />
