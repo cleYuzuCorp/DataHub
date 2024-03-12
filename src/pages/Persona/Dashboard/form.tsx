@@ -312,7 +312,7 @@ const Form = (props: { instance: any }) => {
 
                 const accessToken = await acquireToken(instance)
 
-                const response = await fetch(`${process.env.REACT_APP_API}/persona/save`, {
+                const response = await fetch(`${process.env.REACT_APP_API}/enrichment/save`, {
                     method: "POST",
                     headers: {
                         Authorization: `Bearer ${accessToken}`,
