@@ -24,7 +24,7 @@ const CustomersAccounts = (props: { instance: any, customers: Customer[], setCus
                 await instance.initialize()
                 const accessToken = await acquireToken(instance)
 
-                const response = await fetch(`${process.env.REACT_APP_API}/module-persona?IdTenant=${customer.IdTenant}`, {
+                const response = await fetch(`${process.env.REACT_APP_API}/hubspot-settings?IdTenant=${customer.IdTenant}`, {
                     method: "GET",
                     headers: {
                         Authorization: `Bearer ${accessToken}`,
@@ -95,8 +95,8 @@ const CustomersAccounts = (props: { instance: any, customers: Customer[], setCus
             body: JSON.stringify(payloadName)
         })
 
-        await fetch(`${process.env.REACT_APP_API}/module-persona`, {
-            method: "POST",
+        await fetch(`${process.env.REACT_APP_API}/hubspot-settings`, {
+            method: "PATCH",
             headers: {
                 Authorization: `Bearer ${accessToken}`,
                 "Content-Type": "application/json"

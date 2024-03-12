@@ -129,7 +129,7 @@ const THeader = (props: {
                     await instance.initialize()
                     const accessToken = await acquireToken(instance)
 
-                    const response = await fetch(`${process.env.REACT_APP_API}/enrichment?IdTenant=${selectedCustomer?.IdTenant}`, {
+                    const response = await fetch(`${process.env.REACT_APP_API}/proposition-persona/associations-settings?IdTenant=${selectedCustomer?.IdTenant}`, {
                         method: "GET",
                         headers: {
                             Authorization: `Bearer ${accessToken}`,
@@ -217,7 +217,7 @@ const THeader = (props: {
 
                 const accessToken = await acquireToken(instance)
 
-                const response = await fetch(`${process.env.REACT_APP_API}/enrichment/processPersona`, {
+                const response = await fetch(`${process.env.REACT_APP_API}/proposition-persona/process`, {
                     method: "POST",
                     headers: {
                         Authorization: `Bearer ${accessToken}`,

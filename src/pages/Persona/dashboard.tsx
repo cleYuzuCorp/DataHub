@@ -46,7 +46,7 @@ const Dashboard = (props: { instance: any }) => {
                 await instance.initialize()
                 const accessToken = await acquireToken(instance)
 
-                const response = await fetch(`${process.env.REACT_APP_API}/enrichment?IdTenant=${idTenant}`, {
+                const response = await fetch(`${process.env.REACT_APP_API}/proposition-persona/associations-settings?IdTenant=${idTenant}`, {
                     method: "GET",
                     headers: {
                         Authorization: `Bearer ${accessToken}`,
@@ -312,8 +312,8 @@ const Dashboard = (props: { instance: any }) => {
 
                 const accessToken = await acquireToken(instance)
 
-                const response = await fetch(`${process.env.REACT_APP_API}/enrichment/save`, {
-                    method: "POST",
+                const response = await fetch(`${process.env.REACT_APP_API}/proposition-persona/associations-settings`, {
+                    method: "PATCH",
                     headers: {
                         Authorization: `Bearer ${accessToken}`,
                         "Content-Type": "application/json"

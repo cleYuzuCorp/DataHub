@@ -44,7 +44,7 @@ const History = (props: { instance: any }) => {
                     await instance.initialize()
                     const accessToken = await acquireToken(instance)
 
-                    const response = await fetch(`${process.env.REACT_APP_API}/enrichment?IdTenant=${idTenant}`, {
+                    const response = await fetch(`${process.env.REACT_APP_API}/proposition-persona/associations-settings?IdTenant=${idTenant}`, {
                         method: "GET",
                         headers: {
                             Authorization: `Bearer ${accessToken}`,
@@ -171,8 +171,8 @@ const History = (props: { instance: any }) => {
 
         const accessToken = await acquireToken(instance)
 
-        const response = fetch(`${process.env.REACT_APP_API}/hubspot/enrich`, {
-            method: "POST",
+        const response = fetch(`${process.env.REACT_APP_API}/hubspot/contacts/persona`, {
+            method: "PATCH",
             headers: {
                 Authorization: `Bearer ${accessToken}`,
                 "Content-Type": "application/json"
