@@ -119,7 +119,7 @@ const ChangeFound = (props: { instance: any }) => {
 
                 const accessToken = await acquireToken(instance)
 
-                const response = await fetch(`${process.env.REACT_APP_API}/hubspot/processPersona`, {
+                const response = await fetch(`${process.env.REACT_APP_API}/enrichment/processPersona`, {
                     method: "POST",
                     headers: {
                         Authorization: `Bearer ${accessToken}`,
