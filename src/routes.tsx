@@ -50,7 +50,7 @@ const AppRoutes = (props: { instance?: any }) => {
                 />
               </Drawer>
             </Stack>}
-            <CustomersAccounts instance={instance} customers={customers} setCustomers={setCustomers} loading={loading} />
+            <CustomersAccounts instance={instance} customers={customers} setCustomers={setCustomers} loading={loading} setLoading={setLoading} />
           </Stack>
         </ThemeProvider>} />
         {pagesContext.keys().map((modulePath: string) => {

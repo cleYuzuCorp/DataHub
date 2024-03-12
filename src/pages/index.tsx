@@ -3,19 +3,55 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { CircularProgress, Container, IconButton, Modal, Paper, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography } from "@mui/material"
 import theme from "../theme"
 import AButton from "../components/atoms/a-button"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { acquireToken } from "../App"
 import { Customer } from "../interfaces/customer"
 
-const CustomersAccounts = (props: { instance: any, customers: Customer[], setCustomers: (value: Customer[]) => void, loading: boolean }) => {
+const CustomersAccounts = (props: { instance: any, customers: Customer[], setCustomers: (value: Customer[]) => void, loading: boolean, setLoading: (value: boolean) => void }) => {
 
-    const { instance, customers, setCustomers, loading } = props
+    const { instance, customers, setCustomers, loading, setLoading } = props
 
     const [open, setOpen] = useState(false)
     const [selectedCustomer, setSelectedCustomer] = useState<Customer>()
 
     const handleOpen = (customer: Customer) => {
         setSelectedCustomer(customer)
+
+        const fetchData = async () => {
+            setLoading(true)
+
+            try {
+                await instance.initialize()
+                const accessToken = await acquireToken(instance)
+
+                const response = await fetch(`${process.env.REACT_APP_API}/module-persona?IdTenant=${customer.IdTenant}`, {
+                    method: "GET",
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`,
+                        "Content-Type": "application/json"
+                    }
+                })
+
+                const data = await response.json()
+
+                const customerData = {
+                    IdTenant: customer.IdTenant,
+                    NomClient: customer.NomClient,
+                    IntitulePoste_NomInterne: data.IntitulePoste_NomInterne,
+                    Persona_NomInterne: data.Persona_NomInterne
+                }
+
+                setSelectedCustomer(customerData)
+
+                setLoading(false)
+
+            } catch (error) {
+                console.error("Une erreur s'est produite lors de la requête :", error)
+            }
+        }
+
+        fetchData()
+
         setOpen(true)
     }
 
@@ -59,7 +95,7 @@ const CustomersAccounts = (props: { instance: any, customers: Customer[], setCus
             body: JSON.stringify(payloadName)
         })
 
-        await fetch(`${process.env.REACT_APP_API}/module-persona/settings`, {
+        await fetch(`${process.env.REACT_APP_API}/module-persona`, {
             method: "POST",
             headers: {
                 Authorization: `Bearer ${accessToken}`,
