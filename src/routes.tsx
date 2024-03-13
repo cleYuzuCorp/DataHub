@@ -22,6 +22,7 @@ const AppRoutes = (props: { instance?: any }) => {
   const [customers, setCustomers] = useState<Customer[]>([])
 
   const [openConfirm, setOpenConfirm] = useState(false)
+  const [active, setActive] = useState([""])
   const [dataLoading, setDataLoading] = useState<{ customerName: string; isLoading: boolean }[]>([])
   const [dataInit, setDataInit] = useState(false)
   const [selectedCustomer, setSelectedCustomer] = useState<Customer>()
@@ -108,6 +109,7 @@ const AppRoutes = (props: { instance?: any }) => {
             return item
           }))
           setDataInit(true)
+          setActive([active[0], active[1], "Enrichissement", "Données"])
           setLoading(false)
         }
 
@@ -210,6 +212,8 @@ const AppRoutes = (props: { instance?: any }) => {
               instance={instance}
               customers={customers}
               setCustomers={setCustomers}
+              active={active}
+              setActive={setActive}
               open={openConfirm}
               setOpen={setOpenConfirm}
               dataLoading={dataLoading}
@@ -236,6 +240,8 @@ const AppRoutes = (props: { instance?: any }) => {
                   setCustomers={setCustomers}
                   open={openConfirm}
                   setOpen={setOpenConfirm}
+                  active={active}
+                  setActive={setActive}
                   dataLoading={dataLoading}
                   setDataLoading={setDataLoading}
                   selectedCustomer={selectedCustomer}
@@ -262,6 +268,8 @@ const AppRoutes = (props: { instance?: any }) => {
                   setCustomers={setCustomers}
                   open={openConfirm}
                   setOpen={setOpenConfirm}
+                  active={active}
+                  setActive={setActive}
                   dataLoading={dataLoading}
                   setDataLoading={setDataLoading}
                   selectedCustomer={selectedCustomer}
@@ -286,6 +294,8 @@ const AppRoutes = (props: { instance?: any }) => {
                       setCustomers={setCustomers}
                       open={openConfirm}
                       setOpen={setOpenConfirm}
+                      active={active}
+                      setActive={setActive}
                       dataLoading={dataLoading}
                       setDataLoading={setDataLoading}
                       selectedCustomer={selectedCustomer}

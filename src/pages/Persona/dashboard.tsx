@@ -11,7 +11,16 @@ const Dashboard = (props: { instance: any, validate: () => void }) => {
 
     const { instance, validate } = props
 
-    const idTenant = new URLSearchParams(useLocation().search).get('id')
+    const location = useLocation();
+    const [idTenant, setIdTenant] = useState<string | null>();
+
+    useEffect(() => {
+        const searchParams = new URLSearchParams(location.search)
+        const id = searchParams.get('id')
+        if (id) {
+            setIdTenant(id)
+        }
+    }, [location.search])
 
     const [loading, setLoading] = useState(false)
     const [isRestore, setIsRestore] = useState(false)
@@ -39,44 +48,46 @@ const Dashboard = (props: { instance: any, validate: () => void }) => {
     })
 
     useEffect(() => {
-        setLoading(true)
-
         const fetchData = async () => {
             try {
-                await instance.initialize()
-                const accessToken = await acquireToken(instance)
+                if (idTenant) {
+                    setLoading(true)
 
-                const response = await fetch(`${process.env.REACT_APP_API}/proposition-persona/associations-settings?IdTenant=${idTenant}`, {
-                    method: "GET",
-                    headers: {
-                        Authorization: `Bearer ${accessToken}`,
-                        "Content-Type": "application/json"
+                    await instance.initialize()
+                    const accessToken = await acquireToken(instance)
+
+                    const response = await fetch(`${process.env.REACT_APP_API}/proposition-persona/associations-settings?IdTenant=${idTenant}`, {
+                        method: "GET",
+                        headers: {
+                            Authorization: `Bearer ${accessToken}`,
+                            "Content-Type": "application/json"
+                        }
+                    })
+
+                    const data = await response.json()
+
+                    if (data.personasRoles || data.rolesMotsClefs) {
+                        const associationsPersonaRolesData = Object.keys(data.personasRoles).map((personaKey) => {
+                            return {
+                                parent: personaKey,
+                                childs: data.personasRoles[personaKey].Roles.length !== 0 ? data.personasRoles[personaKey].Roles : [""]
+                            }
+                        })
+
+                        setAssociationsPersonaRoles(associationsPersonaRolesData)
+                        setBackupAssociationsPersonaRoles([...backupAssociationsPersonaRoles, associationsPersonaRolesData])
+
+                        const associationsRoleKeywordsData = Object.keys(data.rolesMotsClefs).map((roleKey) => {
+                            return {
+                                parent: roleKey,
+                                childs: data.rolesMotsClefs[roleKey].MotsClefs.length !== 0 ? data.rolesMotsClefs[roleKey].MotsClefs : [""]
+                            }
+                        })
+
+                        setAssociationsRoleKeywords(associationsRoleKeywordsData)
+                        setBackupAssociationsRoleKeywords([...backupAssociationsRoleKeywords, associationsRoleKeywordsData])
+                        setLoading(false)
                     }
-                })
-
-                const data = await response.json()
-
-                if (data.personasRoles || data.rolesMotsClefs) {
-                    const associationsPersonaRolesData = Object.keys(data.personasRoles).map((personaKey) => {
-                        return {
-                            parent: personaKey,
-                            childs: data.personasRoles[personaKey].Roles.length !== 0 ? data.personasRoles[personaKey].Roles : [""]
-                        }
-                    })
-
-                    setAssociationsPersonaRoles(associationsPersonaRolesData)
-                    setBackupAssociationsPersonaRoles([...backupAssociationsPersonaRoles, associationsPersonaRolesData])
-
-                    const associationsRoleKeywordsData = Object.keys(data.rolesMotsClefs).map((roleKey) => {
-                        return {
-                            parent: roleKey,
-                            childs: data.rolesMotsClefs[roleKey].MotsClefs.length !== 0 ? data.rolesMotsClefs[roleKey].MotsClefs : [""]
-                        }
-                    })
-
-                    setAssociationsRoleKeywords(associationsRoleKeywordsData)
-                    setBackupAssociationsRoleKeywords([...backupAssociationsRoleKeywords, associationsRoleKeywordsData])
-                    setLoading(false)
                 }
             } catch (error) {
                 console.error("Une erreur s'est produite lors de la requête :", error)
@@ -85,7 +96,7 @@ const Dashboard = (props: { instance: any, validate: () => void }) => {
 
         setIsRestore(false)
         fetchData()
-    }, [isRestore])
+    }, [isRestore, idTenant])
 
     const addKeywords = () => {
         setKeywords((prevchilds) => [...prevchilds, ""])
@@ -219,73 +230,73 @@ const Dashboard = (props: { instance: any, validate: () => void }) => {
 
     const addRowRoleKeywords = async () => {
         try {
-            clearErrors();
+            clearErrors()
 
             const isValid = await schema.validate({
                 parent: role,
                 childs: keywords,
-            }, { abortEarly: false });
+            }, { abortEarly: false })
 
             if (isValid) {
                 if (isEditing !== undefined) {
-                    const updatedAssociations = [...associationsRoleKeywords];
-                    updatedAssociations[isEditing] = { parent: role, childs: keywords };
-                    setAssociationsRoleKeywords(updatedAssociations);
-                    setRole("");
-                    setKeywords([""]);
-                    setIsEditing(undefined);
-                    setBackupAssociationsRoleKeywords([...backupAssociationsRoleKeywords, [...associationsRoleKeywords]]);
+                    const updatedAssociations = [...associationsRoleKeywords]
+                    updatedAssociations[isEditing] = { parent: role, childs: keywords }
+                    setAssociationsRoleKeywords(updatedAssociations)
+                    setRole("")
+                    setKeywords([""])
+                    setIsEditing(undefined)
+                    setBackupAssociationsRoleKeywords([...backupAssociationsRoleKeywords, [...associationsRoleKeywords]])
                 } else {
                     setAssociationsRoleKeywords((prevAssociations) => {
-                        const newAssociations = [...prevAssociations, { parent: role, childs: keywords }];
-                        setBackupAssociationsRoleKeywords([...backupAssociationsRoleKeywords, [...newAssociations]]);
-                        return newAssociations;
-                    });
-                    setRole("");
-                    setKeywords([""]);
+                        const newAssociations = [...prevAssociations, { parent: role, childs: keywords }]
+                        setBackupAssociationsRoleKeywords([...backupAssociationsRoleKeywords, [...newAssociations]])
+                        return newAssociations
+                    })
+                    setRole("")
+                    setKeywords([""])
                 }
             }
         } catch (validationError: any) {
             validationError.inner.forEach((error: { path: any; message: string }) => {
-                setError(error.path, { type: 'manual', message: error.message });
-            });
+                setError(error.path, { type: 'manual', message: error.message })
+            })
         }
-    };
+    }
 
     const addRowPersonaRoles = async () => {
         try {
-            clearErrors();
+            clearErrors()
 
             const isValid = await schema.validate({
                 parent: persona,
                 childs: roles,
-            }, { abortEarly: false });
+            }, { abortEarly: false })
 
             if (isValid) {
                 if (isEditing !== undefined) {
-                    const updatedAssociations = [...associationsPersonaRoles];
-                    updatedAssociations[isEditing] = { parent: persona, childs: roles };
-                    setAssociationsPersonaRoles(updatedAssociations);
-                    setPersona("");
-                    setRoles([""]);
-                    setIsEditing(undefined);
-                    setBackupAssociationsPersonaRoles([...backupAssociationsPersonaRoles, [...associationsPersonaRoles]]);
+                    const updatedAssociations = [...associationsPersonaRoles]
+                    updatedAssociations[isEditing] = { parent: persona, childs: roles }
+                    setAssociationsPersonaRoles(updatedAssociations)
+                    setPersona("")
+                    setRoles([""])
+                    setIsEditing(undefined)
+                    setBackupAssociationsPersonaRoles([...backupAssociationsPersonaRoles, [...associationsPersonaRoles]])
                 } else {
                     setAssociationsPersonaRoles((prevAssociations) => {
-                        const newAssociations = [...prevAssociations, { parent: persona, childs: roles }];
-                        setBackupAssociationsPersonaRoles([...backupAssociationsPersonaRoles, [...newAssociations]]);
-                        return newAssociations;
-                    });
-                    setPersona("");
-                    setRoles([""]);
+                        const newAssociations = [...prevAssociations, { parent: persona, childs: roles }]
+                        setBackupAssociationsPersonaRoles([...backupAssociationsPersonaRoles, [...newAssociations]])
+                        return newAssociations
+                    })
+                    setPersona("")
+                    setRoles([""])
                 }
             }
         } catch (validationError: any) {
             validationError.inner.forEach((error: { path: any; message: string }) => {
-                setError(error.path, { type: 'manual', message: error.message });
-            });
+                setError(error.path, { type: 'manual', message: error.message })
+            })
         }
-    };
+    }
 
     const handleSubmit = async () => {
         setLoading(true)

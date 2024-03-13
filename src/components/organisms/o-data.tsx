@@ -339,18 +339,21 @@ const OData = (props: {
                 <Stack spacing={2}>
                     <Stack spacing={4} direction={isDesktop ? "row" : "column"} justifyContent="space-between" width="100%">
                         <MCardData
+                            title="Intitulé de poste"
                             number={filteredRoles ? filteredRoles.length : roles.length}
                             label="Nombre d'intitulé de poste différents"
                             jobTitles={filteredRoles ? filteredRoles : roles}
                         />
 
                         <MCardData
+                            title="Persona"
                             number={filteredPersonas ? filteredPersonas.length : personas.length}
                             label="Nombre de persona différents"
                             jobTitles={filteredPersonas ? filteredPersonas : personas}
                         />
 
                         <MCardData
+                            title="Liaisons"
                             number={filteredLinks ? filteredLinks.length : links.length}
                             label="Nombre de liaisons différentes"
                             jobTitles={filteredLinks ? filteredLinks : links}

@@ -9,8 +9,12 @@ const AHeaderSelect = (props: { values: string[], active: string[], setActive: (
     const [hovered, setHovered] = useState("")
 
     const handleClick = (value: string) => {
-        if (values.includes('Persona')) {
+        if (value === "Persona") {
+            setActive([active[0], value, 'Dashboard'])
+        } else if (values.includes('Persona')) {
             setActive([active[0], value])
+        } else if (value === "Enrichissement") {
+            setActive([active[0], active[1], value, "Données"])
         } else if (values.includes('Dashboard')) {
             setActive([active[0], active[1], value])
         } else if (active.length === 3 || active.length === 4) {

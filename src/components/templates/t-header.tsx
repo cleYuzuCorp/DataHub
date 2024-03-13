@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom"
 import { Customer } from "../../interfaces/customer"
 import { acquireToken } from "../../App"
 import AButton from "../atoms/a-button"
+import { log } from "console"
 
 const THeader = (props: {
     instance?: any,
@@ -16,6 +17,8 @@ const THeader = (props: {
     setCustomers: (value: Customer[]) => void
     open: boolean
     setOpen: (value: boolean) => void
+    active: string[]
+    setActive: (value: string[]) => void
     dataLoading: { customerName: string; isLoading: boolean }[]
     setDataLoading: (value: { customerName: string; isLoading: boolean }[]) => void
     selectedCustomer: Customer | undefined
@@ -24,13 +27,12 @@ const THeader = (props: {
     validate: () => void
 }) => {
 
-    const { instance, customers, setCustomers, open, setOpen, dataLoading, setDataLoading, selectedCustomer, setSelectedCustomer, setLoading, validate } = props
+    const { instance, customers, setCustomers, open, setOpen, active, setActive, dataLoading, setDataLoading, selectedCustomer, setSelectedCustomer, setLoading, validate } = props
 
     const navigate = useNavigate()
 
     const [hovered, setHovered] = useState("")
     const [interactionInProgress, setInteractionInProgress] = useState(false)
-    const [active, setActive] = useState([""])
     const [account, setAccount] = useState()
     const [customersNames, setCustomersNames] = useState<Array<string>>()
 
@@ -42,7 +44,7 @@ const THeader = (props: {
     }
 
     const handleClose = () => {
-        setActive((prevActive) => prevActive.filter((value) => value !== "Enrichissement"))
+        setActive(active.map(value => value === "Enrichissement" ? "Dashboard" : value))
         setOpen(false)
     }
 
@@ -126,24 +128,28 @@ const THeader = (props: {
     }
 
     useEffect(() => {
-        if (active.includes("Dashboard")) {
-            navigate(`/persona/dashboard?id=${selectedCustomer?.IdTenant}`)
-        } else if (active.includes("Données")) {
-            navigate(`/persona/enrichissement/data?id=${selectedCustomer?.IdTenant}`)
-        } else if (active.includes("Initialement nul")) {
-            navigate(`/persona/enrichissement/initially-null?id=${selectedCustomer?.IdTenant}`)
-        } else if (active.includes("Modification trouvée")) {
-            navigate(`/persona/enrichissement/change-found?id=${selectedCustomer?.IdTenant}`)
-        } else if (active.includes("Aucune modification trouvée")) {
-            navigate(`/persona/enrichissement/no-change-found?id=${selectedCustomer?.IdTenant}`)
-        } else if (active.includes("Historique")) {
-            navigate(`/persona/history?id=${selectedCustomer?.IdTenant}`)
-        } else if (active.includes("Enrichissement")) {
-            handleOpen()
-        } else {
-            navigate('/')
+        const fetchNav = async () => {
+            if (active.includes("Dashboard") && selectedCustomer) {
+                navigate(`/persona/dashboard?id=${selectedCustomer.IdTenant}`)
+            } else if (active.includes("Historique") && selectedCustomer) {
+                navigate(`/persona/history?id=${selectedCustomer.IdTenant}`)
+            } else if (active.includes("Enrichissement") && (!selectedCustomer || !dataLoading.find(item => item.customerName === selectedCustomer.NomClient)?.isLoading)) {
+                handleOpen()
+            } else if (active.includes("Données") && selectedCustomer) {
+                navigate(`/persona/enrichissement/data?id=${selectedCustomer.IdTenant}`)
+            } else if (active.includes("Initialement nul") && selectedCustomer) {
+                navigate(`/persona/enrichissement/initially-null?id=${selectedCustomer.IdTenant}`)
+            } else if (active.includes("Modification trouvée") && selectedCustomer) {
+                navigate(`/persona/enrichissement/change-found?id=${selectedCustomer.IdTenant}`)
+            } else if (active.includes("Aucune modification trouvée") && selectedCustomer) {
+                navigate(`/persona/enrichissement/no-change-found?id=${selectedCustomer.IdTenant}`)
+            } else {
+                navigate('/')
+            }
         }
-    }, [active])
+
+        fetchNav()
+    }, [active, selectedCustomer])
 
     const choices = [
         "Persona",

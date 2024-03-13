@@ -5,9 +5,9 @@ import { useState } from "react"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faArrowDown, faArrowUp } from "@fortawesome/free-solid-svg-icons"
 
-const MCardData = (props: { number: number, label: string, jobTitles: JobTitle[] }) => {
+const MCardData = (props: { title: string, number: number, label: string, jobTitles: JobTitle[] }) => {
 
-    const { number, label, jobTitles } = props
+    const { title, number, label, jobTitles } = props
 
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
 
@@ -56,7 +56,7 @@ const MCardData = (props: { number: number, label: string, jobTitles: JobTitle[]
                     <TableRow>
                         <TableCell align="left">
                             <Typography variant="body2">
-                                Intitulé de poste
+                                {title}
                             </Typography>
                         </TableCell>
                         <TableCell align="right">

@@ -337,7 +337,7 @@ const History = (props: { instance: any }) => {
                                         </TableCell>
                                         <TableCell align="center">
                                             <Typography>
-                                                {history.PersonaAfter}
+                                                {history.PersonaBefore}
                                             </Typography>
                                         </TableCell>
                                         <TableCell align="center">
@@ -347,7 +347,7 @@ const History = (props: { instance: any }) => {
                                         </TableCell>
                                         <TableCell align="center">
                                             <Typography>
-                                                {history.PersonaBefore}
+                                                {history.PersonaAfter}
                                             </Typography>
                                         </TableCell>
                                         <TableCell align="center">
