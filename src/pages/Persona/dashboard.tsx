@@ -1,4 +1,4 @@
-import { CircularProgress, Container, Stack, Typography } from "@mui/material"
+import { CircularProgress, Container, IconButton, Modal, Stack, TextField, Typography } from "@mui/material"
 import OFormAssociation from "../../components/organisms/o-form-association"
 import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
@@ -6,13 +6,17 @@ import { useLocation } from "react-router-dom"
 import { acquireToken } from "../../App"
 import * as yup from "yup"
 import { yupResolver } from "@hookform/resolvers/yup"
+import AButton from "../../components/atoms/a-button"
+import { faXmark } from "@fortawesome/free-solid-svg-icons"
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import theme from "../../theme"
 
 const Dashboard = (props: { instance: any, validate: () => void }) => {
 
     const { instance, validate } = props
 
-    const location = useLocation();
-    const [idTenant, setIdTenant] = useState<string | null>();
+    const location = useLocation()
+    const [IdTenant, setIdTenant] = useState<string | null>()
 
     useEffect(() => {
         const searchParams = new URLSearchParams(location.search)
@@ -23,8 +27,12 @@ const Dashboard = (props: { instance: any, validate: () => void }) => {
     }, [location.search])
 
     const [loading, setLoading] = useState(false)
+    const [open, setOpen] = useState(false)
     const [isRestore, setIsRestore] = useState(false)
     const [isEditing, setIsEditing] = useState<number>()
+
+    const [posteNomInterne, setPosteNomInterne] = useState<string>("")
+    const [personaNomInterne, setPersonaNomInterne] = useState<string>("")
 
     const [role, setRole] = useState<string>("")
     const [keywords, setKeywords] = useState<Array<string>>([""])
@@ -50,13 +58,31 @@ const Dashboard = (props: { instance: any, validate: () => void }) => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                if (idTenant) {
+                if (IdTenant) {
                     setLoading(true)
 
                     await instance.initialize()
                     const accessToken = await acquireToken(instance)
 
-                    const response = await fetch(`${process.env.REACT_APP_API}/proposition-persona/associations-settings?IdTenant=${idTenant}`, {
+                    const responseSettings = await fetch(`${process.env.REACT_APP_API}/hubspot-settings?IdTenant=${IdTenant}`, {
+                        method: "GET",
+                        headers: {
+                            Authorization: `Bearer ${accessToken}`,
+                            "Content-Type": "application/json"
+                        }
+                    })
+
+                    const dataSettings = await responseSettings.json()
+
+                    const SettingsData = {
+                        IntitulePoste_NomInterne: dataSettings.IntitulePoste_NomInterne,
+                        Persona_NomInterne: dataSettings.Persona_NomInterne
+                    }
+
+                    setPosteNomInterne(SettingsData.IntitulePoste_NomInterne)
+                    setPersonaNomInterne(SettingsData.Persona_NomInterne)
+
+                    const response = await fetch(`${process.env.REACT_APP_API}/proposition-persona/associations-settings?IdTenant=${IdTenant}`, {
                         method: "GET",
                         headers: {
                             Authorization: `Bearer ${accessToken}`,
@@ -86,6 +112,7 @@ const Dashboard = (props: { instance: any, validate: () => void }) => {
 
                         setAssociationsRoleKeywords(associationsRoleKeywordsData)
                         setBackupAssociationsRoleKeywords([...backupAssociationsRoleKeywords, associationsRoleKeywordsData])
+
                         setLoading(false)
                     }
                 }
@@ -96,7 +123,7 @@ const Dashboard = (props: { instance: any, validate: () => void }) => {
 
         setIsRestore(false)
         fetchData()
-    }, [isRestore, idTenant])
+    }, [isRestore, IdTenant])
 
     const addKeywords = () => {
         setKeywords((prevchilds) => [...prevchilds, ""])
@@ -302,11 +329,11 @@ const Dashboard = (props: { instance: any, validate: () => void }) => {
         setLoading(true)
 
         const fetchData = async () => {
-            if (idTenant) {
-                const parsedId = parseInt(idTenant, 10)
+            if (IdTenant) {
+                const parsedId = parseInt(IdTenant, 10)
 
                 const body = {
-                    idTenant: parsedId,
+                    IdTenant: parsedId,
                     associationsRoleMotClef: associationsRoleKeywords.map((association) => {
                         return {
                             NomRole: association.parent,
@@ -340,6 +367,37 @@ const Dashboard = (props: { instance: any, validate: () => void }) => {
         fetchData()
     }
 
+    const handlePosteNomInterneChange = (event: { target: { value: string } }) => {
+        const value = event.target.value
+        setPosteNomInterne(value)
+    }
+
+    const handlePersonaNomInterneChange = (event: { target: { value: string } }) => {
+        const value = event.target.value
+        setPersonaNomInterne(value)
+    }
+
+    const editSettings = async () => {
+        const accessToken = await acquireToken(instance)
+
+        const payloadSettings = {
+            IdTenant: IdTenant,
+            IntitulePoste_NomInterne: posteNomInterne,
+            Persona_NomInterne: personaNomInterne
+        }
+
+        await fetch(`${process.env.REACT_APP_API}/hubspot-settings`, {
+            method: "PATCH",
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payloadSettings)
+        })
+
+        setOpen(false)
+    }
+
     return (
         <Container maxWidth="lg">
             <Stack spacing={8} alignItems="center" marginTop="100px" marginBottom="100px">
@@ -348,26 +406,32 @@ const Dashboard = (props: { instance: any, validate: () => void }) => {
                 </Typography>
 
                 {loading ? <CircularProgress /> : <Stack spacing={8} alignItems="center" width="100%">
-                    <OFormAssociation
-                        parentLabel="Rôle"
-                        childLabel="Mot clé"
-                        parent={role}
-                        childs={keywords}
-                        associations={associationsRoleKeywords}
-                        errors={errors}
-                        setIsRestore={setIsRestore}
-                        setAssociations={setAssociationsRoleKeywords}
-                        addChilds={addKeywords}
-                        removeChilds={removeKeywords}
-                        handleParentChange={handleRoleChange}
-                        handleChildsChange={handleKeywordsChange}
-                        editAssociations={editAssociationRoleKeywords}
-                        removeAssociations={removeAssociationRoleKeywords}
-                        backUp={restoreAssociationRoleKeywords}
-                        addRow={addRowRoleKeywords}
-                        handleSubmit={handleSubmit}
-                        validate={validate}
-                    />
+                    <Stack spacing={2} alignItems="flex-end" width="100%">
+                        <AButton variant="outlined" onClick={() => setOpen(true)}>
+                            Modifier les propriétés
+                        </AButton>
+
+                        <OFormAssociation
+                            parentLabel="Rôle"
+                            childLabel="Mot clé"
+                            parent={role}
+                            childs={keywords}
+                            associations={associationsRoleKeywords}
+                            errors={errors}
+                            setIsRestore={setIsRestore}
+                            setAssociations={setAssociationsRoleKeywords}
+                            addChilds={addKeywords}
+                            removeChilds={removeKeywords}
+                            handleParentChange={handleRoleChange}
+                            handleChildsChange={handleKeywordsChange}
+                            editAssociations={editAssociationRoleKeywords}
+                            removeAssociations={removeAssociationRoleKeywords}
+                            backUp={restoreAssociationRoleKeywords}
+                            addRow={addRowRoleKeywords}
+                            handleSubmit={handleSubmit}
+                            validate={validate}
+                        />
+                    </Stack>
 
                     <OFormAssociation
                         parentLabel="Persona"
@@ -391,6 +455,66 @@ const Dashboard = (props: { instance: any, validate: () => void }) => {
                         validate={validate}
                     />
                 </Stack>}
+
+                <Modal open={open} onClose={() => setOpen(false)}>
+                    <Stack
+                        spacing={4}
+                        alignItems="center"
+                        sx={{
+                            position: 'absolute',
+                            top: '50%',
+                            left: '50%',
+                            transform: 'translate(-50%, -50%)',
+                            borderRadius: '15px',
+                            background: theme.palette.background.default,
+                            padding: '30px 50px 30px 50px'
+                        }}
+                    >
+                        <IconButton
+                            sx={{
+                                position: 'absolute',
+                                top: '10px',
+                                right: '10px',
+                                width: '40px',
+                                height: '40px'
+                            }}
+                            onClick={() => setOpen(false)}
+                        >
+                            <FontAwesomeIcon icon={faXmark} color={theme.palette.text.primary} />
+                        </IconButton>
+                        <Typography variant="h4">
+                            Les propriétés du client
+                        </Typography>
+
+                        <TextField
+                            required
+                            placeholder="Intitulé de poste interne"
+                            name="IntitulePoste_NomInterne"
+                            value={posteNomInterne}
+                            onChange={handlePosteNomInterneChange}
+                            sx={{
+                                borderColor: '#E0E0E0',
+                                boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)'
+                            }}
+                        />
+
+                        <TextField
+                            required
+                            placeholder="Nom du persona interne"
+                            name="Persona_NomInterne"
+                            value={personaNomInterne}
+                            onChange={handlePersonaNomInterneChange}
+                            sx={{
+                                borderColor: '#E0E0E0',
+                                boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)'
+                            }}
+                        />
+
+                        <AButton variant="contained" onClick={editSettings}>
+                            Sauvegarder
+                        </AButton>
+                    </Stack>
+                </Modal>
             </Stack>
         </Container>
     )

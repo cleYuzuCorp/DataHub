@@ -7,51 +7,15 @@ import { useState } from "react"
 import { acquireToken } from "../App"
 import { Customer } from "../interfaces/customer"
 
-const CustomersAccounts = (props: { instance: any, customers: Customer[], setCustomers: (value: Customer[]) => void, loading: boolean, setLoading: (value: boolean) => void }) => {
+const CustomersAccounts = (props: { instance: any, customers: Customer[], setCustomers: (value: Customer[]) => void, loading: boolean }) => {
 
-    const { instance, customers, setCustomers, loading, setLoading } = props
+    const { instance, customers, setCustomers, loading } = props
 
     const [open, setOpen] = useState(false)
     const [selectedCustomer, setSelectedCustomer] = useState<Customer>()
 
     const handleOpen = (customer: Customer) => {
         setSelectedCustomer(customer)
-
-        const fetchData = async () => {
-            setLoading(true)
-
-            try {
-                await instance.initialize()
-                const accessToken = await acquireToken(instance)
-
-                const response = await fetch(`${process.env.REACT_APP_API}/hubspot-settings?IdTenant=${customer.IdTenant}`, {
-                    method: "GET",
-                    headers: {
-                        Authorization: `Bearer ${accessToken}`,
-                        "Content-Type": "application/json"
-                    }
-                })
-
-                const data = await response.json()
-
-                const customerData = {
-                    IdTenant: customer.IdTenant,
-                    NomClient: customer.NomClient,
-                    IntitulePoste_NomInterne: data.IntitulePoste_NomInterne,
-                    Persona_NomInterne: data.Persona_NomInterne
-                }
-
-                setSelectedCustomer(customerData)
-
-                setLoading(false)
-
-            } catch (error) {
-                console.error("Une erreur s'est produite lors de la requête :", error)
-            }
-        }
-
-        fetchData()
-
         setOpen(true)
     }
 
@@ -59,7 +23,7 @@ const CustomersAccounts = (props: { instance: any, customers: Customer[], setCus
         setOpen(false)
     }
 
-    const handleSelectedCustomerChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = event.target
 
         setSelectedCustomer((prevCustomer: Customer | undefined) => {
@@ -80,12 +44,6 @@ const CustomersAccounts = (props: { instance: any, customers: Customer[], setCus
             NomClient: selectedCustomer?.NomClient
         }
 
-        const payloadSettings = {
-            IdTenant: selectedCustomer?.IdTenant,
-            IntitulePoste_NomInterne: selectedCustomer?.IntitulePoste_NomInterne,
-            Persona_NomInterne: selectedCustomer?.Persona_NomInterne
-        }
-
         await fetch(`${process.env.REACT_APP_API}/tenant/${selectedCustomer?.IdTenant}`, {
             method: "PATCH",
             headers: {
@@ -95,17 +53,8 @@ const CustomersAccounts = (props: { instance: any, customers: Customer[], setCus
             body: JSON.stringify(payloadName)
         })
 
-        await fetch(`${process.env.REACT_APP_API}/hubspot-settings`, {
-            method: "PATCH",
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(payloadSettings)
-        })
-
         setCustomers(customers.map((customer) =>
-            customer.IdTenant === selectedCustomer?.IdTenant ? { ...payloadName, ...payloadSettings } : customer
+            customer.IdTenant === selectedCustomer?.IdTenant ? { ...customer, ...payloadName } : customer
         ) as Customer[])
 
         setOpen(false)
@@ -173,7 +122,7 @@ const CustomersAccounts = (props: { instance: any, customers: Customer[], setCus
                                                 padding="10px"
                                                 borderRadius="15px"
                                                 sx={{
-                                                    width: `${customer.IdTenant.toString().length}ch`,
+                                                    width: `${customer.IdTenant ? customer.IdTenant.toString().length : 0}ch`,
                                                     background: theme.palette.secondary.light
                                                 }}
                                             >
@@ -254,31 +203,7 @@ const CustomersAccounts = (props: { instance: any, customers: Customer[], setCus
                             placeholder="Nom"
                             name="NomClient"
                             value={selectedCustomer.NomClient}
-                            onChange={handleSelectedCustomerChange}
-                            sx={{
-                                borderColor: '#E0E0E0',
-                                boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)'
-                            }}
-                        />
-
-                        <TextField
-                            required
-                            placeholder="Intitulé de poste interne"
-                            name="IntitulePoste_NomInterne"
-                            value={selectedCustomer.IntitulePoste_NomInterne}
-                            onChange={handleSelectedCustomerChange}
-                            sx={{
-                                borderColor: '#E0E0E0',
-                                boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)'
-                            }}
-                        />
-
-                        <TextField
-                            required
-                            placeholder="Nom du persona interne"
-                            name="Persona_NomInterne"
-                            value={selectedCustomer.Persona_NomInterne}
-                            onChange={handleSelectedCustomerChange}
+                            onChange={handleNameChange}
                             sx={{
                                 borderColor: '#E0E0E0',
                                 boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)'
