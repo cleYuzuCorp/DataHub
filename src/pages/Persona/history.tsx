@@ -258,7 +258,7 @@ const History = (props: { instance: any }) => {
                                     </TableCell>
                                     <TableCell align="center">
                                         <Typography variant="body2" color={theme.palette.background.default}>
-                                            Persona
+                                            Persona modifié
                                         </Typography>
                                     </TableCell>
                                     <TableCell align="center">
@@ -268,7 +268,7 @@ const History = (props: { instance: any }) => {
                                     </TableCell>
                                     <TableCell align="center">
                                         <Typography variant="body2" color={theme.palette.background.default}>
-                                            Persona modifié
+                                            Nouveau persona
                                         </Typography>
                                     </TableCell>
                                     <TableCell align="center">
@@ -296,7 +296,7 @@ const History = (props: { instance: any }) => {
                             </TableHead>
                             <TableBody>
                                 {filteredHistories.slice(startIndex, endIndex).map((history, index) =>
-                                    <TableRow key={index}>
+                                    <TableRow key={index} sx={{ background: history.IdObjectAsk !== history.IdObjectModifiedReal || (history.PersonaAsk?.toLowerCase() !== history.PersonaAfter?.toLowerCase() && history.PersonaBefore !== "restaured") ? theme.palette.error.light : null }}>
                                         <TableCell>
                                             <Typography
                                                 fontSize="11px"
@@ -360,6 +360,7 @@ const History = (props: { instance: any }) => {
                                         <TableCell align="right">
                                             <Checkbox
                                                 checked={selectedRows.includes(history)}
+                                                disabled={history.PersonaBefore === "restaured"}
                                                 onChange={() => handleSelectChange(index)}
                                             />
                                         </TableCell>
@@ -405,7 +406,7 @@ const History = (props: { instance: any }) => {
                                 </TableHead>
                                 <TableBody>
                                     {filteredHistories.map((history, index) =>
-                                        <TableRow>
+                                        <TableRow sx={{ background: theme.palette.secondary.light }}>
                                             <TableCell align="center">
                                                 <Stack
                                                     textAlign="center"

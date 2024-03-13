@@ -21,7 +21,7 @@ const ChangeFound = (props: {
                     DataHub
                 </Typography>
 
-                {loading ? <CircularProgress /> : <OTableEnrichment instance={instance} id={idTenant} contacts={changeFound} dbPersona={dbPersona} />}
+                {loading ? <CircularProgress /> : <OTableEnrichment instance={instance} id={idTenant} contacts={changeFound} dbPersona={dbPersona} find={true} />}
             </Stack>
         </Container>
     )

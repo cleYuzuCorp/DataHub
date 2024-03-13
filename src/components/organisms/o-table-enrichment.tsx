@@ -8,13 +8,13 @@ import { Contact } from "../../interfaces/contact"
 import { acquireToken } from "../../App"
 
 const OTableEnrichment = (props: {
-    instance: any, id: string | null, contacts: Contact[], nothing?: boolean, dbPersona: {
+    instance: any, id: string | null, contacts: Contact[], nothing?: boolean, find?: boolean, dbPersona: {
         description: string
         value: string
     }[]
 }) => {
 
-    const { instance, id, contacts, nothing, dbPersona } = props
+    const { instance, id, contacts, nothing, find, dbPersona } = props
 
     const isDesktop = useMediaQuery('(min-width:1000px)')
 
@@ -269,6 +269,11 @@ const OTableEnrichment = (props: {
                                                                 hs_object_id
                                                             </Typography>
                                                         </TableCell>
+                                                        {find && <TableCell align="center">
+                                                            <Typography>
+                                                                Persona actuel
+                                                            </Typography>
+                                                        </TableCell>}
                                                         <TableCell align="center">
                                                             <Typography>
                                                                 Prénom
@@ -288,6 +293,11 @@ const OTableEnrichment = (props: {
                                                                 {c.hs_object_id}
                                                             </Typography>
                                                         </TableCell>
+                                                        {find && <TableCell align="center">
+                                                            <Typography>
+                                                                {c.persona}
+                                                            </Typography>
+                                                        </TableCell>}
                                                         <TableCell align="center">
                                                             <Typography>
                                                                 {c.firsname}
