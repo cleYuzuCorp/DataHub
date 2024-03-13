@@ -7,9 +7,9 @@ import { acquireToken } from "../../App"
 import * as yup from "yup"
 import { yupResolver } from "@hookform/resolvers/yup"
 
-const Dashboard = (props: { instance: any }) => {
+const Dashboard = (props: { instance: any, validate: () => void }) => {
 
-    const { instance } = props
+    const { instance, validate } = props
 
     const idTenant = new URLSearchParams(useLocation().search).get('id')
 
@@ -355,6 +355,7 @@ const Dashboard = (props: { instance: any }) => {
                         backUp={restoreAssociationRoleKeywords}
                         addRow={addRowRoleKeywords}
                         handleSubmit={handleSubmit}
+                        validate={validate}
                     />
 
                     <OFormAssociation
@@ -376,6 +377,7 @@ const Dashboard = (props: { instance: any }) => {
                         backUp={restoreAssociationPersonaRoles}
                         addRow={addRowPersonaRoles}
                         handleSubmit={handleSubmit}
+                        validate={validate}
                     />
                 </Stack>}
             </Stack>

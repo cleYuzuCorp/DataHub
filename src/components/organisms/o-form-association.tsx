@@ -26,9 +26,10 @@ const OFormAssociation = (props: {
     backUp: () => void,
     addRow: () => void,
     handleSubmit: () => void
+    validate: () => void
 }) => {
 
-    const { parentLabel, childLabel, parent, childs, roles, associations, errors, setIsRestore, setAssociations, addChilds, removeChilds, handleParentChange, handleChildsChange, editAssociations, removeAssociations, backUp, addRow, handleSubmit } = props
+    const { parentLabel, childLabel, parent, childs, roles, associations, errors, setIsRestore, setAssociations, addChilds, removeChilds, handleParentChange, handleChildsChange, editAssociations, removeAssociations, backUp, addRow, handleSubmit, validate } = props
 
     const isDesktop = useMediaQuery('(min-width:1000px)')
 
@@ -45,11 +46,12 @@ const OFormAssociation = (props: {
         setOpen('')
     }
 
-    const validate = () => {
+    const valid = () => {
         if (open === 'Delete' && indexToRemove !== undefined) {
             removeAssociations(indexToRemove)
         } else if (open === 'Save') {
             handleSubmit()
+            validate()
         } else {
             console.log("Une erreur est survenu dans la validation d'une action")
         }
@@ -418,7 +420,7 @@ const OFormAssociation = (props: {
                             Annuler
                         </AButton>
 
-                        <AButton variant="contained" onClick={validate}>
+                        <AButton variant="contained" onClick={valid}>
                             Confirmer
                         </AButton>
                     </Stack>

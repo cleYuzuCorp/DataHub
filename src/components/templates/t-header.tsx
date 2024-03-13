@@ -1,6 +1,6 @@
 import { faRightFromBracket, faRightToBracket, faUser, faXmark } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { IconButton, Modal, Stack, TextField, Typography } from "@mui/material"
+import { IconButton, Modal, Stack, Typography } from "@mui/material"
 import AAccordion from "../atoms/a-accordion"
 import AHeaderSelect from "../atoms/a-header-select"
 import { useEffect, useState } from "react"
@@ -8,47 +8,35 @@ import theme from "../../theme"
 import { useNavigate } from "react-router-dom"
 import { Customer } from "../../interfaces/customer"
 import { acquireToken } from "../../App"
-import { JobTitle } from "../../interfaces/job-title"
-import { Contact } from "../../interfaces/contact"
 import AButton from "../atoms/a-button"
 
 const THeader = (props: {
     instance?: any,
     customers: Customer[]
     setCustomers: (value: Customer[]) => void
+    open: boolean
+    setOpen: (value: boolean) => void
+    dataLoading: { customerName: string; isLoading: boolean }[]
+    setDataLoading: (value: { customerName: string; isLoading: boolean }[]) => void
+    selectedCustomer: Customer | undefined
+    setSelectedCustomer: (value: Customer | undefined) => void
     setLoading: (value: boolean) => void
-    dbPersona: { description: string, value: string }[]
-    setDbPersona: (value: { description: string, value: string }[]) => void
-    associationsRoleKeywords: { parent: string, childs: string[] }[]
-    setAssociationsRoleKeywords: (value: { parent: string, childs: string[] }[]) => void
-    associationsPersonaRoles: { parent: string, childs: { id: number, value: string }[] }[]
-    setAssociationsPersonaRoles: (value: { parent: string, childs: { id: number, value: string }[] }[]) => void
-    setNumberContacts: (value: number) => void
-    setNumberRoles: (value: number) => void
-    setNumberPersonas: (value: number) => void
-    setRoles: (value: JobTitle[]) => void
-    setPersonas: (value: JobTitle[]) => void
-    setLinks: (value: JobTitle[]) => void
-    setInitiallyNull: (value: [Contact]) => void
-    setChangeFound: (value: Contact[]) => void
-    setNoChangeFound: (value: Contact[]) => void
+    validate: () => void
 }) => {
 
-    const { instance, customers, setCustomers, setLoading, dbPersona, setDbPersona, associationsRoleKeywords, setAssociationsRoleKeywords, associationsPersonaRoles, setAssociationsPersonaRoles, setNumberContacts, setNumberRoles, setNumberPersonas, setRoles, setPersonas, setLinks, setInitiallyNull, setChangeFound, setNoChangeFound } = props
+    const { instance, customers, setCustomers, open, setOpen, dataLoading, setDataLoading, selectedCustomer, setSelectedCustomer, setLoading, validate } = props
 
     const navigate = useNavigate()
 
     const [hovered, setHovered] = useState("")
-    const [open, setOpen] = useState(false)
-    const [dataInit, setDataInit] = useState(false)
     const [interactionInProgress, setInteractionInProgress] = useState(false)
     const [active, setActive] = useState([""])
     const [account, setAccount] = useState()
     const [customersNames, setCustomersNames] = useState<Array<string>>()
-    const [selectedCustomer, setSelectedCustomer] = useState<Customer>()
 
     const handleOpen = () => {
-        if (dataInit === false) {
+        const loadingCustomer = dataLoading.find(item => item.customerName === selectedCustomer?.NomClient)
+        if (!loadingCustomer || !loadingCustomer.isLoading) {
             setOpen(true)
         }
     }
@@ -69,6 +57,13 @@ const THeader = (props: {
         const names = customers.map((customer) => customer.NomClient as string)
         setCustomersNames(names)
     }, [customers])
+
+    useEffect(() => {
+        if (customersNames) {
+            const data = customersNames.map(name => ({ customerName: name, isLoading: false }))
+            setDataLoading(data)
+        }
+    }, [customersNames])
 
     useEffect(() => {
         const foundCustomer = customers.find(customer => active.includes(customer.NomClient as string))
@@ -129,148 +124,6 @@ const THeader = (props: {
             setInteractionInProgress(false)
         }
     }
-
-    const validate = () => {
-        setOpen(false)
-        setLoading(true)
-
-        const fetchData = async () => {
-            try {
-                await instance.initialize()
-                const accessToken = await acquireToken(instance)
-
-                const response = await fetch(`${process.env.REACT_APP_API}/proposition-persona/associations-settings?IdTenant=${selectedCustomer?.IdTenant}`, {
-                    method: "GET",
-                    headers: {
-                        Authorization: `Bearer ${accessToken}`,
-                        "Content-Type": "application/json"
-                    }
-                })
-
-                const data = await response.json()
-
-                if (data.personasRoles || data.rolesMotsClefs || data.dbPersona) {
-                    const associationsPersonaRolesData = Object.keys(data.personasRoles).map((personaKey) => {
-                        return {
-                            parent: personaKey,
-                            childs: data.personasRoles[personaKey].Roles.map((role: any, rolesIndex: number) => ({
-                                id: rolesIndex + 1,
-                                value: role,
-                            }))
-                        }
-                    })
-
-                    setAssociationsPersonaRoles(associationsPersonaRolesData)
-
-                    const associationsRoleKeywordsData = Object.keys(data.rolesMotsClefs).map((roleKey) => {
-                        return {
-                            parent: roleKey,
-                            childs: data.rolesMotsClefs[roleKey].MotsClefs.length !== 0 ? data.rolesMotsClefs[roleKey].MotsClefs : [""]
-                        }
-                    })
-
-                    setAssociationsRoleKeywords(associationsRoleKeywordsData)
-
-                    const personas = data.dbPersona.map((persona: { description: string, value: string }) => {
-                        return {
-                            description: persona.description,
-                            value: persona.value
-                        }
-                    })
-
-                    setDbPersona(personas)
-
-                    setDataInit(true)
-                    setLoading(false)
-                }
-
-            } catch (error) {
-                console.error("Une erreur s'est produite lors de la requête :", error)
-            }
-        }
-
-        fetchData()
-    }
-
-    useEffect(() => {
-        setLoading(true)
-
-        const fetchData = async () => {
-            if (selectedCustomer?.IdTenant && dataInit) {
-                const parsedId = selectedCustomer?.IdTenant
-
-                const body = {
-                    idTenant: parsedId,
-                    dbPersona: dbPersona,
-                    associationsRoleMotClef: associationsRoleKeywords.map((roleKeywords) => {
-                        if (roleKeywords.parent !== "" && roleKeywords.childs.every((child) => child !== "")) {
-                            return {
-                                NomRole: roleKeywords.parent,
-                                NomMotClef: roleKeywords.childs,
-                            }
-                        } else {
-                            return undefined
-                        }
-                    }).filter((association) => association !== undefined),
-                    associationsPersonaRole: associationsPersonaRoles.map((personaRoles) => {
-                        if (personaRoles.parent !== "" && personaRoles.childs.every((child) => child.value !== "")) {
-                            return {
-                                NomPersona: personaRoles.parent,
-                                NomRole: personaRoles.childs,
-                            }
-                        } else {
-                            return undefined
-                        }
-                    }).filter((association) => association !== undefined)
-                }
-
-                const accessToken = await acquireToken(instance)
-
-                const response = await fetch(`${process.env.REACT_APP_API}/proposition-persona/process`, {
-                    method: "POST",
-                    headers: {
-                        Authorization: `Bearer ${accessToken}`,
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify(body)
-                })
-
-                const data = await response.json()
-
-                setNumberContacts(data.dashboard.totalOfDifferentContacts)
-                setNumberRoles(data.dashboard.totalOfDifferentRoles)
-                setNumberPersonas(data.dashboard.totalOfDifferentPersonas)
-
-                setInitiallyNull(data.enrichment.contactsWithProposedPersonaAndNull)
-                setChangeFound(data.enrichment.contactsWithProposedPersonaAndValue)
-                setNoChangeFound(data.enrichment.contactsWithoutProposedPersona)
-
-                const rolesData = Object.entries(data.dashboard.occurencesByRoles).map(([jobTitle, occurences]) => ({
-                    jobTitle: jobTitle as string,
-                    occurences: occurences as number
-                }))
-
-                setRoles(rolesData)
-
-                const personasData = Object.entries(data.dashboard.occurencesByPersonas).map(([jobTitle, occurences]) => ({
-                    jobTitle: jobTitle as string,
-                    occurences: occurences as number
-                }))
-
-                setPersonas(personasData)
-
-                const linksData = Object.entries(data.dashboard.occurencesByLiaisons).map(([jobTitle, occurences]) => ({
-                    jobTitle: jobTitle as string,
-                    occurences: occurences as number
-                }))
-
-                setLinks(linksData)
-                setLoading(false)
-            }
-        }
-
-        fetchData()
-    }, [dataInit])
 
     useEffect(() => {
         if (active.includes("Dashboard")) {
