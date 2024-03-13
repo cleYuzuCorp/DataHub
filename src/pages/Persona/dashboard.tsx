@@ -28,6 +28,7 @@ const Dashboard = (props: { instance: any, validate: () => void }) => {
 
     const [loading, setLoading] = useState(false)
     const [open, setOpen] = useState(false)
+    const [settingsEdit, setSettingsEdit] = useState(false)
     const [isRestore, setIsRestore] = useState(false)
     const [isEditing, setIsEditing] = useState<number>()
 
@@ -92,6 +93,13 @@ const Dashboard = (props: { instance: any, validate: () => void }) => {
 
                     const data = await response.json()
 
+                    console.log(data, 'data')
+
+                    if (data.statusCode === 404) {
+                        setLoading(false)
+                        setOpen(true)
+                    }
+
                     if (data.personasRoles || data.rolesMotsClefs) {
                         const associationsPersonaRolesData = Object.keys(data.personasRoles).map((personaKey) => {
                             return {
@@ -123,7 +131,7 @@ const Dashboard = (props: { instance: any, validate: () => void }) => {
 
         setIsRestore(false)
         fetchData()
-    }, [isRestore, IdTenant])
+    }, [isRestore, IdTenant, settingsEdit])
 
     const addKeywords = () => {
         setKeywords((prevchilds) => [...prevchilds, ""])
@@ -396,6 +404,7 @@ const Dashboard = (props: { instance: any, validate: () => void }) => {
         })
 
         setOpen(false)
+        setSettingsEdit(!settingsEdit)
     }
 
     return (
@@ -414,6 +423,7 @@ const Dashboard = (props: { instance: any, validate: () => void }) => {
                         <OFormAssociation
                             parentLabel="Rôle"
                             childLabel="Mot clé"
+                            buttonHidden={false}
                             parent={role}
                             childs={keywords}
                             associations={associationsRoleKeywords}
@@ -436,6 +446,7 @@ const Dashboard = (props: { instance: any, validate: () => void }) => {
                     <OFormAssociation
                         parentLabel="Persona"
                         childLabel="Rôle"
+                        buttonHidden={true}
                         parent={persona}
                         childs={roles}
                         roles={associationsRoleKeywords}

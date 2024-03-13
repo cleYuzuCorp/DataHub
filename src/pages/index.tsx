@@ -69,7 +69,7 @@ const CustomersAccounts = (props: { instance: any, customers: Customer[], setCus
 
         const isConfirmed = window.confirm("Êtes-vous sûr de vouloir supprimer ce client ?")
         if (isConfirmed) {
-            await fetch(`${process.env.REACT_APP_API}/tenant/delete`, {
+            await fetch(`${process.env.REACT_APP_API}/tenant`, {
                 method: "DELETE",
                 headers: {
                     Authorization: `Bearer ${accessToken}`,

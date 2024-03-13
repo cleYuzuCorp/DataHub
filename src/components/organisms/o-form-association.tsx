@@ -8,28 +8,29 @@ import { FieldErrors } from "react-hook-form"
 import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd"
 
 const OFormAssociation = (props: {
-    parentLabel: string,
-    childLabel: string,
-    parent: string,
-    childs: string[],
-    roles?: { parent: string, childs: string[] }[],
-    associations: { parent: string, childs: string[] }[],
-    errors: FieldErrors<{ childs?: string[] | undefined; parent: string }>,
-    setIsRestore: (value: boolean) => void,
-    setAssociations: (associations: { parent: string; childs: string[] }[]) => void,
-    addChilds: () => void,
-    removeChilds: (indexToRemove: number) => void,
-    handleParentChange: (value: string) => void,
-    handleChildsChange: (index: number, value: string) => void,
-    editAssociations: (index: number) => void,
-    removeAssociations: (index: number) => void,
-    backUp: () => void,
-    addRow: () => void,
+    parentLabel: string
+    childLabel: string
+    buttonHidden: boolean
+    parent: string
+    childs: string[]
+    roles?: { parent: string, childs: string[] }[]
+    associations: { parent: string, childs: string[] }[]
+    errors: FieldErrors<{ childs?: string[] | undefined; parent: string }>
+    setIsRestore: (value: boolean) => void
+    setAssociations: (associations: { parent: string; childs: string[] }[]) => void
+    addChilds: () => void
+    removeChilds: (indexToRemove: number) => void
+    handleParentChange: (value: string) => void
+    handleChildsChange: (index: number, value: string) => void
+    editAssociations: (index: number) => void
+    removeAssociations: (index: number) => void
+    backUp: () => void
+    addRow: () => void
     handleSubmit: () => void
     validate: () => void
 }) => {
 
-    const { parentLabel, childLabel, parent, childs, roles, associations, errors, setIsRestore, setAssociations, addChilds, removeChilds, handleParentChange, handleChildsChange, editAssociations, removeAssociations, backUp, addRow, handleSubmit, validate } = props
+    const { parentLabel, childLabel, buttonHidden, parent, childs, roles, associations, errors, setIsRestore, setAssociations, addChilds, removeChilds, handleParentChange, handleChildsChange, editAssociations, removeAssociations, backUp, addRow, handleSubmit, validate } = props
 
     const isDesktop = useMediaQuery('(min-width:1000px)')
 
@@ -72,14 +73,14 @@ const OFormAssociation = (props: {
     return (
         <Stack spacing={8} alignItems="center" width="100%">
             <Stack spacing={4} direction={isDesktop ? "row" : "column"} width="100%">
-                <Stack spacing={4} justifyContent="flex-end">
+                {!buttonHidden ? <Stack spacing={4} justifyContent="flex-end">
                     <AButton variant="outlined" color="error" onClick={() => setIsRestore(true)}>
                         Restaurer
                     </AButton>
                     <AButton variant="contained" onClick={() => setOpen('Save')}>
                         Sauvegarder
                     </AButton>
-                </Stack>
+                </Stack> : null}
 
                 <Stack width="100%" borderRadius="15px" sx={{ boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)' }}>
                     <Stack
