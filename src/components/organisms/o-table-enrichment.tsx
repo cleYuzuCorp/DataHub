@@ -131,7 +131,7 @@ const OTableEnrichment = (props: {
     }
 
     return (
-        <Stack width="100%">
+        <Stack width="100%" alignItems="center">
             {loading ? <CircularProgress /> : <Stack spacing={4} width="100%">
                 <Stack spacing={4} direction={isDesktop ? "row" : "column"} alignItems="center" width="100%">
                     <TextField

@@ -12,7 +12,7 @@ import AButton from "../atoms/a-button"
 import { log } from "console"
 
 const THeader = (props: {
-    instance?: any,
+    instance?: any
     customers: Customer[]
     setCustomers: (value: Customer[]) => void
     open: boolean

@@ -93,8 +93,6 @@ const Dashboard = (props: { instance: any, validate: () => void }) => {
 
                     const data = await response.json()
 
-                    console.log(data, 'data')
-
                     if (data.statusCode === 404) {
                         setLoading(false)
                         setOpen(true)
