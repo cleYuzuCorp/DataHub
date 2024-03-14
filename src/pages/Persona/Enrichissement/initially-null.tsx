@@ -8,9 +8,10 @@ const InitiallyNull = (props: {
     loading: boolean
     dbPersona: { description: string, value: string }[]
     initiallyNull: Contact[]
+    validate: () => void
 }) => {
 
-    const { instance, loading, dbPersona, initiallyNull } = props
+    const { instance, loading, dbPersona, initiallyNull, validate } = props
 
     const idTenant = new URLSearchParams(useLocation().search).get('id')
 
@@ -21,7 +22,7 @@ const InitiallyNull = (props: {
                     DataHub
                 </Typography>
 
-                {loading ? <CircularProgress /> : <OTableEnrichment instance={instance} id={idTenant} contacts={initiallyNull} dbPersona={dbPersona} />}
+                {loading ? <CircularProgress /> : <OTableEnrichment instance={instance} id={idTenant} contacts={initiallyNull} dbPersona={dbPersona} validate={validate} />}
             </Stack>
         </Container>
     )

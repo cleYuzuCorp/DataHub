@@ -9,7 +9,6 @@ import { useNavigate } from "react-router-dom"
 import { Customer } from "../../interfaces/customer"
 import { acquireToken } from "../../App"
 import AButton from "../atoms/a-button"
-import { log } from "console"
 
 const THeader = (props: {
     instance?: any

@@ -8,9 +8,10 @@ const ChangeFound = (props: {
     loading: boolean
     dbPersona: { description: string, value: string }[]
     changeFound: Contact[]
+    validate: () => void
 }) => {
 
-    const { instance, loading, dbPersona, changeFound } = props
+    const { instance, loading, dbPersona, changeFound, validate } = props
 
     const idTenant = new URLSearchParams(useLocation().search).get('id')
 
@@ -21,7 +22,7 @@ const ChangeFound = (props: {
                     DataHub
                 </Typography>
 
-                {loading ? <CircularProgress /> : <OTableEnrichment instance={instance} id={idTenant} contacts={changeFound} dbPersona={dbPersona} find={true} />}
+                {loading ? <CircularProgress /> : <OTableEnrichment instance={instance} id={idTenant} contacts={changeFound} dbPersona={dbPersona} find={true} validate={validate} />}
             </Stack>
         </Container>
     )

@@ -356,7 +356,7 @@ const Dashboard = (props: { instance: any, validate: () => void }) => {
 
                 const accessToken = await acquireToken(instance)
 
-                const response = await fetch(`${process.env.REACT_APP_API}/proposition-persona/associations-settings`, {
+                await fetch(`${process.env.REACT_APP_API}/proposition-persona/associations-settings`, {
                     method: "PATCH",
                     headers: {
                         Authorization: `Bearer ${accessToken}`,

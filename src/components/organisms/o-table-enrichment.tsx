@@ -8,13 +8,16 @@ import { Contact } from "../../interfaces/contact"
 import { acquireToken } from "../../App"
 
 const OTableEnrichment = (props: {
-    instance: any, id: string | null, contacts: Contact[], nothing?: boolean, find?: boolean, dbPersona: {
-        description: string
-        value: string
-    }[]
+    instance: any
+    id: string | null
+    contacts: Contact[]
+    dbPersona: { description: string, value: string }[]
+    nothing?: boolean
+    find?: boolean
+    validate: () => void
 }) => {
 
-    const { instance, id, contacts, nothing, find, dbPersona } = props
+    const { instance, id, contacts, dbPersona, nothing, find, validate } = props
 
     const isDesktop = useMediaQuery('(min-width:1000px)')
 
@@ -115,7 +118,7 @@ const OTableEnrichment = (props: {
         await instance.initialize()
         const accessToken = await acquireToken(instance)
 
-        const response = await fetch(`${process.env.REACT_APP_API}/hubspot/contacts/persona`, {
+        await fetch(`${process.env.REACT_APP_API}/hubspot/contacts/persona`, {
             method: "PATCH",
             headers: {
                 Authorization: `Bearer ${accessToken}`,
@@ -124,9 +127,8 @@ const OTableEnrichment = (props: {
             body: JSON.stringify(body)
         })
 
-        console.log(response)
-
         handleIgnoreProposal()
+        validate()
         setLoading(false)
     }
 
