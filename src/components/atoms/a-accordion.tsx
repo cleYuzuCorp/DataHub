@@ -11,7 +11,7 @@ const AAccordion = (props: { title: string, values: string[], active: string[], 
     const [hovered, setHovered] = useState("")
 
     const handleClick = (value: string) => {
-        setActive([value, 'Persona', 'Dashboard'])
+        setActive([value, 'Persona', 'Settings'])
     }
 
 

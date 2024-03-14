@@ -1,7 +1,7 @@
 import { IconButton, MenuItem, Modal, Paper, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography, useMediaQuery } from "@mui/material"
 import { useState } from "react"
 import theme from "../../theme"
-import { faTrash, faGear, faPlus, faXmark, faArrowRotateRight, faGripVertical } from "@fortawesome/free-solid-svg-icons"
+import { faTrash, faGear, faPlus, faXmark, faArrowRotateRight, faGripVertical, faFloppyDisk } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import AButton from "../atoms/a-button"
 import { FieldErrors } from "react-hook-form"
@@ -138,7 +138,7 @@ const OFormAssociation = (props: {
                                 }
                             }}
                         >
-                            <FontAwesomeIcon icon={faPlus} color={theme.palette.text.primary} size="xs" />
+                            <FontAwesomeIcon icon={faFloppyDisk} color={theme.palette.text.primary} size="xs" />
                         </IconButton>
 
                         <IconButton
@@ -413,7 +413,8 @@ const OFormAssociation = (props: {
                         <FontAwesomeIcon icon={faXmark} color={theme.palette.text.primary} />
                     </IconButton>
                     <Typography variant="h4">
-                        Êtes vous sûr de vouloir réaliser cette action ?
+                        Êtes vous sûr de vouloir réaliser cette action ? <br />
+                        {open === 'Save' ? "Cela entraînera un chargement en fond" : null}
                     </Typography>
 
                     <Stack spacing={4} direction="row">

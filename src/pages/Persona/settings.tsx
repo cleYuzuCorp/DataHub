@@ -11,7 +11,7 @@ import { faXmark } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import theme from "../../theme"
 
-const Dashboard = (props: { instance: any, validate: () => void }) => {
+const Settings = (props: { instance: any, validate: () => void }) => {
 
     const { instance, validate } = props
 
@@ -529,4 +529,4 @@ const Dashboard = (props: { instance: any, validate: () => void }) => {
     )
 }
 
-export default Dashboard
+export default Settings

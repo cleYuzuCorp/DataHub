@@ -43,7 +43,7 @@ const THeader = (props: {
     }
 
     const handleClose = () => {
-        setActive(active.map(value => value === "Enrichissement" ? "Dashboard" : value))
+        setActive(active.map(value => value === "Enrichissement" ? "Settings" : value))
         setOpen(false)
     }
 
@@ -128,8 +128,8 @@ const THeader = (props: {
 
     useEffect(() => {
         const fetchNav = async () => {
-            if (active.includes("Dashboard") && selectedCustomer) {
-                navigate(`/persona/dashboard?id=${selectedCustomer.IdTenant}`)
+            if (active.includes("Settings") && selectedCustomer) {
+                navigate(`/persona/settings?id=${selectedCustomer.IdTenant}`)
             } else if (active.includes("Historique") && selectedCustomer) {
                 navigate(`/persona/history?id=${selectedCustomer.IdTenant}`)
             } else if (active.includes("Enrichissement") && (!selectedCustomer || !dataLoading.find(item => item.customerName === selectedCustomer.NomClient)?.isLoading)) {
@@ -156,7 +156,7 @@ const THeader = (props: {
     ]
 
     const persona = [
-        "Dashboard",
+        "Settings",
         "Enrichissement",
         "Historique"
     ]

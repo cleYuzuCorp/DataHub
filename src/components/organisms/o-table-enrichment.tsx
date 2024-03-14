@@ -1,6 +1,6 @@
-import { faMagnifyingGlass, faChevronUp, faChevronDown, faArrowDown, faArrowUp } from "@fortawesome/free-solid-svg-icons"
+import { faMagnifyingGlass, faChevronUp, faChevronDown, faArrowDown, faArrowUp, faXmark } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { Checkbox, CircularProgress, Collapse, Paper, Stack, Table, TableBody, TableCell, TableHead, TablePagination, TableRow, TextField, Typography, useMediaQuery } from "@mui/material"
+import { Checkbox, CircularProgress, Collapse, IconButton, Modal, Paper, Stack, Table, TableBody, TableCell, TableHead, TablePagination, TableRow, TextField, Typography, useMediaQuery } from "@mui/material"
 import React, { useEffect, useState } from "react"
 import theme from "../../theme"
 import AButton from "../atoms/a-button"
@@ -22,11 +22,12 @@ const OTableEnrichment = (props: {
     const isDesktop = useMediaQuery('(min-width:1000px)')
 
     const [loading, setLoading] = useState(false)
+    const [open, setOpen] = useState(false)
     const [searchTerm, setSearchTerm] = useState("")
     const [filteredContacts, setFilteredContacts] = useState<Contact[]>(contacts)
 
     const [hovered, setHovered] = useState<number | undefined>()
-    const [open, setOpen] = useState<Array<boolean>>([])
+    const [openRow, setOpenRow] = useState<Array<boolean>>([])
     const [selectedContacts, setSelectedContacts] = useState<Array<Contact>>([])
     const [ignoredContacts, setIgnoredContacts] = useState<Array<Contact>>([])
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
@@ -59,7 +60,7 @@ const OTableEnrichment = (props: {
     }, [searchTerm, ignoredContacts, contacts])
 
     const toggleRow = (index: number) => {
-        setOpen((prevOpenRows) => ({
+        setOpenRow((prevOpenRows) => ({
             ...prevOpenRows,
             [index]: !prevOpenRows[index]
         }))
@@ -155,7 +156,7 @@ const OTableEnrichment = (props: {
                     />
 
                     {!nothing ? <Stack spacing={2} width="100%">
-                        <AButton variant="contained" onClick={handleSubmit}>
+                        <AButton variant="contained" onClick={() => setOpen(true)}>
                             Valider la proposition
                         </AButton>
 
@@ -228,12 +229,12 @@ const OTableEnrichment = (props: {
                                     onMouseLeave={() => setHovered(undefined)}
                                     onClick={() => toggleRow(index)}
                                     sx={{
-                                        background: open[index] || hovered === index ? theme.palette.secondary.light : 'none'
+                                        background: openRow[index] || hovered === index ? theme.palette.secondary.light : 'none'
                                     }}
                                 >
                                     <TableCell>
                                         <Stack spacing={2} direction="row" alignItems="center">
-                                            {open[index] ?
+                                            {openRow[index] ?
                                                 <FontAwesomeIcon icon={faChevronUp} /> :
                                                 <FontAwesomeIcon icon={faChevronDown} />
                                             }
@@ -262,7 +263,7 @@ const OTableEnrichment = (props: {
                                 </TableRow>
                                 <TableRow>
                                     <TableCell colSpan={nothing ? 3 : 4} padding="none">
-                                        <Collapse in={open[index]} timeout="auto" unmountOnExit>
+                                        <Collapse in={openRow[index]} timeout="auto" unmountOnExit>
                                             <Table component={Paper} sx={{ background: theme.palette.background.default }}>
                                                 <TableHead>
                                                     <TableRow sx={{ background: theme.palette.info.light }}>
@@ -334,6 +335,49 @@ const OTableEnrichment = (props: {
                     }}
                 />
             </Stack>}
+
+            <Modal open={open} onClose={() => setOpen(false)}>
+                <Stack
+                    spacing={4}
+                    alignItems="center"
+                    sx={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        borderRadius: '15px',
+                        background: theme.palette.background.default,
+                        padding: '30px 50px 30px 50px'
+                    }}
+                >
+                    <IconButton
+                        sx={{
+                            position: 'absolute',
+                            top: '10px',
+                            right: '10px',
+                            width: '40px',
+                            height: '40px'
+                        }}
+                        onClick={() => setOpen(false)}
+                    >
+                        <FontAwesomeIcon icon={faXmark} color={theme.palette.text.primary} />
+                    </IconButton>
+                    <Typography variant="h4">
+                        Êtes vous sûr de vouloir réaliser cette action ? <br />
+                        Cela entraînera un chargement en fond
+                    </Typography>
+
+                    <Stack spacing={4} direction="row">
+                        <AButton variant="outlined" color="error" onClick={() => setOpen(false)}>
+                            Annuler
+                        </AButton>
+
+                        <AButton variant="contained" onClick={handleSubmit}>
+                            Confirmer
+                        </AButton>
+                    </Stack>
+                </Stack>
+            </Modal>
         </Stack>
     )
 }

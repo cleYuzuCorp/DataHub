@@ -10,12 +10,12 @@ const AHeaderSelect = (props: { values: string[], active: string[], setActive: (
 
     const handleClick = (value: string) => {
         if (value === "Persona") {
-            setActive([active[0], value, 'Dashboard'])
+            setActive([active[0], value, 'Settings'])
         } else if (values.includes('Persona')) {
             setActive([active[0], value])
         } else if (value === "Enrichissement") {
             setActive([active[0], active[1], value, "Données"])
-        } else if (values.includes('Dashboard')) {
+        } else if (values.includes('Settings')) {
             setActive([active[0], active[1], value])
         } else if (active.length === 3 || active.length === 4) {
             setActive([active[0], active[1], active[2], value])
