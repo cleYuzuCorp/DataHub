@@ -93,7 +93,7 @@ const CustomersAccounts = (props: { instance: any, customers: Customer[], setCus
                 {loading ? <Stack spacing={2} alignItems="center">
                     <CircularProgress />
                     <Typography textAlign="center">
-                        Réveil de toutes les services <br />
+                        Réveil de tous les services <br />
                         Merci de patienter...
                     </Typography>
                 </Stack> : <Stack spacing={8} width="100%">
