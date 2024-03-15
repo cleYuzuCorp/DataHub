@@ -1,9 +1,11 @@
 import { Container, Stack, Typography } from "@mui/material"
 import OData from "../../../components/organisms/o-data"
 import { JobTitle } from "../../../interfaces/job-title"
+import { Customer } from "../../../interfaces/customer"
 
 const Data = (props: {
     instance: any
+    selectedCustomer: Customer
     loading: boolean
     numberContacts: number
     numberRoles: number
@@ -13,7 +15,7 @@ const Data = (props: {
     links: JobTitle[]
 }) => {
 
-    const { instance, loading, numberContacts, numberRoles, numberPersonas, roles, personas, links } = props
+    const { instance, selectedCustomer, loading, numberContacts, numberRoles, numberPersonas, roles, personas, links } = props
 
     return (
         <Container maxWidth="lg">
@@ -23,6 +25,7 @@ const Data = (props: {
                 </Typography>
                 <OData
                     instance={instance}
+                    selectedCustomer={selectedCustomer}
                     loading={loading}
                     numberContacts={numberContacts}
                     numberRoles={numberRoles}

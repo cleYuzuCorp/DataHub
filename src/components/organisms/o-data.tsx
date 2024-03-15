@@ -11,9 +11,11 @@ import jsPDF from "jspdf"
 import html2canvas from "html2canvas"
 import * as XLSX from 'xlsx'
 import { useLocation } from "react-router-dom"
+import { Customer } from "../../interfaces/customer"
 
 const OData = (props: {
     instance: any
+    selectedCustomer: Customer
     loading: boolean
     numberContacts: number
     numberRoles: number
@@ -23,7 +25,7 @@ const OData = (props: {
     links: JobTitle[]
 }) => {
 
-    const { loading, numberContacts, numberRoles, numberPersonas, roles, personas, links } = props
+    const { loading, selectedCustomer, numberContacts, numberRoles, numberPersonas, roles, personas, links } = props
 
     const idTenant = new URLSearchParams(useLocation().search).get('id')
 
@@ -90,7 +92,7 @@ const OData = (props: {
         const formattedDate = currentDate.toLocaleDateString().split('/').join('-')
         const formattedTime = currentDate.toLocaleTimeString().split(':').join('-')
 
-        const fileName = `Bilan_Datahub_Persona_${idTenant}_${formattedDate}_${formattedTime}.xlsx`
+        const fileName = `${selectedCustomer.NomClient}_${formattedDate}_${formattedTime}.xlsx`
 
         const sortedRoles = roles.sort((a, b) => b.occurences - a.occurences)
         const sortedPersonas = personas.sort((a, b) => b.occurences - a.occurences)
@@ -129,7 +131,7 @@ const OData = (props: {
                 const formattedDate = currentDate.toLocaleDateString().split('/').join('-')
                 const formattedTime = currentDate.toLocaleTimeString().split(':').join('-')
 
-                const fileName = `Bilan_Datahub_Persona_${idTenant}_${formattedDate}_${formattedTime}.pdf`
+                const fileName = `${selectedCustomer.NomClient}_${formattedDate}_${formattedTime}.pdf`
 
                 const maxWidth = 150
                 const lineHeight = 10
@@ -149,7 +151,7 @@ const OData = (props: {
 
                 pdf.setFont('BD Supper, sans serif', 'normal')
                 pdf.setFontSize(16)
-                addTextWithWrap(`Au total, 974 contacts sont présents sur HubSpot. Parmis eux, ${numberRoles} intitulés de postes distincts`, 20, 130, 175)
+                addTextWithWrap(`Au total, ${numberContacts} contacts sont présents sur HubSpot. Parmis eux, ${numberRoles} intitulés de postes distincts`, 20, 130, 175)
 
                 pdf.setFont('BD Supper, sans serif', 'bold')
                 pdf.setFontSize(19)
@@ -197,7 +199,7 @@ const OData = (props: {
                 tableData.forEach((rowData, rowIndex) => {
                     rowData.forEach((cellData, colIndex) => {
                         const textHeight = lineHeight * (pdf.splitTextToSize(String(cellData), cellWidth, { maxWidth: cellWidth, lineHeight: lineHeight }).length - 1)
-                        const cellY = startY + (rowIndex + 2) * cellHeight + (cellHeight - textHeight) / 2
+                        const cellY = startY + (rowIndex + 1) * cellHeight + (cellHeight - textHeight) / 2 + 7
 
                         if (colIndex === 0) {
                             addTextWithWrap(String(cellData), margin + colIndex * cellWidth + 10, cellY, cellWidth - 10)

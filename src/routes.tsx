@@ -308,6 +308,7 @@ const AppRoutes = (props: { instance?: any }) => {
                 <PageComponent
                   instance={instance}
                   customers={customers}
+                  selectedCustomer={selectedCustomer}
                   loading={loading}
                   dbPersona={dbPersona}
                   setDbPersona={setDbPersona}
