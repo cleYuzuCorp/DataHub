@@ -90,7 +90,13 @@ const CustomersAccounts = (props: { instance: any, customers: Customer[], setCus
                     DataHub
                 </Typography>
 
-                {loading ? <CircularProgress /> : <Stack spacing={8} width="100%">
+                {loading ? <Stack spacing={2} alignItems="center">
+                    <CircularProgress />
+                    <Typography textAlign="center">
+                        Réveil de toutes les services <br />
+                        Merci de patienter...
+                    </Typography>
+                </Stack> : <Stack spacing={8} width="100%">
                     <Stack spacing={2} width="100%">
                         <Table component={Paper} sx={{ background: theme.palette.background.default }}>
                             <TableHead sx={{ background: theme.palette.text.primary }}>

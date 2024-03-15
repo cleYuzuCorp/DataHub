@@ -80,7 +80,7 @@ const THeader = (props: {
                 await instance.initialize()
                 const accessToken = await acquireToken(instance)
 
-                const response = await fetch(`${process.env.REACT_APP_API}/tenant/`, {
+                const response = await fetch(`${process.env.REACT_APP_API}/tenant`, {
                     headers: {
                         Authorization: `Bearer ${accessToken}`,
                         "Content-Type": "application/json",
@@ -99,7 +99,9 @@ const THeader = (props: {
             }
         }
 
-        fetchData()
+        setTimeout(() => {
+            fetchData()
+        }, 10000)
     }, [instance])
 
     const handleSignIn = async () => {
