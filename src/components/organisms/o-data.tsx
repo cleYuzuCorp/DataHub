@@ -355,7 +355,7 @@ const OData = (props: {
                         />
 
                         <MCardData
-                            title="Liaisons"
+                            title="Rôle - Persona"
                             number={filteredLinks ? filteredLinks.length : links.length}
                             label="Nombre de liaisons différentes"
                             jobTitles={filteredLinks ? filteredLinks : links}

@@ -99,9 +99,7 @@ const THeader = (props: {
             }
         }
 
-        setTimeout(() => {
-            fetchData()
-        }, 10000)
+        fetchData()
     }, [instance])
 
     const handleSignIn = async () => {
