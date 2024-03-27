@@ -19,7 +19,7 @@ const ChangeFound = (props: {
         <Container maxWidth="lg">
             <Stack spacing={8} alignItems="center" marginTop="100px" marginBottom="100px">
                 <Typography variant="h3">
-                    DataHub
+                    DataHub - Persona
                 </Typography>
 
                 {loading ? <CircularProgress /> : <OTableEnrichment instance={instance} id={idTenant} contacts={changeFound} dbPersona={dbPersona} find={true} validate={validate} />}

@@ -1,4 +1,4 @@
-import { CircularProgress, Container, IconButton, Modal, Stack, TextField, Typography } from "@mui/material"
+import { CircularProgress, Container, IconButton, Modal, Stack, TextField, Typography, useMediaQuery } from "@mui/material"
 import OFormAssociation from "../../components/organisms/o-form-association"
 import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
@@ -14,6 +14,8 @@ import theme from "../../theme"
 const Settings = (props: { instance: any, validate: () => void }) => {
 
     const { instance, validate } = props
+
+    const isDesktop = useMediaQuery('(min-width:1000px)')
 
     const location = useLocation()
     const [IdTenant, setIdTenant] = useState<string | null>()
@@ -409,11 +411,11 @@ const Settings = (props: { instance: any, validate: () => void }) => {
         <Container maxWidth="lg">
             <Stack spacing={8} alignItems="center" marginTop="100px" marginBottom="100px">
                 <Typography variant="h3">
-                    DataHub
+                    DataHub - Persona
                 </Typography>
 
                 {loading ? <CircularProgress /> : <Stack spacing={8} alignItems="center" width="100%">
-                    <Stack spacing={2} alignItems="flex-end" width="100%">
+                    <Stack spacing={2} alignItems={isDesktop ? "flex-end" : "normal"} width="100%">
                         <AButton variant="outlined" onClick={() => setOpen(true)}>
                             Modifier les propriétés
                         </AButton>
