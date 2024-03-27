@@ -9,9 +9,9 @@ const AHeaderSelect = (props: { values: string[], active: string[], setActive: (
     const [hovered, setHovered] = useState("")
 
     const handleClick = (value: string) => {
-        if (value === "Persona") {
+        if (value === "Persona" || value === "Maison Mère") {
             setActive([active[0], value, 'Settings'])
-        } else if (values.includes('Persona')) {
+        } else if (values.includes('Persona') || values.includes('Maison Mère')) {
             setActive([active[0], value])
         } else if (value === "Enrichissement") {
             setActive([active[0], active[1], value, "Données"])

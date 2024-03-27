@@ -198,7 +198,7 @@ const History = (props: { instance: any }) => {
         <Container maxWidth="lg">
             <Stack spacing={8} alignItems="center" marginTop="100px" marginBottom="100px">
                 <Typography variant="h3">
-                    DataHub
+                    DataHub - Persona
                 </Typography>
 
                 {loading ? <CircularProgress /> : <Stack spacing={4} width="100%">
@@ -406,7 +406,7 @@ const History = (props: { instance: any }) => {
                                 </TableHead>
                                 <TableBody>
                                     {filteredHistories.map((history, index) =>
-                                        <TableRow sx={{ background: theme.palette.secondary.light }}>
+                                        <TableRow key={index} sx={{ background: history.IdObjectAsk !== history.IdObjectModifiedReal || (history.PersonaAsk?.toLowerCase() !== history.PersonaAfter?.toLowerCase() && history.PersonaBefore !== "restaured") ? theme.palette.error.light : null }}>
                                             <TableCell align="center">
                                                 <Stack
                                                     textAlign="center"

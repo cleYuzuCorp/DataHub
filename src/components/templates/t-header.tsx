@@ -128,21 +128,43 @@ const THeader = (props: {
 
     useEffect(() => {
         const fetchNav = async () => {
-            if (active.includes("Settings") && selectedCustomer) {
-                navigate(`/persona/settings?id=${selectedCustomer.IdTenant}`)
-            } else if (active.includes("Historique") && selectedCustomer) {
-                navigate(`/persona/history?id=${selectedCustomer.IdTenant}`)
-            } else if (active.includes("Enrichissement") && (!selectedCustomer || !dataLoading.find(item => item.customerName === selectedCustomer.NomClient)?.isLoading)) {
-                handleOpen()
-            } else if (active.includes("Données") && selectedCustomer) {
-                navigate(`/persona/enrichissement/data?id=${selectedCustomer.IdTenant}`)
-            } else if (active.includes("Initialement nul") && selectedCustomer) {
-                navigate(`/persona/enrichissement/initially-null?id=${selectedCustomer.IdTenant}`)
-            } else if (active.includes("Modification trouvée") && selectedCustomer) {
-                navigate(`/persona/enrichissement/change-found?id=${selectedCustomer.IdTenant}`)
-            } else if (active.includes("Aucune modification trouvée") && selectedCustomer) {
-                navigate(`/persona/enrichissement/no-change-found?id=${selectedCustomer.IdTenant}`)
-            } else {
+            if (active.includes("Persona")) {
+                if (active.includes("Settings") && selectedCustomer) {
+                    navigate(`/persona/settings?id=${selectedCustomer.IdTenant}`)
+                } else if (active.includes("Historique") && selectedCustomer) {
+                    navigate(`/persona/history?id=${selectedCustomer.IdTenant}`)
+                } else if (active.includes("Enrichissement") && (!selectedCustomer || !dataLoading.find(item => item.customerName === selectedCustomer.NomClient)?.isLoading)) {
+                    handleOpen()
+                } else if (active.includes("Données") && selectedCustomer) {
+                    navigate(`/persona/enrichissement/data?id=${selectedCustomer.IdTenant}`)
+                } else if (active.includes("Initialement nul") && selectedCustomer) {
+                    navigate(`/persona/enrichissement/initially-null?id=${selectedCustomer.IdTenant}`)
+                } else if (active.includes("Modification trouvée") && selectedCustomer) {
+                    navigate(`/persona/enrichissement/change-found?id=${selectedCustomer.IdTenant}`)
+                } else if (active.includes("Aucune modification trouvée") && selectedCustomer) {
+                    navigate(`/persona/enrichissement/no-change-found?id=${selectedCustomer.IdTenant}`)
+                } else {
+                    navigate('/')
+                }
+            } /* else if (active.includes("Maison Mère")) {
+                if (active.includes("Settings") && selectedCustomer) {
+                    navigate(`/maison-mere/settings?id=${selectedCustomer.IdTenant}`)
+                } else if (active.includes("Historique") && selectedCustomer) {
+                    navigate(`/maison-mere/history?id=${selectedCustomer.IdTenant}`)
+                } else if (active.includes("Enrichissement") && (!selectedCustomer || !dataLoading.find(item => item.customerName === selectedCustomer.NomClient)?.isLoading)) {
+                    handleOpen()
+                } else if (active.includes("Données") && selectedCustomer) {
+                    navigate(`/maison-mere/enrichissement/data?id=${selectedCustomer.IdTenant}`)
+                } else if (active.includes("Initialement nul") && selectedCustomer) {
+                    navigate(`/maison-mere/enrichissement/initially-null?id=${selectedCustomer.IdTenant}`)
+                } else if (active.includes("Modification trouvée") && selectedCustomer) {
+                    navigate(`/maison-mere/enrichissement/change-found?id=${selectedCustomer.IdTenant}`)
+                } else if (active.includes("Aucune modification trouvée") && selectedCustomer) {
+                    navigate(`/maison-mere/enrichissement/no-change-found?id=${selectedCustomer.IdTenant}`)
+                } else {
+                    navigate('/')
+                }
+            } */ else {
                 navigate('/')
             }
         }
@@ -152,7 +174,7 @@ const THeader = (props: {
 
     const choices = [
         "Persona",
-        "Secteur d'activité"
+        "Maison Mère"
     ]
 
     const persona = [
@@ -180,7 +202,8 @@ const THeader = (props: {
             flexGrow={1}
             sx={{
                 background: theme.palette.background.default,
-                boxShadow: '0px 4px 10px 0px rgba(0, 0, 0, 0.25)'
+                boxShadow: '0px 4px 10px 0px rgba(0, 0, 0, 0.25)',
+                overflowY: 'auto'
             }}
         >
             <img
@@ -223,7 +246,7 @@ const THeader = (props: {
                     {customersNames && active.some(value => customersNames.includes(value)) &&
                         <AHeaderSelect values={choices} active={active} setActive={setActive} />
                     }
-                    {active.includes("Persona") &&
+                    {(active.includes("Persona") /*|| active.includes("Maison Mère")*/) &&
                         <AHeaderSelect values={persona} active={active} setActive={setActive} />
                     }
                     {active.includes("Enrichissement") &&
