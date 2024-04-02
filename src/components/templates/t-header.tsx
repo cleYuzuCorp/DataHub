@@ -33,6 +33,7 @@ const THeader = (props: {
     const [hovered, setHovered] = useState("")
     const [interactionInProgress, setInteractionInProgress] = useState(false)
     const [account, setAccount] = useState()
+    const [graphData, setGraphData] = useState<string>()
     const [customersNames, setCustomersNames] = useState<Array<string>>()
 
     const handleOpen = () => {
@@ -48,10 +49,67 @@ const THeader = (props: {
     }
 
     useEffect(() => {
-        const accounts = instance.getAllAccounts()
-        if (accounts.length !== 0) {
-            setAccount(accounts[0].name)
+        const fetchData = async () => {
+            const accounts = instance.getAllAccounts()
+            if (accounts.length !== 0) {
+                setAccount(accounts[0].name)
+
+                await instance.initialize()
+                const accessToken = await acquireToken(instance)
+                fetch("https://graph.microsoft.com/v1.0/me/photo/$value", {
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`,
+                    },
+                    method: "GET",
+                })
+                    .then((response) => response.arrayBuffer())
+                    .then((data) => {
+                        const blob = new Blob([new Uint8Array(data)], { type: "image/jpeg" })
+                        const reader = new FileReader()
+                        reader.readAsDataURL(blob)
+                        reader.onloadend = function () {
+                            const img = new Image()
+                            if (typeof reader.result === 'string') {
+                                img.src = reader.result
+                            }
+                            img.onload = () => {
+                                const canvas = document.createElement("canvas")
+                                const ctx = canvas.getContext("2d")
+                                const maxWidth = 100
+                                const maxHeight = 100
+                                let width = img.width
+                                let height = img.height
+
+                                if (width > height) {
+                                    if (width > maxWidth) {
+                                        height *= maxWidth / width
+                                        width = maxWidth
+                                    }
+                                } else {
+                                    if (height > maxHeight) {
+                                        width *= maxHeight / height
+                                        height = maxHeight
+                                    }
+                                }
+
+                                canvas.width = width
+                                canvas.height = height
+                                if (ctx) {
+                                    ctx.drawImage(img, 0, 0, width, height)
+                                }
+
+                                const resizedImage = canvas.toDataURL("image/jpeg")
+                                setGraphData(resizedImage)
+                            }
+                        }
+                    })
+                    .catch((error) => {
+                        console.log(error)
+                    })
+            }
         }
+
+        fetchData()
     }, [customers])
 
     useEffect(() => {
@@ -266,7 +324,9 @@ const THeader = (props: {
                 }}
             >
                 {account ? <Stack spacing={2} alignItems="center">
-                    <Stack>
+                    <Stack spacing={1} direction="row" alignItems="center">
+                        {/*<img src={graphData} alt="Profile" style={{ borderRadius: "50%", width: "50px", height: "50px" }} />*/}
+
                         <Typography>
                             {account}
                         </Typography>

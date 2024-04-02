@@ -405,7 +405,7 @@ const History = (props: { instance: any }) => {
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
-                                    {filteredHistories.map((history, index) =>
+                                    {filteredHistories.slice(startIndex, endIndex).map((history, index) =>
                                         <TableRow key={index} sx={{ background: history.IdObjectAsk !== history.IdObjectModifiedReal || (history.PersonaAsk?.toLowerCase() !== history.PersonaAfter?.toLowerCase() && history.PersonaBefore !== "restaured") ? theme.palette.error.light : null }}>
                                             <TableCell align="center">
                                                 <Stack
