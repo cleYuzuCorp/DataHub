@@ -12,6 +12,8 @@ import AButton from "../atoms/a-button"
 
 const THeader = (props: {
     instance?: any
+    account: any
+    setAccount: (value: any) => void
     customers: Customer[]
     setCustomers: (value: Customer[]) => void
     open: boolean
@@ -26,13 +28,12 @@ const THeader = (props: {
     validate: () => void
 }) => {
 
-    const { instance, customers, setCustomers, open, setOpen, active, setActive, dataLoading, setDataLoading, selectedCustomer, setSelectedCustomer, setLoading, validate } = props
+    const { instance, account, setAccount, customers, setCustomers, open, setOpen, active, setActive, dataLoading, setDataLoading, selectedCustomer, setSelectedCustomer, setLoading, validate } = props
 
     const navigate = useNavigate()
 
     const [hovered, setHovered] = useState("")
     const [interactionInProgress, setInteractionInProgress] = useState(false)
-    const [account, setAccount] = useState()
     const [graphData, setGraphData] = useState<string>()
     const [customersNames, setCustomersNames] = useState<Array<string>>()
 
@@ -48,69 +49,93 @@ const THeader = (props: {
         setOpen(false)
     }
 
-    useEffect(() => {
-        const fetchData = async () => {
-            const accounts = instance.getAllAccounts()
-            if (accounts.length !== 0) {
-                setAccount(accounts[0].name)
-
-                await instance.initialize()
-                const accessToken = await acquireToken(instance)
-                fetch("https://graph.microsoft.com/v1.0/me/photo/$value", {
-                    headers: {
-                        Authorization: `Bearer ${accessToken}`,
-                    },
-                    method: "GET",
-                })
-                    .then((response) => response.arrayBuffer())
-                    .then((data) => {
-                        const blob = new Blob([new Uint8Array(data)], { type: "image/jpeg" })
-                        const reader = new FileReader()
-                        reader.readAsDataURL(blob)
-                        reader.onloadend = function () {
-                            const img = new Image()
-                            if (typeof reader.result === 'string') {
-                                img.src = reader.result
-                            }
-                            img.onload = () => {
-                                const canvas = document.createElement("canvas")
-                                const ctx = canvas.getContext("2d")
-                                const maxWidth = 100
-                                const maxHeight = 100
-                                let width = img.width
-                                let height = img.height
-
-                                if (width > height) {
-                                    if (width > maxWidth) {
-                                        height *= maxWidth / width
-                                        width = maxWidth
-                                    }
-                                } else {
-                                    if (height > maxHeight) {
-                                        width *= maxHeight / height
-                                        height = maxHeight
-                                    }
-                                }
-
-                                canvas.width = width
-                                canvas.height = height
-                                if (ctx) {
-                                    ctx.drawImage(img, 0, 0, width, height)
-                                }
-
-                                const resizedImage = canvas.toDataURL("image/jpeg")
-                                setGraphData(resizedImage)
-                            }
-                        }
-                    })
-                    .catch((error) => {
-                        console.log(error)
-                    })
-            }
+    const handleSignIn = async () => {
+        const loginRequest = {
+            scopes: ["openid", "user.read"],
+        }
+        const accounts = instance.getAllAccounts()
+        if (accounts.length === 0) {
+            await instance.loginRedirect({ ...loginRequest, prompt: "select_account" }).catch((error: any) => console.log(error))
         }
 
-        fetchData()
-    }, [customers])
+        setAccount(accounts[0].name)
+    }
+
+    const handleSignOut = async () => {
+        if (interactionInProgress) return
+        setInteractionInProgress(true)
+        try {
+            await instance.logoutRedirect()
+        } catch (error) {
+            console.error(error)
+        } finally {
+            setInteractionInProgress(false)
+        }
+    }
+
+    // useEffect(() => {
+    //     const fetchData = async () => {
+    //         const accounts = instance.getAllAccounts()
+    //         if (accounts.length !== 0) {
+    //             setAccount(accounts[0].name)
+
+    //             await instance.initialize()
+    //             const accessToken = await acquireToken(instance)
+    //             fetch("https://graph.microsoft.com/v1.0/me/photo/$value", {
+    //                 headers: {
+    //                     Authorization: `Bearer ${accessToken}`,
+    //                 },
+    //                 method: "GET",
+    //             })
+    //                 .then((response) => response.arrayBuffer())
+    //                 .then((data) => {
+    //                     const blob = new Blob([new Uint8Array(data)], { type: "image/jpeg" })
+    //                     const reader = new FileReader()
+    //                     reader.readAsDataURL(blob)
+    //                     reader.onloadend = function () {
+    //                         const img = new Image()
+    //                         if (typeof reader.result === 'string') {
+    //                             img.src = reader.result
+    //                         }
+    //                         img.onload = () => {
+    //                             const canvas = document.createElement("canvas")
+    //                             const ctx = canvas.getContext("2d")
+    //                             const maxWidth = 100
+    //                             const maxHeight = 100
+    //                             let width = img.width
+    //                             let height = img.height
+
+    //                             if (width > height) {
+    //                                 if (width > maxWidth) {
+    //                                     height *= maxWidth / width
+    //                                     width = maxWidth
+    //                                 }
+    //                             } else {
+    //                                 if (height > maxHeight) {
+    //                                     width *= maxHeight / height
+    //                                     height = maxHeight
+    //                                 }
+    //                             }
+
+    //                             canvas.width = width
+    //                             canvas.height = height
+    //                             if (ctx) {
+    //                                 ctx.drawImage(img, 0, 0, width, height)
+    //                             }
+
+    //                             const resizedImage = canvas.toDataURL("image/jpeg")
+    //                             setGraphData(resizedImage)
+    //                         }
+    //                     }
+    //                 })
+    //                 .catch((error) => {
+    //                     console.log(error)
+    //                 })
+    //         }
+    //     }
+
+    //     fetchData()
+    // }, [account])
 
     useEffect(() => {
         const names = customers.map((customer) => customer.NomClient as string)
@@ -159,30 +184,6 @@ const THeader = (props: {
 
         fetchData()
     }, [instance])
-
-    const handleSignIn = async () => {
-        const loginRequest = {
-            scopes: ["openid", "user.read"],
-        }
-        const accounts = instance.getAllAccounts()
-        if (accounts.length === 0) {
-            await instance.loginRedirect({ ...loginRequest, prompt: "select_account" }).catch((error: any) => console.log(error))
-        }
-
-        setAccount(accounts[0].name)
-    }
-
-    const handleSignOut = async () => {
-        if (interactionInProgress) return
-        setInteractionInProgress(true)
-        try {
-            await instance.logoutRedirect()
-        } catch (error) {
-            console.error(error)
-        } finally {
-            setInteractionInProgress(false)
-        }
-    }
 
     useEffect(() => {
         const fetchNav = async () => {
@@ -295,7 +296,7 @@ const THeader = (props: {
                         </Typography>
                     </Stack>
 
-                    {customersNames &&
+                    {customersNames && account &&
                         <AAccordion title="Choix du client" values={customersNames} active={active} setActive={setActive} />
                     }
                 </Stack>

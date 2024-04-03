@@ -7,9 +7,9 @@ import { useState } from "react"
 import { acquireToken } from "../App"
 import { Customer } from "../interfaces/customer"
 
-const CustomersAccounts = (props: { instance: any, customers: Customer[], setCustomers: (value: Customer[]) => void, loading: boolean }) => {
+const CustomersAccounts = (props: { instance: any, account: any, customers: Customer[], setCustomers: (value: Customer[]) => void, loading: boolean }) => {
 
-    const { instance, customers, setCustomers, loading } = props
+    const { instance, account, customers, setCustomers, loading } = props
 
     const [open, setOpen] = useState(false)
     const [selectedCustomer, setSelectedCustomer] = useState<Customer>()
@@ -90,7 +90,9 @@ const CustomersAccounts = (props: { instance: any, customers: Customer[], setCus
                     DataHub
                 </Typography>
 
-                {loading ? <Stack spacing={2} alignItems="center">
+                {!account ? <Typography textAlign="center">
+                    Veuillez vous connectez pour accéder aux services de l'application.
+                </Typography> : loading ? <Stack spacing={2} alignItems="center">
                     <CircularProgress />
                     <Typography textAlign="center">
                         Réveil de tous les services <br />

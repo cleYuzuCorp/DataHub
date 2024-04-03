@@ -20,6 +20,7 @@ const AppRoutes = (props: { instance?: any }) => {
   const [loading, setLoading] = useState(false)
   const [open, setOpen] = useState(false)
   const [customers, setCustomers] = useState<Customer[]>([])
+  const [account, setAccount] = useState()
 
   const [openConfirm, setOpenConfirm] = useState(false)
   const [active, setActive] = useState([""])
@@ -210,6 +211,8 @@ const AppRoutes = (props: { instance?: any }) => {
           <Stack direction="row">
             {isDesktop ? <THeader
               instance={instance}
+              account={account}
+              setAccount={setAccount}
               customers={customers}
               setCustomers={setCustomers}
               active={active}
@@ -236,6 +239,8 @@ const AppRoutes = (props: { instance?: any }) => {
               <Drawer anchor="left" open={open} onClose={() => setOpen(false)}>
                 <THeader
                   instance={instance}
+                  account={account}
+                  setAccount={setAccount}
                   customers={customers}
                   setCustomers={setCustomers}
                   open={openConfirm}
@@ -251,7 +256,7 @@ const AppRoutes = (props: { instance?: any }) => {
                 />
               </Drawer>
             </Stack>}
-            <CustomersAccounts instance={instance} customers={customers} setCustomers={setCustomers} loading={loading} />
+            <CustomersAccounts instance={instance} account={account} customers={customers} setCustomers={setCustomers} loading={loading} />
           </Stack>
         </ThemeProvider>} />
         {pagesContext.keys().map((modulePath: string) => {
@@ -264,6 +269,8 @@ const AppRoutes = (props: { instance?: any }) => {
               <Stack direction="row">
                 {isDesktop ? <THeader
                   instance={instance}
+                  account={account}
+                  setAccount={setAccount}
                   customers={customers}
                   setCustomers={setCustomers}
                   open={openConfirm}
@@ -290,6 +297,8 @@ const AppRoutes = (props: { instance?: any }) => {
                   <Drawer anchor="left" open={open} onClose={() => setOpen(false)}>
                     <THeader
                       instance={instance}
+                      account={account}
+                      setAccount={setAccount}
                       customers={customers}
                       setCustomers={setCustomers}
                       open={openConfirm}
@@ -307,6 +316,7 @@ const AppRoutes = (props: { instance?: any }) => {
                 </Stack>}
                 <PageComponent
                   instance={instance}
+                  account={account}
                   customers={customers}
                   selectedCustomer={selectedCustomer}
                   loading={loading}

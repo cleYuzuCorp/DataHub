@@ -2,7 +2,7 @@
     "routes": [
         {
             "route": "/*",
-            "serve": "/index.html",
+            "serve": "/index.tsx",
             "statusCode": 200
         }
     ]
