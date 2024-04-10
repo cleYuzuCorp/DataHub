@@ -73,69 +73,69 @@ const THeader = (props: {
         }
     }
 
-    // useEffect(() => {
-    //     const fetchData = async () => {
-    //         const accounts = instance.getAllAccounts()
-    //         if (accounts.length !== 0) {
-    //             setAccount(accounts[0].name)
+    useEffect(() => {
+        const fetchData = async () => {
+            const accounts = instance.getAllAccounts()
+            if (accounts.length !== 0) {
+                setAccount(accounts[0].name)
 
-    //             await instance.initialize()
-    //             const accessToken = await acquireToken(instance)
-    //             fetch("https://graph.microsoft.com/v1.0/me/photo/$value", {
-    //                 headers: {
-    //                     Authorization: `Bearer ${accessToken}`,
-    //                 },
-    //                 method: "GET",
-    //             })
-    //                 .then((response) => response.arrayBuffer())
-    //                 .then((data) => {
-    //                     const blob = new Blob([new Uint8Array(data)], { type: "image/jpeg" })
-    //                     const reader = new FileReader()
-    //                     reader.readAsDataURL(blob)
-    //                     reader.onloadend = function () {
-    //                         const img = new Image()
-    //                         if (typeof reader.result === 'string') {
-    //                             img.src = reader.result
-    //                         }
-    //                         img.onload = () => {
-    //                             const canvas = document.createElement("canvas")
-    //                             const ctx = canvas.getContext("2d")
-    //                             const maxWidth = 100
-    //                             const maxHeight = 100
-    //                             let width = img.width
-    //                             let height = img.height
+                // await instance.initialize()
+                // const accessToken = await acquireToken(instance)
+                // fetch("https://graph.microsoft.com/v1.0/me/photo/$value", {
+                //     headers: {
+                //         Authorization: `Bearer ${accessToken}`,
+                //     },
+                //     method: "GET",
+                // })
+                //     .then((response) => response.arrayBuffer())
+                //     .then((data) => {
+                //         const blob = new Blob([new Uint8Array(data)], { type: "image/jpeg" })
+                //         const reader = new FileReader()
+                //         reader.readAsDataURL(blob)
+                //         reader.onloadend = function () {
+                //             const img = new Image()
+                //             if (typeof reader.result === 'string') {
+                //                 img.src = reader.result
+                //             }
+                //             img.onload = () => {
+                //                 const canvas = document.createElement("canvas")
+                //                 const ctx = canvas.getContext("2d")
+                //                 const maxWidth = 100
+                //                 const maxHeight = 100
+                //                 let width = img.width
+                //                 let height = img.height
 
-    //                             if (width > height) {
-    //                                 if (width > maxWidth) {
-    //                                     height *= maxWidth / width
-    //                                     width = maxWidth
-    //                                 }
-    //                             } else {
-    //                                 if (height > maxHeight) {
-    //                                     width *= maxHeight / height
-    //                                     height = maxHeight
-    //                                 }
-    //                             }
+                //                 if (width > height) {
+                //                     if (width > maxWidth) {
+                //                         height *= maxWidth / width
+                //                         width = maxWidth
+                //                     }
+                //                 } else {
+                //                     if (height > maxHeight) {
+                //                         width *= maxHeight / height
+                //                         height = maxHeight
+                //                     }
+                //                 }
 
-    //                             canvas.width = width
-    //                             canvas.height = height
-    //                             if (ctx) {
-    //                                 ctx.drawImage(img, 0, 0, width, height)
-    //                             }
+                //                 canvas.width = width
+                //                 canvas.height = height
+                //                 if (ctx) {
+                //                     ctx.drawImage(img, 0, 0, width, height)
+                //                 }
 
-    //                             const resizedImage = canvas.toDataURL("image/jpeg")
-    //                             setGraphData(resizedImage)
-    //                         }
-    //                     }
-    //                 })
-    //                 .catch((error) => {
-    //                     console.log(error)
-    //                 })
-    //         }
-    //     }
+                //                 const resizedImage = canvas.toDataURL("image/jpeg")
+                //                 setGraphData(resizedImage)
+                //             }
+                //         }
+                //     })
+                //     .catch((error) => {
+                //         console.log(error)
+                //     })
+            }
+        }
 
-    //     fetchData()
-    // }, [account])
+        fetchData()
+    }, [account])
 
     useEffect(() => {
         const names = customers.map((customer) => customer.NomClient as string)
@@ -162,7 +162,6 @@ const THeader = (props: {
             try {
                 await instance.initialize()
                 const accessToken = await acquireToken(instance)
-
                 const response = await fetch(`${process.env.REACT_APP_API}/tenant`, {
                     headers: {
                         Authorization: `Bearer ${accessToken}`,
@@ -178,7 +177,8 @@ const THeader = (props: {
 
                 setLoading(false)
             } catch (error) {
-                console.log("Erreur:", error)
+                setTimeout(() => { fetchData() }, 10000)
+
             }
         }
 
@@ -223,7 +223,9 @@ const THeader = (props: {
                 } else {
                     navigate('/')
                 }
-            } */ else {
+            } */ else if (active.includes("Formatage") && selectedCustomer) {
+                navigate(`/formatting?id=${selectedCustomer.IdTenant}`)
+            } else {
                 navigate('/')
             }
         }
@@ -233,7 +235,8 @@ const THeader = (props: {
 
     const choices = [
         "Persona",
-        "Maison Mère"
+        "Maison Mère",
+        "Formatage"
     ]
 
     const persona = [

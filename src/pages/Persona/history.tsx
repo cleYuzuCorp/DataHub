@@ -6,7 +6,7 @@ import AButton from "../../components/atoms/a-button"
 import theme from "../../theme"
 import { useLocation } from "react-router-dom"
 import { acquireToken } from "../../App"
-import { HistoryRow } from "../../interfaces/history"
+import { HistoryPersona } from "../../interfaces/history-persona"
 import { format } from 'date-fns'
 
 const History = (props: { instance: any }) => {
@@ -22,9 +22,9 @@ const History = (props: { instance: any }) => {
     const [isRestored, setIsRestored] = useState(false)
 
     const [searchTerm, setSearchTerm] = useState("")
-    const [histories, setHistories] = useState<Array<HistoryRow>>([])
-    const [filteredHistories, setFilteredHistories] = useState<HistoryRow[]>([])
-    const [selectedRows, setSelectedRows] = useState<HistoryRow[]>([])
+    const [histories, setHistories] = useState<Array<HistoryPersona>>([])
+    const [filteredHistories, setFilteredHistories] = useState<HistoryPersona[]>([])
+    const [selectedRows, setSelectedRows] = useState<HistoryPersona[]>([])
 
     const [page, setPage] = useState(0)
     const [rowsPerPage, setRowsPerPage] = useState(10)

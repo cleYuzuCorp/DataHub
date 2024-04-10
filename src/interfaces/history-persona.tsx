@@ -1,4 +1,4 @@
-export interface HistoryRow {
+export interface HistoryPersona {
     Id: number,
     IdTenant: number,
     IdObjectAsk: number,
