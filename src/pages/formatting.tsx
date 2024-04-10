@@ -102,8 +102,11 @@ const Formatting = (props: { instance: any }) => {
 
                 const dataHistories = await responseHistories.json()
 
-                console.log(dataHistories)
+                const sortedHistories = dataHistories.sort((a: { Date: string }, b: { Date: string }) => {
+                    return new Date(b.Date as string).getTime() - new Date(a.Date as string).getTime()
+                })
 
+                setHistories(sortedHistories)
                 setLoading(false)
             } catch (error) {
                 console.error("Une erreur s'est produite lors de la requête :", error)
