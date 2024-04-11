@@ -1,7 +1,10 @@
 import { useState } from 'react';
 import { Container, Button } from "@mui/material";
+import { useLocation } from 'react-router-dom';
 
 const Form = () => {
+    const idTenant = new URLSearchParams(useLocation().search).get('id')
+
     const [file, setFile] = useState<File>();
 
     const handleDragOver = (event: any) => {
@@ -11,7 +14,11 @@ const Form = () => {
     const handleDrop = (event: any) => {
         event.preventDefault();
         const droppedFile = event.dataTransfer.files[0];
-        setFile(droppedFile);
+        if (droppedFile) {
+            const formData = new FormData();
+            formData.append('file', droppedFile);
+            setFile(droppedFile);
+        }
     };
 
     const handleUpload = async () => {
@@ -24,11 +31,19 @@ const Form = () => {
             const formData = new FormData();
             formData.append('file', file);
 
-            const url = 'http://127.0.0.1:7071/api/drop-contact-parser';
+            const body = {
+                IdTenant: idTenant,
+                file: formData
+            }
+
+            const url = 'http://localhost:3001/import';
 
             const response = await fetch(url, {
                 method: 'POST',
-                body: formData
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(body)
             });
 
             const data = await response.json();

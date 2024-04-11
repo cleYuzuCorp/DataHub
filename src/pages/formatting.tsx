@@ -19,58 +19,18 @@ const Formatting = (props: { instance: any }) => {
 
     const [loading, setLoading] = useState(false)
     const [fetchDataInit, setFetchDataInit] = useState(false)
-    const [isRestored, setIsRestored] = useState(false)
     const [checked, setChecked] = useState(false)
 
     const [searchTerm, setSearchTerm] = useState("")
     const [histories, setHistories] = useState<Array<HistoryFormatting>>([])
     const [filteredHistories, setFilteredHistories] = useState<HistoryFormatting[]>([])
-    const [selectedRows, setSelectedRows] = useState<HistoryFormatting[]>([])
 
     const [page, setPage] = useState(0)
     const [rowsPerPage, setRowsPerPage] = useState(10)
 
-    const [dbPersona, setDbPersona] = useState([{ description: "", value: "" }])
-
     useEffect(() => {
         setFetchDataInit(true)
     }, [])
-
-    useEffect(() => {
-        setLoading(true)
-
-        const fetchData = async () => {
-            if (fetchDataInit) {
-                try {
-                    await instance.initialize()
-                    const accessToken = await acquireToken(instance)
-
-                    const response = await fetch(`${process.env.REACT_APP_API}/proposition-persona/associations-settings?IdTenant=${idTenant}`, {
-                        method: "GET",
-                        headers: {
-                            Authorization: `Bearer ${accessToken}`,
-                            "Content-Type": "application/json"
-                        }
-                    })
-
-                    const data = await response.json()
-
-                    const personas = data.dbPersona.map((persona: { description: string, value: string }) => {
-                        return {
-                            description: persona.description,
-                            value: persona.value
-                        }
-                    })
-
-                    setDbPersona(personas)
-                } catch (error) {
-                    console.error("Une erreur s'est produite lors de la requête :", error)
-                }
-            }
-        }
-
-        fetchData()
-    }, [fetchDataInit])
 
     useEffect(() => {
         setLoading(true)
@@ -89,6 +49,8 @@ const Formatting = (props: { instance: any }) => {
                 })
 
                 const dataStatus = await responseStatus.json()
+
+                console.log(dataStatus, 'd')
 
                 setChecked(dataStatus)
 
@@ -114,7 +76,7 @@ const Formatting = (props: { instance: any }) => {
         }
 
         fetchData()
-    }, [isRestored])
+    }, [fetchDataInit])
 
     const handleFilteredChange = (value: string) => {
         setSearchTerm(value)
@@ -122,7 +84,7 @@ const Formatting = (props: { instance: any }) => {
 
     useEffect(() => {
         const filtered = histories.filter(history =>
-            history.IdHistoryFormatage.toString().includes(searchTerm) ||
+            history.hs_object_id.toString().includes(searchTerm) ||
             history.Date.includes(searchTerm) ||
             history.Type.toLowerCase().includes(searchTerm.toLowerCase())
         )
@@ -143,16 +105,14 @@ const Formatting = (props: { instance: any }) => {
 
     const handleCheckChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setChecked(event.target.checked)
-    }
 
-    useEffect(() => {
         const fetchData = async () => {
             try {
                 await instance.initialize()
                 const accessToken = await acquireToken(instance)
 
                 const body = {
-                    actif: checked
+                    actif: event.target.checked
                 }
 
                 await fetch(`${process.env.REACT_APP_API}/settings-formatage/${idTenant}`, {
@@ -170,7 +130,7 @@ const Formatting = (props: { instance: any }) => {
         }
 
         fetchData()
-    }, [checked])
+    }
 
     return (
         <Container maxWidth="lg">
@@ -189,14 +149,10 @@ const Formatting = (props: { instance: any }) => {
                             En activant ce paramètre, un formatage de vos données s'effectuera chaque lundi à minuit.
                         </Typography>
 
-                        <FormControlLabel
-                            control={<Switch checked={checked} onChange={handleCheckChange} />}
-                            label="Activation du formatage :"
-                            labelPlacement="start"
-                            sx={{
-                                justifyContent: 'flex-end'
-                            }}
-                        />
+                        <Stack spacing={1} direction="row" alignItems="center">
+                            <Typography>Activation du formatage :</Typography>
+                            <Switch checked={checked} onChange={handleCheckChange} />
+                        </Stack>
                     </Stack>
                     <Stack spacing={4} width="100%">
                         <Typography variant="h4">
@@ -264,11 +220,11 @@ const Formatting = (props: { instance: any }) => {
                                                     padding="10px"
                                                     borderRadius="15px"
                                                     sx={{
-                                                        width: `${history.IdObject.toString().length}ch`,
-                                                        background: theme.palette.info.light
+                                                        width: `${history.hs_object_id ? history.hs_object_id.toString().length : 0}ch`,
+                                                        background: theme.palette.secondary.light
                                                     }}
                                                 >
-                                                    {history.IdObject}
+                                                    {history.hs_object_id}
                                                 </Typography>
                                             </TableCell>
                                             <TableCell align="center">
@@ -326,12 +282,12 @@ const Formatting = (props: { instance: any }) => {
                                                         padding="5px"
                                                         borderRadius="15px"
                                                         sx={{
-                                                            width: `${history.IdObject.toString().length}ch`,
+                                                            width: `${history.hs_object_id ? history.hs_object_id.toString().length : 0}ch`,
                                                             background: theme.palette.secondary.light
                                                         }}
                                                     >
                                                         <Typography fontSize="11px">
-                                                            {history.IdObject}
+                                                            {history.hs_object_id}
                                                         </Typography>
                                                     </Stack>
                                                 </TableCell>
