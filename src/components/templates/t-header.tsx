@@ -223,7 +223,9 @@ const THeader = (props: {
                 } else {
                     navigate('/')
                 }
-            } */ else if (active.includes("Formatage") && selectedCustomer) {
+            } */ else if (active.includes("Aide à l'import") && selectedCustomer) {
+                navigate(`/import-assistance/form?id=${selectedCustomer.IdTenant}`)
+            } else if (active.includes("Formatage") && selectedCustomer) {
                 navigate(`/formatting?id=${selectedCustomer.IdTenant}`)
             } else {
                 navigate('/')
@@ -236,6 +238,7 @@ const THeader = (props: {
     const choices = [
         "Persona",
         "Maison Mère",
+        "Aide à l'import",
         "Formatage"
     ]
 
