@@ -23,33 +23,28 @@ const Form = () => {
 
     const handleUpload = async () => {
         try {
-            if (!file) {
-                console.error('No file selected');
+            if (!file || !idTenant) {
+                console.error("No file selected");
                 return;
             }
 
+
             const formData = new FormData();
-            formData.append('file', file);
+            formData.append("file", file);
+            formData.append("IdTenant", idTenant);
 
-            const body = {
-                IdTenant: idTenant,
-                file: formData
-            }
-
-            const url = 'http://localhost:3001/import';
+            const url = "http://localhost:3001/import";
 
             const response = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(body)
+                method: "POST",
+                body: formData,
             });
 
             const data = await response.json();
             console.log(data);
+
         } catch (error) {
-            console.error('Error uploading file:', error);
+            console.error("Error uploading file:", error);
         }
     };
 
