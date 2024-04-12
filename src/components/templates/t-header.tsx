@@ -224,7 +224,7 @@ const THeader = (props: {
                     navigate('/')
                 }
             } */ else if (active.includes("Aide à l'import") && selectedCustomer) {
-                navigate(`/import-assistance/form?id=${selectedCustomer.IdTenant}`)
+                navigate(`/import-assistance?id=${selectedCustomer.IdTenant}`)
             } else if (active.includes("Formatage") && selectedCustomer) {
                 navigate(`/formatting?id=${selectedCustomer.IdTenant}`)
             } else {
