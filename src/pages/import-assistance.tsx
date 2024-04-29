@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Container, Button, Stack, Typography, RadioGroup, Radio, FormControlLabel, TextField, MenuItem, LinearProgress } from "@mui/material"
+import { Container, Button, Stack, Typography, RadioGroup, Radio, FormControlLabel, TextField, MenuItem, LinearProgress, Divider } from "@mui/material"
 import { useLocation } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFolderOpen, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons'
@@ -9,7 +9,7 @@ import { yupResolver } from "@hookform/resolvers/yup"
 import { useForm } from 'react-hook-form'
 import AButton from '../components/atoms/a-button'
 
-const Form = () => {
+const ImportAssistance = () => {
     const idTenant = new URLSearchParams(useLocation().search).get('id')
 
     const [hovered, setHovered] = useState(false)
@@ -139,9 +139,15 @@ const Form = () => {
                             ou cliquez sur ce bouton pour l’upload
                         </Typography>
 
-                        <Typography color="#C1C1C1">
-                            OU
-                        </Typography>
+                        <Stack spacing={2} direction="row" alignItems="center">
+                            <Divider orientation="vertical" sx={{ border: '1px solid', borderColor: '#C1C1C1', width: '75px' }} />
+
+                            <Typography color="#C1C1C1">
+                                OU
+                            </Typography>
+
+                            <Divider orientation="vertical" sx={{ border: '1px solid', borderColor: '#C1C1C1', width: '75px' }} />
+                        </Stack>
 
                         <Button
                             variant="contained"
@@ -203,7 +209,14 @@ const Form = () => {
                     </Stack> : null}
                 </Stack>
 
-                <Stack width="100%">
+                <Stack
+                    width="100%"
+                    sx={{
+                        background: theme.palette.background.default,
+                        boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)',
+                        borderRadius: '15px',
+                    }}
+                >
                     <Stack
                         padding="16px"
                         borderRadius="15px"
@@ -216,20 +229,33 @@ const Form = () => {
                         </Typography>
                     </Stack>
 
-                    <Stack
-                        spacing={4}
-                        padding="32px"
-                        sx={{
-                            background: theme.palette.background.default,
-                            boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)',
-                            borderRadius: '0px 0px 15px 15px',
-                        }}
-                    >
+                    <Stack spacing={1} padding="16px">
                         <Stack spacing={4} direction="row">
                             <RadioGroup value={proposition} onChange={handlePropositionChange}>
-                                <FormControlLabel value="choice" control={<Radio />} label="Choisir une entreprise existante" />
-                                <FormControlLabel value="replace" control={<Radio />} label="Remplacer par une entreprise de mon import" />
-                                <FormControlLabel value="create" control={<Radio />} label="Créer une nouvelle entreprise" />
+                                <FormControlLabel
+                                    value="choice"
+                                    control={<Radio />}
+                                    label="Choisir une entreprise existante"
+                                    sx={{
+                                        margin: '10px 0px 10px 0px'
+                                    }}
+                                />
+                                <FormControlLabel
+                                    value="replace"
+                                    control={<Radio />}
+                                    label="Remplacer par une entreprise de mon import"
+                                    sx={{
+                                        margin: '10px 0px 10px 0px'
+                                    }}
+                                />
+                                <FormControlLabel
+                                    value="create"
+                                    control={<Radio />}
+                                    label="Créer une nouvelle entreprise"
+                                    sx={{
+                                        margin: '10px 0px 10px 0px'
+                                    }}
+                                />
                             </RadioGroup>
 
                             {proposition !== "create" ? <TextField
@@ -284,8 +310,8 @@ const Form = () => {
                     />
                 </Stack>
             </Stack>
-        </Container>
+        </Container >
     )
 }
 
-export default Form
+export default ImportAssistance
