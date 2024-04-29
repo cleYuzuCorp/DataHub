@@ -8,18 +8,17 @@ import * as yup from "yup"
 import { yupResolver } from "@hookform/resolvers/yup"
 import { useForm } from 'react-hook-form'
 import AButton from '../components/atoms/a-button'
+import MFileUpload from '../components/molecules/m-file-upload'
 
 const ImportAssistance = () => {
     const idTenant = new URLSearchParams(useLocation().search).get('id')
 
-    const [hovered, setHovered] = useState(false)
-    const [file, setFile] = useState<File>()
     const [proposition, setProposition] = useState("choice")
     const [compagnies, setCompagnies] = useState([])
     const [filteredCompagnies, setFilteredCompagnies] = useState([])
     const [selectedCompagnies, setSelectedCompagnies] = useState("")
     const [searchTerm, setSearchTerm] = useState("")
-    const [progress, setProgress] = useState(0)
+    const [file, setFile] = useState<File>()
 
     const schema = yup.object().shape({
         compagnies: yup.string().required('Vous devez séléctionner au moins une entreprise')
@@ -28,40 +27,6 @@ const ImportAssistance = () => {
     const { clearErrors, setError, formState: { errors } } = useForm({
         resolver: yupResolver(schema),
     })
-
-    useEffect(() => {
-        setProgress(0)
-
-        const timer = setInterval(() => {
-            setProgress((oldProgress) => {
-                const diff = Math.random() * 10
-                return Math.min(oldProgress + diff, 100)
-            })
-        }, 200)
-
-        return () => {
-            clearInterval(timer)
-        }
-    }, [file])
-
-    const handleDragOver = (event: any) => {
-        event.preventDefault()
-    }
-
-    const handleDrop = (event: any) => {
-        event.preventDefault()
-        const droppedFile = event.dataTransfer.files[0]
-        if (droppedFile) {
-            const formData = new FormData()
-            formData.append('file', droppedFile)
-            setFile(droppedFile)
-        }
-    }
-
-    const handleFileChange = async (event: any) => {
-        const selectedFile = event.target.files ? event.target.files[0] : null
-        setFile(selectedFile)
-    }
 
     const loadData = async () => {
         try {
@@ -113,101 +78,12 @@ const ImportAssistance = () => {
 
     return (
         <Container maxWidth="lg">
-            <Stack spacing={6} alignItems="center" marginTop="100px" marginBottom="100px">
-                <Stack spacing={2} alignItems="center">
-                    <Stack
-                        spacing={2}
-                        alignItems="center"
-                        textAlign="center"
-                        onDragOver={handleDragOver}
-                        onDrop={handleDrop}
-                        sx={{
-                            maxWidth: '500px',
-                            width: '100%',
-                            background: theme.palette.background.default,
-                            border: '1px dashed',
-                            borderColor: theme.palette.text.primary,
-                            borderRadius: '30px',
-                            borderWidth: '5px',
-                            padding: '20px',
-                        }}
-                    >
-                        <FontAwesomeIcon icon={faFolderOpen} size='4x' color={theme.palette.text.primary} />
+            <Stack spacing={8} alignItems="center" marginTop="100px" marginBottom="100px">
+                <Typography variant="h3">
+                    DataHub - Aide à l'import
+                </Typography>
 
-                        <Typography>
-                            Glisser et déposer votre document excel ici <br />
-                            ou cliquez sur ce bouton pour l’upload
-                        </Typography>
-
-                        <Stack spacing={2} direction="row" alignItems="center">
-                            <Divider orientation="vertical" sx={{ border: '1px solid', borderColor: '#C1C1C1', width: '75px' }} />
-
-                            <Typography color="#C1C1C1">
-                                OU
-                            </Typography>
-
-                            <Divider orientation="vertical" sx={{ border: '1px solid', borderColor: '#C1C1C1', width: '75px' }} />
-                        </Stack>
-
-                        <Button
-                            variant="contained"
-                            component="label"
-                            sx={{
-                                fontWeight: 700,
-                                color: theme.palette.background.default,
-                                background: theme.palette.text.primary,
-                                border: '1px solid',
-                                borderColor: theme.palette.text.primary,
-                                borderRadius: '15px',
-                                transition: "all 0.5s ease 0s",
-                                position: 'relative',
-                                overflow: 'hidden',
-                                '&:hover': {
-                                    color: theme.palette.text.primary,
-                                    borderColor: theme.palette.text.primary,
-                                    background: theme.palette.primary.main,
-                                    '&::before': {
-                                        content: '""',
-                                        position: 'absolute',
-                                        top: 0,
-                                        left: hovered ? '100%' : 0,
-                                        width: '100%',
-                                        height: '100%',
-                                        background: theme.palette.text.primary,
-                                        transition: 'left 0.5s ease',
-                                    },
-                                },
-                            }}
-                            onMouseEnter={() => setHovered(true)}
-                            onMouseLeave={() => setHovered(false)}
-                        >
-                            Parcourir
-                            <input type="file" hidden onChange={handleFileChange} accept=".xlsx,.xls" />
-                        </Button>
-                    </Stack>
-                    {file ? <Stack alignItems="center" width="100%">
-                        {progress !== 100 ? <LinearProgress
-                            variant='determinate'
-                            value={progress}
-                            sx={{
-                                width: '100%',
-                                background: theme.palette.text.secondary,
-                                '& .MuiLinearProgress-bar': {
-                                    background: theme.palette.text.primary
-                                }
-                            }}
-                        /> :
-                            <Stack spacing={2} direction="row" alignItems="center">
-                                <Typography>
-                                    {file.name}
-                                </Typography>
-
-                                <AButton variant='contained' size='small' onClick={loadData}>
-                                    Confirmer
-                                </AButton>
-                            </Stack>}
-                    </Stack> : null}
-                </Stack>
+                <MFileUpload file={file} setFile={setFile} request={loadData} />
 
                 <Stack
                     width="100%"
@@ -310,7 +186,7 @@ const ImportAssistance = () => {
                     />
                 </Stack>
             </Stack>
-        </Container >
+        </Container>
     )
 }
 

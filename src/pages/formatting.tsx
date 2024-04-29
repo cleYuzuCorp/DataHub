@@ -326,7 +326,7 @@ const Formatting = (props: { instance: any }) => {
                     </Stack>
                 </Stack>}
             </Stack>
-        </Container >
+        </Container>
     )
 }
 
