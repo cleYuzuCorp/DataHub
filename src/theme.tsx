@@ -5,6 +5,7 @@ const customColors = {
     lightYellow: '#FFF080',
     lightYellowMid: 'rgba(255, 240, 128, 0.50)',
     darkBlue: '#1B255F',
+    darkBlueMid: 'rgba(27, 37, 95, 0.50)',
     lightBlue: '#001FD0',
     orange: '#F37962',
     lightOrange: 'rgba(243, 121, 98, 0.50)',
@@ -23,7 +24,8 @@ export const theme = createTheme({
         },
         text: {
             primary: customColors.darkBlue,
-            secondary: customColors.lightBlue
+            secondary: customColors.darkBlueMid,
+            disabled: customColors.lightBlue
         },
         info: {
             main: customColors.orange,
