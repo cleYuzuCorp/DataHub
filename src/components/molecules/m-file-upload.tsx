@@ -23,7 +23,7 @@ const MFileUpload = (props: { file: File | undefined, setFile: (value: File | un
                 const diff = Math.random() * 10
                 return Math.min(oldProgress + diff, 100)
             })
-        }, 200)
+        }, 100)
 
         return () => {
             clearInterval(timer)
@@ -33,6 +33,11 @@ const MFileUpload = (props: { file: File | undefined, setFile: (value: File | un
     const handleDragOver = (event: any) => {
         event.preventDefault()
         setDragging(true)
+    }
+
+    const handleDragLeave = (event: any) => {
+        event.preventDefault()
+        setDragging(false)
     }
 
     const handleDrop = (event: any) => {
@@ -55,7 +60,7 @@ const MFileUpload = (props: { file: File | undefined, setFile: (value: File | un
     }
 
     return (
-        <Stack spacing={2} alignItems="center">
+        <Stack spacing={2} alignItems="center" onDragLeave={handleDragLeave}>
             <Stack
                 spacing={2}
                 alignItems="center"
