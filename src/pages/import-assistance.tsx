@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Container, Stack, Typography, CircularProgress, RadioGroup, Radio, FormControlLabel, TextField, MenuItem, TableHead, Paper, Table, TableBody, TableCell, TableRow, TablePagination } from "@mui/material"
+import { Container, Stack, Typography, CircularProgress, RadioGroup, Radio, FormControlLabel, TextField, MenuItem, TableHead, Paper, Table, TableBody, TableCell, TableRow, TablePagination, Alert, Snackbar } from "@mui/material"
 import { useLocation } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowDown, faArrowUp, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons'
@@ -16,23 +16,31 @@ const ImportAssistance = () => {
     const idTenant = new URLSearchParams(useLocation().search).get('id')
 
     const [loading, setLoading] = useState(false)
+    const [open, setOpen] = useState(false)
+    const [progress, setProgress] = useState(0)
     const [proposition, setProposition] = useState("choice")
+
     const [file, setFile] = useState<File>()
-    const [data, setData] = useState<Data[]>([])
-    const [filteredData, setFilteredData] = useState<Data[]>([])
+    const [dataMatched, setDataMatched] = useState<Data[]>([])
+    const [dataCantMatched, setDataCantMatched] = useState<Data[]>([])
+    const [filteredDataMatched, setFilteredDataMatched] = useState<Data[]>([])
+    const [filteredDataCantMatched, setFilteredDataCantMatched] = useState<Data[]>([])
     const [selectedData, setSelectedData] = useState<Data>()
     const [searchTerm, setSearchTerm] = useState("")
 
-    const [compagnies, setCompagnies] = useState([])
+    const [companies, setCompanies] = useState([])
     const [selectedCompagnies, setSelectedCompagnies] = useState("")
 
-    const [page, setPage] = useState(0)
-    const [rowsPerPage, setRowsPerPage] = useState(10)
+    const [pageMatched, setPageMatched] = useState(0)
+    const [rowsPerPageMatched, setRowsPerPageMatched] = useState(10)
+    const [pageCantMatched, setPageCantMatched] = useState(0)
+    const [rowsPerPageCantMatched, setRowsPerPageCantMatched] = useState(10)
     const [hovered, setHovered] = useState<number | undefined>()
     const [sortOrderExist, setSortOrderExist] = useState<'asc' | 'desc'>('asc')
 
     const schema = yup.object().shape({
-        compagnies: yup.string().required('Vous devez séléctionner au moins une entreprise')
+        data: yup.mixed().default('Une erreur est survenu'),
+        companies: yup.string().required('Vous devez séléctionner au moins une entreprise')
     })
 
     const { clearErrors, setError, formState: { errors } } = useForm({
@@ -41,55 +49,65 @@ const ImportAssistance = () => {
 
     const loadData = async () => {
         try {
-            setLoading(true)
+            clearErrors('data')
+            setProgress(0)
 
-            if (!idTenant || !file) {
-                console.error("No file selected")
-                setLoading(false)
-                return
-            }
-
-            if (!file.name.endsWith('.xlsx')) {
-                console.error("Invalid file format. Please select a .xlsx file.")
-                setLoading(false)
-                return
-            }
-
-            const reader = new FileReader()
-            reader.onload = async (e) => {
-                const celulle = new Uint8Array(e?.target?.result as ArrayBuffer)
-                const workbook = XLSX.read(celulle, { type: 'array' })
-
-                const sheetName = workbook.SheetNames[0]
-                const worksheet = workbook.Sheets[sheetName]
-
-                const firstCell = worksheet[XLSX.utils.encode_cell({ r: 0, c: 0 })]?.v
-                if (firstCell !== "Domain" && firstCell !== "Email") {
-                    console.error("Invalid Excel format. The first cell should be 'Domain' or 'Email'.")
-                    setLoading(false)
-                    return
-                }
-
+            if (file && idTenant) {
                 const formData = new FormData()
                 formData.append("file", file)
                 formData.append("IdTenant", idTenant)
+
+                let temp = 0
+                const interval = 100
+                const totalTime = 8000
+
+                const progressIncrement = (interval / totalTime) * 100
+
+                const timer = setInterval(() => {
+                    if (temp < 90) {
+                        temp += progressIncrement;
+                        setProgress(Math.min(temp, 100))
+                    } else {
+                        clearInterval(timer)
+                    }
+                }, interval)
 
                 const response = await fetch(`${process.env.REACT_APP_API}/import/check`, {
                     method: "POST",
                     body: formData,
                 })
 
+                if (!response.ok) {
+                    clearInterval(timer)
+                    setProgress(100)
+                    const errorData = await response.json()
+                    setError('data', { message: errorData.message })
+                    setLoading(false)
+                    setOpen(true)
+                    return
+                }
+
+                clearInterval(timer)
+                setProgress(100)
+
                 const data = await response.json()
 
-                setData(data)
+                console.log(data)
+                setDataMatched(data.matched)
+                setDataCantMatched(data.cantMatched)
                 setLoading(false)
+                setOpen(true)
             }
-
-            reader.readAsArrayBuffer(file)
         } catch (error) {
             console.error("Error uploading file:", error)
         }
     }
+
+    useEffect(() => {
+        if (file) {
+            loadData()
+        }
+    }, [file])
 
     const handlePropositionChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setProposition((event.target as HTMLInputElement).value)
@@ -97,7 +115,7 @@ const ImportAssistance = () => {
 
     const handleCompagniesChange = (value: string) => {
         setSelectedCompagnies(value)
-        clearErrors('compagnies')
+        clearErrors('companies')
     }
 
     const handleFilteredChange = (value: string) => {
@@ -105,55 +123,69 @@ const ImportAssistance = () => {
     }
 
     useEffect(() => {
-        const filtered = data.filter(d =>
-            data[0].Domain ? d.Domain.toLowerCase().includes(searchTerm.toLowerCase()) :
+        const filteredMatched = dataMatched.filter(d =>
+            dataMatched[0].Domain ? d.Domain.toLowerCase().includes(searchTerm.toLowerCase()) :
                 d.Email.toLowerCase().includes(searchTerm.toLowerCase())
         )
 
-        setFilteredData(filtered)
-    }, [searchTerm, data])
+        const filteredCantMatched = dataCantMatched.filter(d =>
+            dataCantMatched[0].Domain ? d.Domain.toLowerCase().includes(searchTerm.toLowerCase()) :
+                d.Email.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+
+        setFilteredDataMatched(filteredMatched)
+        setFilteredDataCantMatched(filteredCantMatched)
+    }, [searchTerm, dataMatched, dataCantMatched])
 
     const toggleSortDataExist = () => {
         setSortOrderExist(sortOrderExist === 'asc' ? 'desc' : 'asc')
 
-        const sortedData = [...filteredData].sort((a, b) => {
+        const sortedData = [...filteredDataMatched].sort((a, b) => {
             if (a.Exist.length === b.Exist.length) return 0
             return sortOrderExist === 'asc' ? (a.Exist.length > b.Exist.length ? 1 : -1) : (a.Exist.length < b.Exist.length ? 1 : -1)
         })
         return sortedData
     }
 
-    const startIndex = page * rowsPerPage
-    const endIndex = startIndex + rowsPerPage
+    const startIndexMatched = pageMatched * rowsPerPageMatched
+    const endIndexMatched = startIndexMatched + rowsPerPageMatched
+
+    const startIndexCantMatched = pageCantMatched * rowsPerPageCantMatched
+    const endIndexCantMatched = startIndexCantMatched + rowsPerPageCantMatched
 
     const importData = async () => {
         try {
+            clearErrors('data')
             setLoading(true)
 
-            if (!idTenant || !file) {
-                console.error("No file selected")
+            if (file && idTenant) {
+                const wb = XLSX.utils.book_new()
+                const ws = XLSX.utils.json_to_sheet(dataMatched)
+                XLSX.utils.book_append_sheet(wb, ws, "Sheet1")
+                const excelBuffer = XLSX.write(wb, { type: 'array', bookType: 'xlsx' })
+
+                const formData = new FormData()
+                formData.append("file", new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }))
+                formData.append("IdTenant", idTenant)
+
+                const response = await fetch(`${process.env.REACT_APP_API}/import`, {
+                    method: "POST",
+                    body: formData,
+                })
+
+                if (!response.ok) {
+                    const errorData = await response.json()
+                    setError('data', { message: errorData.message })
+                    setLoading(false)
+                    setOpen(true)
+                    return
+                }
+
+                console.log(response)
+
                 setLoading(false)
-                return
+                setOpen(true)
             }
-
-            const wb = XLSX.utils.book_new()
-            const ws = XLSX.utils.json_to_sheet(data)
-            XLSX.utils.book_append_sheet(wb, ws, "Sheet1")
-            const excelBuffer = XLSX.write(wb, { type: 'array', bookType: 'xlsx' })
-
-            const formData = new FormData()
-            formData.append("file", new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }))
-            formData.append("IdTenant", idTenant)
-
-            const response = await fetch(`${process.env.REACT_APP_API}/import`, {
-                method: "POST",
-                body: formData,
-            })
-
-            console.log(response)
-
-            setLoading(false)
-
         } catch (error) {
             console.error("Error uploading file:", error)
         }
@@ -167,7 +199,33 @@ const ImportAssistance = () => {
                 </Typography>
 
                 {loading ? <CircularProgress /> : <Stack spacing={6} alignItems="center" width="100%">
-                    <MFileUpload file={file} setFile={setFile} request={loadData} />
+                    <MFileUpload progress={progress} file={file} setFile={setFile} />
+
+                    {errors.data?.message ? <Snackbar
+                        open={open}
+                        onClose={() => setOpen(false)}
+                        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                    >
+                        <Alert
+                            onClose={() => setOpen(false)}
+                            severity="error"
+                            variant="filled"
+                        >
+                            {errors?.data?.message}
+                        </Alert>
+                    </Snackbar> : <Snackbar
+                        open={open}
+                        onClose={() => setOpen(false)}
+                        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                    >
+                        <Alert
+                            onClose={() => setOpen(false)}
+                            severity="success"
+                            variant="filled"
+                        >
+                            Fichier traité avec succès !
+                        </Alert>
+                    </Snackbar>}
 
                     {selectedData && <Stack
                         width="100%"
@@ -223,18 +281,18 @@ const ImportAssistance = () => {
                                     label="Entreprise"
                                     value={selectedCompagnies}
                                     onChange={(e) => handleCompagniesChange(e.target.value)}
-                                    helperText={errors.compagnies?.message}
+                                    helperText={errors.companies?.message}
                                     sx={{
-                                        borderColor: errors.compagnies ? theme.palette.error.main : '#E0E0E0',
+                                        borderColor: errors.companies ? theme.palette.error.main : '#E0E0E0',
                                         '& .MuiFormHelperText-root': {
-                                            color: errors.compagnies ? theme.palette.error.main : 'inherit'
+                                            color: errors.companies ? theme.palette.error.main : 'inherit'
                                         },
                                         width: '100%',
                                         height: '50px'
                                     }}
                                 >
-                                    {compagnies?.map((compagnies) => <MenuItem key={compagnies} value={compagnies}>
-                                        {compagnies}
+                                    {companies?.map((companies) => <MenuItem key={companies} value={companies}>
+                                        {companies}
                                     </MenuItem>
                                     )}
                                 </TextField> : null}
@@ -250,7 +308,7 @@ const ImportAssistance = () => {
                         </Stack>
                     </Stack>}
 
-                    {filteredData.length > 0 && <Stack spacing={2} width="100%">
+                    {filteredDataMatched.length > 0 && !errors.data?.message && <Stack spacing={4} width="100%">
                         <Stack spacing={4} direction="row">
                             <TextField
                                 placeholder="Recherche par Domaine ou Email"
@@ -275,88 +333,126 @@ const ImportAssistance = () => {
                             </AButton>
                         </Stack>
 
-                        <Table component={Paper} sx={{ background: theme.palette.background.default }} style={{ overflowX: 'auto' }}>
-                            <TableHead sx={{ background: theme.palette.text.primary }}>
-                                <TableRow>
-                                    {Object.keys(filteredData[0]).map((key, index) => (
-                                        <TableCell key={index} align="left">
-                                            {key === "Exist" ? <Stack
-                                                spacing={1}
-                                                direction="row"
-                                                alignItems="center"
-                                                onClick={toggleSortDataExist}
-                                                sx={{
-                                                    cursor: 'pointer'
-                                                }}
-                                            >
+                        <Stack spacing={2}>
+                            <Typography variant="h4">
+                                Données traitées
+                            </Typography>
+
+                            <Table component={Paper} sx={{ background: theme.palette.background.default }} style={{ overflowX: 'auto' }}>
+                                <TableHead sx={{ background: theme.palette.text.primary }}>
+                                    <TableRow>
+                                        {Object.keys(filteredDataMatched[0]).map((key, index) => (
+                                            <TableCell key={index} align={index !== 3 ? "left" : "right"}>
+                                                {key === "Exist" ? <Stack
+                                                    spacing={1}
+                                                    direction="row"
+                                                    alignItems="center"
+                                                    onClick={toggleSortDataExist}
+                                                    sx={{
+                                                        cursor: 'pointer'
+                                                    }}
+                                                >
+                                                    <Typography variant="body2" color={theme.palette.background.default}>
+                                                        {key}
+                                                    </Typography>
+                                                    {sortOrderExist === 'asc' ?
+                                                        <FontAwesomeIcon icon={faArrowUp} color={theme.palette.background.default} /> :
+                                                        <FontAwesomeIcon icon={faArrowDown} color={theme.palette.background.default} />
+                                                    }
+                                                </Stack> :
+                                                    <Typography variant="body2" color={theme.palette.background.default}>
+                                                        {key}
+                                                    </Typography>}
+                                            </TableCell>
+                                        ))}
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    {filteredDataMatched.length > 0 && filteredDataMatched.slice(startIndexMatched, endIndexMatched).map((d, index) =>
+                                        <TableRow
+                                            key={index}
+                                            onMouseEnter={() => setHovered(index)}
+                                            onMouseLeave={() => setHovered(undefined)}
+                                            onClick={() => setSelectedData(d)}
+                                            sx={{
+                                                background: selectedData === d || hovered === index ? theme.palette.secondary.light : 'none'
+                                            }}
+                                        >
+                                            {Object.keys(d).map((key, index) => (
+                                                <TableCell key={index} align={index !== 3 ? "left" : "right"}>
+                                                    {index === 2 ? d.Exist.length > 0 ? <Typography>
+                                                        Déjà présent
+                                                    </Typography> : <Typography>
+                                                        Nouveau
+                                                    </Typography> : <Typography>
+                                                        {d[key as keyof typeof d]}
+                                                    </Typography>}
+                                                </TableCell>
+                                            ))}
+                                        </TableRow>
+                                    )}
+                                </TableBody>
+                            </Table>
+
+                            <TablePagination
+                                rowsPerPageOptions={[10, 25, 50, 100]}
+                                component="div"
+                                count={filteredDataMatched.length}
+                                rowsPerPage={rowsPerPageMatched}
+                                page={pageMatched}
+                                onPageChange={(event, newPage) => setPageMatched(newPage)}
+                                onRowsPerPageChange={(event) => {
+                                    setRowsPerPageMatched(parseInt(event.target.value, 10))
+                                    setPageMatched(0)
+                                }}
+                            />
+                        </Stack>
+
+                        <Stack spacing={2}>
+                            <Typography variant="h4">
+                                Données non traitées
+                            </Typography>
+
+                            <Table component={Paper} sx={{ background: theme.palette.background.default }} style={{ overflowX: 'auto' }}>
+                                <TableHead sx={{ background: theme.palette.text.primary }}>
+                                    <TableRow>
+                                        {Object.keys(filteredDataCantMatched[0]).map((key, index) => (
+                                            <TableCell key={index} align={index !== 3 ? "left" : "right"}>
                                                 <Typography variant="body2" color={theme.palette.background.default}>
                                                     {key}
                                                 </Typography>
-                                                {sortOrderExist === 'asc' ?
-                                                    <FontAwesomeIcon icon={faArrowUp} color={theme.palette.background.default} /> :
-                                                    <FontAwesomeIcon icon={faArrowDown} color={theme.palette.background.default} />
-                                                }
-                                            </Stack> :
-                                                <Typography variant="body2" color={theme.palette.background.default}>
-                                                    {key}
-                                                </Typography>}
-                                        </TableCell>
-                                    ))}
-                                    <TableCell align="right">
-                                        <Typography variant="body2" color={theme.palette.background.default}>
-                                            Status
-                                        </Typography>
-                                    </TableCell>
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {filteredData.length > 0 && filteredData.slice(startIndex, endIndex).map((d, index) =>
-                                    <TableRow
-                                        key={index}
-                                        onMouseEnter={() => setHovered(index)}
-                                        onMouseLeave={() => setHovered(undefined)}
-                                        onClick={() => setSelectedData(d)}
-                                        sx={{
-                                            background: selectedData === d || hovered === index ? theme.palette.secondary.light : 'none'
-                                        }}
-                                    >
-                                        {Object.keys(d).map((key, index) => (
-                                            <TableCell key={index} align="left">
-                                                {index === 2 ? d.Exist.length > 0 ? <Typography>
-                                                    Déjà présent
-                                                </Typography> : <Typography>
-                                                    Nouveau
-                                                </Typography> : <Typography>
-                                                    {d[key as keyof typeof d]}
-                                                </Typography>}
                                             </TableCell>
                                         ))}
-                                        <TableCell align="right">
-                                            <Typography>
-                                                {d.Exist.length > 0 ? <Typography>
-                                                    En cours
-                                                </Typography> : <Typography>
-                                                    Terminé
-                                                </Typography>}
-                                            </Typography>
-                                        </TableCell>
                                     </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
+                                </TableHead>
+                                <TableBody>
+                                    {filteredDataCantMatched.length > 0 && filteredDataCantMatched.slice(startIndexCantMatched, endIndexCantMatched).map((d, index) =>
+                                        <TableRow key={index}>
+                                            {Object.keys(d).map((key, index) => (
+                                                <TableCell key={index} align={index !== 3 ? "left" : "right"}>
+                                                    <Typography>
+                                                        {d[key as keyof typeof d]}
+                                                    </Typography>
+                                                </TableCell>
+                                            ))}
+                                        </TableRow>
+                                    )}
+                                </TableBody>
+                            </Table>
 
-                        <TablePagination
-                            rowsPerPageOptions={[10, 25, 50, 100]}
-                            component="div"
-                            count={filteredData.length}
-                            rowsPerPage={rowsPerPage}
-                            page={page}
-                            onPageChange={(event, newPage) => setPage(newPage)}
-                            onRowsPerPageChange={(event) => {
-                                setRowsPerPage(parseInt(event.target.value, 10))
-                                setPage(0)
-                            }}
-                        />
+                            <TablePagination
+                                rowsPerPageOptions={[10, 25, 50, 100]}
+                                component="div"
+                                count={filteredDataCantMatched.length}
+                                rowsPerPage={rowsPerPageCantMatched}
+                                page={pageMatched}
+                                onPageChange={(event, newPage) => setPageCantMatched(newPage)}
+                                onRowsPerPageChange={(event) => {
+                                    setRowsPerPageCantMatched(parseInt(event.target.value, 10))
+                                    setPageCantMatched(0)
+                                }}
+                            />
+                        </Stack>
                     </Stack>}
                 </Stack>}
             </Stack>

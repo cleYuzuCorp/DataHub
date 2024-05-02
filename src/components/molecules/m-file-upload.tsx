@@ -7,28 +7,12 @@ import AButton from "../atoms/a-button"
 import { useEffect, useState } from "react"
 import { IconProp } from "@fortawesome/fontawesome-svg-core"
 
-const MFileUpload = (props: { file: File | undefined, setFile: (value: File | undefined) => void, request: () => void }) => {
+const MFileUpload = (props: { progress: number, file: File | undefined, setFile: (value: File | undefined) => void }) => {
 
-    const { file, setFile, request } = props
+    const { progress, file, setFile } = props
 
     const [hovered, setHovered] = useState(false)
     const [dragging, setDragging] = useState(false)
-    const [progress, setProgress] = useState(0)
-
-    useEffect(() => {
-        setProgress(0)
-
-        const timer = setInterval(() => {
-            setProgress((oldProgress) => {
-                const diff = Math.random() * 10
-                return Math.min(oldProgress + diff, 100)
-            })
-        }, 100)
-
-        return () => {
-            clearInterval(timer)
-        }
-    }, [file])
 
     const handleDragOver = (event: any) => {
         event.preventDefault()
@@ -159,16 +143,9 @@ const MFileUpload = (props: { file: File | undefined, setFile: (value: File | un
                             background: theme.palette.text.primary
                         }
                     }}
-                /> :
-                    <Stack spacing={2} direction="row" alignItems="center">
-                        <Typography>
-                            {file.name}
-                        </Typography>
-
-                        <AButton variant='contained' size='small' onClick={request}>
-                            Confirmer
-                        </AButton>
-                    </Stack>}
+                /> : <Typography>
+                    {file.name}
+                </Typography>}
             </Stack> : null}
         </Stack>
     )
