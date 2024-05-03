@@ -44,7 +44,7 @@ const History = (props: { instance: any }) => {
                     await instance.initialize()
                     const accessToken = await acquireToken(instance)
 
-                    const response = await fetch(`${process.env.REACT_APP_API}/proposition-persona/associations-settings?IdTenant=${idTenant}`, {
+                    const response = await fetch(`${process.env.REACT_APP_API}/proposition-persona/associations-settings/${idTenant}`, {
                         method: "GET",
                         headers: {
                             Authorization: `Bearer ${accessToken}`,
@@ -79,7 +79,7 @@ const History = (props: { instance: any }) => {
                 await instance.initialize()
                 const accessToken = await acquireToken(instance)
 
-                const response = await fetch(`${process.env.REACT_APP_API}/historique-persona?idTenant=${idTenant}`, {
+                const response = await fetch(`${process.env.REACT_APP_API}/historique-persona/${idTenant}`, {
                     method: "GET",
                     headers: {
                         Authorization: `Bearer ${accessToken}`,
@@ -163,7 +163,6 @@ const History = (props: { instance: any }) => {
         const account = instance.getActiveAccount()
 
         const body = {
-            idTenant: idTenant,
             emailModified: account.username,
             tableOfValues: dbPersona,
             propositions: [{ contacts: data }]
@@ -171,7 +170,7 @@ const History = (props: { instance: any }) => {
 
         const accessToken = await acquireToken(instance)
 
-        const response = fetch(`${process.env.REACT_APP_API}/hubspot/contacts/persona`, {
+        const response = fetch(`${process.env.REACT_APP_API}/hubspot/contacts/persona/${idTenant}`, {
             method: "PATCH",
             headers: {
                 Authorization: `Bearer ${accessToken}`,

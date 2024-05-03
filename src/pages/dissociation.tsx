@@ -32,7 +32,6 @@ const Dissociation = () => {
             if (file && idTenant) {
                 const formData = new FormData()
                 formData.append("file", file)
-                formData.append("IdTenant", idTenant)
 
                 let temp = 0
                 const interval = 100
@@ -49,7 +48,7 @@ const Dissociation = () => {
                     }
                 }, interval)
 
-                const response = await fetch(`${process.env.REACT_APP_API}/dissociation`, {
+                const response = await fetch(`${process.env.REACT_APP_API}/dissociation/${idTenant}`, {
                     method: "POST",
                     body: formData,
                 })

@@ -110,7 +110,6 @@ const OTableEnrichment = (props: {
         const account = instance.getActiveAccount()
 
         const body = {
-            idTenant: id,
             emailModified: account.username,
             tableOfValues: dbPersona,
             propositions: selectedContacts,
@@ -119,7 +118,7 @@ const OTableEnrichment = (props: {
         await instance.initialize()
         const accessToken = await acquireToken(instance)
 
-        await fetch(`${process.env.REACT_APP_API}/hubspot/contacts/persona`, {
+        await fetch(`${process.env.REACT_APP_API}/hubspot/contacts/persona/${id}`, {
             method: "PATCH",
             headers: {
                 Authorization: `Bearer ${accessToken}`,

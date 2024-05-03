@@ -1,13 +1,14 @@
 import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { Checkbox, CircularProgress, Container, FormControlLabel, Paper, Stack, Switch, Table, TableBody, TableCell, TableHead, TablePagination, TableRow, TextField, Typography, useMediaQuery } from "@mui/material"
+import { CircularProgress, Container, Paper, Stack, Switch, Table, TableBody, TableCell, TableHead, TablePagination, TableRow, TextField, Typography, useMediaQuery } from "@mui/material"
 import { useEffect, useState } from "react"
-import AButton from "../components/atoms/a-button"
 import theme from "../theme"
 import { useLocation } from "react-router-dom"
 import { acquireToken } from "../App"
 import { HistoryFormatting } from "../interfaces/history-formatting"
 import { format } from 'date-fns'
+import { DataFormatting } from "../interfaces/data-formatting"
+import Chart from "react-apexcharts"
 
 const Formatting = (props: { instance: any }) => {
 
@@ -20,6 +21,8 @@ const Formatting = (props: { instance: any }) => {
     const [loading, setLoading] = useState(false)
     const [fetchDataInit, setFetchDataInit] = useState(false)
     const [checked, setChecked] = useState(false)
+
+    const [data, setData] = useState<DataFormatting[]>()
 
     const [searchTerm, setSearchTerm] = useState("")
     const [histories, setHistories] = useState<Array<HistoryFormatting>>([])
@@ -50,9 +53,19 @@ const Formatting = (props: { instance: any }) => {
 
                 const dataStatus = await responseStatus.json()
 
-                console.log(dataStatus, 'd')
-
                 setChecked(dataStatus)
+
+                const responseData = await fetch(`${process.env.REACT_APP_API}/dataformatage/${idTenant}`, {
+                    method: "GET",
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`,
+                        "Content-Type": "application/json"
+                    }
+                })
+
+                const data = await responseData.json()
+
+                setData(data)
 
                 const responseHistories = await fetch(`${process.env.REACT_APP_API}/historique-formatage/${idTenant}`, {
                     method: "GET",
@@ -154,10 +167,74 @@ const Formatting = (props: { instance: any }) => {
                             <Switch checked={checked} onChange={handleCheckChange} />
                         </Stack>
                     </Stack>
+
                     <Stack spacing={4} width="100%">
                         <Typography variant="h4">
                             Historique
                         </Typography>
+
+                        {data && <Stack>
+                            <Chart
+                                id="chart-container"
+                                type="line"
+                                width="100%"
+                                height="550px"
+                                series={[
+                                    {
+                                        name: data.find(d => d.Type === 'TOTAL CONTACT')?.Type,
+                                        data: data.filter(d => d.Type === 'TOTAL CONTACT').map(item => ({
+                                            x: new Date(item.Date).getTime(),
+                                            y: parseFloat(item.Data)
+                                        }))
+                                    },
+                                    {
+                                        name: data.find(d => d.Type === 'TOTAL COMPANIES')?.Type,
+                                        data: data.filter(d => d.Type === 'TOTAL COMPANIES').map(item => ({
+                                            x: new Date(item.Date).getTime(),
+                                            y: parseFloat(item.Data)
+                                        }))
+                                    }
+                                ]}
+                                options={{
+                                    xaxis: {
+                                        type: 'datetime',
+                                        labels: {
+                                            formatter: function (value) {
+                                                return format(new Date(value), 'yyyy-MM-dd HH:mm:ss')
+                                            }
+                                        }
+                                    }
+                                }}
+
+                            />
+
+                            <Chart
+                                id="remaining-chart-container"
+                                type="bar"
+                                width="100%"
+                                height="550px"
+                                series={data.filter(d => d.Type !== 'TOTAL CONTACT' && d.Type !== 'TOTAL COMPANIES')
+                                    .map(d => d.Type).map(type => ({
+                                        name: type,
+                                        data: data
+                                            .filter(d => d.Type === type)
+                                            .map(item => ({
+                                                x: new Date(item.Date).getTime(),
+                                                y: parseFloat(item.Data)
+                                            }))
+                                    }))}
+                                options={{
+                                    xaxis: {
+                                        type: 'datetime',
+                                        labels: {
+                                            formatter: function (value) {
+                                                return format(new Date(value), 'yyyy-MM-dd HH:mm:ss')
+                                            }
+                                        }
+                                    }
+                                }}
+                            />
+                        </Stack>}
 
                         <Stack spacing={4} direction="row" alignItems="center" width="100%">
                             <TextField

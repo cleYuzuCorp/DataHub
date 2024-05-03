@@ -67,7 +67,7 @@ const Settings = (props: { instance: any, validate: () => void }) => {
                     await instance.initialize()
                     const accessToken = await acquireToken(instance)
 
-                    const responseSettings = await fetch(`${process.env.REACT_APP_API}/hubspot-settings?IdTenant=${IdTenant}`, {
+                    const responseSettings = await fetch(`${process.env.REACT_APP_API}/hubspot-settings/${IdTenant}`, {
                         method: "GET",
                         headers: {
                             Authorization: `Bearer ${accessToken}`,
@@ -85,7 +85,7 @@ const Settings = (props: { instance: any, validate: () => void }) => {
                     setPosteNomInterne(SettingsData.IntitulePoste_NomInterne)
                     setPersonaNomInterne(SettingsData.Persona_NomInterne)
 
-                    const response = await fetch(`${process.env.REACT_APP_API}/proposition-persona/associations-settings?IdTenant=${IdTenant}`, {
+                    const response = await fetch(`${process.env.REACT_APP_API}/proposition-persona/associations-settings/${IdTenant}`, {
                         method: "GET",
                         headers: {
                             Authorization: `Bearer ${accessToken}`,
@@ -341,7 +341,6 @@ const Settings = (props: { instance: any, validate: () => void }) => {
                 const parsedId = parseInt(IdTenant, 10)
 
                 const body = {
-                    IdTenant: parsedId,
                     associationsRoleMotClef: associationsRoleKeywords.map((association) => {
                         return {
                             NomRole: association.parent,
@@ -358,7 +357,7 @@ const Settings = (props: { instance: any, validate: () => void }) => {
 
                 const accessToken = await acquireToken(instance)
 
-                await fetch(`${process.env.REACT_APP_API}/proposition-persona/associations-settings`, {
+                await fetch(`${process.env.REACT_APP_API}/proposition-persona/associations-settings/${parsedId}`, {
                     method: "PATCH",
                     headers: {
                         Authorization: `Bearer ${accessToken}`,
@@ -389,12 +388,11 @@ const Settings = (props: { instance: any, validate: () => void }) => {
         const accessToken = await acquireToken(instance)
 
         const payloadSettings = {
-            IdTenant: IdTenant,
             IntitulePoste_NomInterne: posteNomInterne,
             Persona_NomInterne: personaNomInterne
         }
 
-        await fetch(`${process.env.REACT_APP_API}/hubspot-settings`, {
+        await fetch(`${process.env.REACT_APP_API}/hubspot-settings/${IdTenant}`, {
             method: "PATCH",
             headers: {
                 Authorization: `Bearer ${accessToken}`,

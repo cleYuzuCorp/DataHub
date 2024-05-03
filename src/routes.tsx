@@ -130,7 +130,6 @@ const AppRoutes = (props: { instance?: any }) => {
         const parsedId = selectedCustomer?.IdTenant
 
         const body = {
-          idTenant: parsedId,
           dbPersona: dbPersona,
           associationsRoleMotClef: associationsRoleKeywords.map((roleKeywords) => {
             if (roleKeywords.parent !== "" && roleKeywords.childs.every((child) => child !== "")) {
@@ -156,7 +155,7 @@ const AppRoutes = (props: { instance?: any }) => {
 
         const accessToken = await acquireToken(instance)
 
-        const response = await fetch(`${process.env.REACT_APP_API}/proposition-persona/process`, {
+        const response = await fetch(`${process.env.REACT_APP_API}/proposition-persona/process/${parsedId}`, {
           method: "POST",
           headers: {
             Authorization: `Bearer ${accessToken}`,

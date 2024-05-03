@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { ReactNode, useEffect, useState } from 'react'
 import { Container, Stack, Typography, CircularProgress, RadioGroup, Radio, FormControlLabel, TextField, MenuItem, TableHead, Paper, Table, TableBody, TableCell, TableRow, TablePagination, Alert, Snackbar } from "@mui/material"
 import { useLocation } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -9,8 +9,9 @@ import { yupResolver } from "@hookform/resolvers/yup"
 import { useForm } from 'react-hook-form'
 import AButton from '../components/atoms/a-button'
 import MFileUpload from '../components/molecules/m-file-upload'
-import { Data } from '../interfaces/data'
+import { DataFile } from '../interfaces/data-file'
 import * as XLSX from 'xlsx'
+import { Exist } from '../interfaces/exist'
 
 const ImportAssistance = () => {
     const idTenant = new URLSearchParams(useLocation().search).get('id')
@@ -21,11 +22,11 @@ const ImportAssistance = () => {
     const [proposition, setProposition] = useState("choice")
 
     const [file, setFile] = useState<File>()
-    const [dataMatched, setDataMatched] = useState<Data[]>([])
-    const [dataCantMatched, setDataCantMatched] = useState<Data[]>([])
-    const [filteredDataMatched, setFilteredDataMatched] = useState<Data[]>([])
-    const [filteredDataCantMatched, setFilteredDataCantMatched] = useState<Data[]>([])
-    const [selectedData, setSelectedData] = useState<Data>()
+    const [dataMatched, setDataMatched] = useState<DataFile[]>([])
+    const [dataCantMatched, setDataCantMatched] = useState<DataFile[]>([])
+    const [filteredDataMatched, setFilteredDataMatched] = useState<DataFile[]>([])
+    const [filteredDataCantMatched, setFilteredDataCantMatched] = useState<DataFile[]>([])
+    const [selectedData, setSelectedData] = useState<DataFile>()
     const [searchTerm, setSearchTerm] = useState("")
 
     const [companies, setCompanies] = useState([])
@@ -37,6 +38,7 @@ const ImportAssistance = () => {
     const [rowsPerPageCantMatched, setRowsPerPageCantMatched] = useState(10)
     const [hovered, setHovered] = useState<number | undefined>()
     const [sortOrderExist, setSortOrderExist] = useState<'asc' | 'desc'>('asc')
+    const [sortOrderStatus, setSortOrderStatus] = useState<'asc' | 'desc'>('asc')
 
     const schema = yup.object().shape({
         data: yup.mixed().default('Une erreur est survenu'),
@@ -55,7 +57,6 @@ const ImportAssistance = () => {
             if (file && idTenant) {
                 const formData = new FormData()
                 formData.append("file", file)
-                formData.append("IdTenant", idTenant)
 
                 let temp = 0
                 const interval = 100
@@ -65,14 +66,14 @@ const ImportAssistance = () => {
 
                 const timer = setInterval(() => {
                     if (temp < 90) {
-                        temp += progressIncrement;
+                        temp += progressIncrement
                         setProgress(Math.min(temp, 100))
                     } else {
                         clearInterval(timer)
                     }
                 }, interval)
 
-                const response = await fetch(`${process.env.REACT_APP_API}/import/check`, {
+                const response = await fetch(`${process.env.REACT_APP_API}/import/check/${idTenant}`, {
                     method: "POST",
                     body: formData,
                 })
@@ -92,7 +93,14 @@ const ImportAssistance = () => {
 
                 const data = await response.json()
 
-                console.log(data)
+                const domains = data.matched.map((d: DataFile) => {
+                    if (d.Exist && d.Exist.length > 0) {
+                        return d.Exist.map((e: Exist) => e.domain)
+                    }
+                    return []
+                }).flat()
+
+                setCompanies(domains)
                 setDataMatched(data.matched)
                 setDataCantMatched(data.cantMatched)
                 setLoading(false)
@@ -138,13 +146,51 @@ const ImportAssistance = () => {
     }, [searchTerm, dataMatched, dataCantMatched])
 
     const toggleSortDataExist = () => {
-        setSortOrderExist(sortOrderExist === 'asc' ? 'desc' : 'asc')
-
-        const sortedData = [...filteredDataMatched].sort((a, b) => {
-            if (a.Exist.length === b.Exist.length) return 0
-            return sortOrderExist === 'asc' ? (a.Exist.length > b.Exist.length ? 1 : -1) : (a.Exist.length < b.Exist.length ? 1 : -1)
+        filteredDataMatched.sort((a, b) => {
+            if (sortOrderExist === 'asc') {
+                if (a.Exist.length === 0 && b.Exist.length > 0) {
+                    return -1
+                } else if (a.Exist.length > 0 && b.Exist.length === 0) {
+                    return 1
+                } else {
+                    return 0
+                }
+            } else {
+                if (a.Exist.length === 0 && b.Exist.length > 0) {
+                    return 1
+                } else if (a.Exist.length > 0 && b.Exist.length === 0) {
+                    return -1
+                } else {
+                    return 0
+                }
+            }
         })
-        return sortedData
+
+        setSortOrderExist(sortOrderExist === 'asc' ? 'desc' : 'asc')
+    }
+
+    const toggleSortDataStatus = () => {
+        filteredDataMatched.sort((a, b) => {
+            if (sortOrderStatus === 'asc') {
+                if (a.Status === 'En cours' && b.Status !== 'En cours') {
+                    return -1
+                } else if (a.Status !== 'En cours' && b.Status === 'En cours') {
+                    return 1
+                } else {
+                    return 0
+                }
+            } else {
+                if (a.Status === 'Terminé' && b.Status !== 'Terminé') {
+                    return -1
+                } else if (a.Status !== 'Terminé' && b.Status === 'Terminé') {
+                    return 1
+                } else {
+                    return 0
+                }
+            }
+        })
+
+        setSortOrderStatus(sortOrderStatus === 'asc' ? 'desc' : 'asc')
     }
 
     const startIndexMatched = pageMatched * rowsPerPageMatched
@@ -164,11 +210,12 @@ const ImportAssistance = () => {
                 XLSX.utils.book_append_sheet(wb, ws, "Sheet1")
                 const excelBuffer = XLSX.write(wb, { type: 'array', bookType: 'xlsx' })
 
-                const formData = new FormData()
-                formData.append("file", new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }))
-                formData.append("IdTenant", idTenant)
+                const excelFile = new File([new Uint8Array(excelBuffer)], "data.xlsx", { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
 
-                const response = await fetch(`${process.env.REACT_APP_API}/import`, {
+                const formData = new FormData()
+                formData.append("file", excelFile)
+
+                const response = await fetch(`${process.env.REACT_APP_API}/import/${idTenant}`, {
                     method: "POST",
                     body: formData,
                 })
@@ -180,8 +227,6 @@ const ImportAssistance = () => {
                     setOpen(true)
                     return
                 }
-
-                console.log(response)
 
                 setLoading(false)
                 setOpen(true)
@@ -342,7 +387,7 @@ const ImportAssistance = () => {
                                 <TableHead sx={{ background: theme.palette.text.primary }}>
                                     <TableRow>
                                         {Object.keys(filteredDataMatched[0]).map((key, index) => (
-                                            <TableCell key={index} align={index !== 3 ? "left" : "right"}>
+                                            <TableCell key={index} align={key !== "Status" ? "left" : "right"}>
                                                 {key === "Exist" ? <Stack
                                                     spacing={1}
                                                     direction="row"
@@ -356,6 +401,23 @@ const ImportAssistance = () => {
                                                         {key}
                                                     </Typography>
                                                     {sortOrderExist === 'asc' ?
+                                                        <FontAwesomeIcon icon={faArrowUp} color={theme.palette.background.default} /> :
+                                                        <FontAwesomeIcon icon={faArrowDown} color={theme.palette.background.default} />
+                                                    }
+                                                </Stack> : key === "Status" ? <Stack
+                                                    spacing={1}
+                                                    direction="row"
+                                                    justifyContent="flex-end"
+                                                    alignItems="center"
+                                                    onClick={toggleSortDataStatus}
+                                                    sx={{
+                                                        cursor: 'pointer'
+                                                    }}
+                                                >
+                                                    <Typography variant="body2" color={theme.palette.background.default}>
+                                                        {key}
+                                                    </Typography>
+                                                    {sortOrderStatus === 'asc' ?
                                                         <FontAwesomeIcon icon={faArrowUp} color={theme.palette.background.default} /> :
                                                         <FontAwesomeIcon icon={faArrowDown} color={theme.palette.background.default} />
                                                     }
@@ -380,12 +442,12 @@ const ImportAssistance = () => {
                                         >
                                             {Object.keys(d).map((key, index) => (
                                                 <TableCell key={index} align={index !== 3 ? "left" : "right"}>
-                                                    {index === 2 ? d.Exist.length > 0 ? <Typography>
+                                                    {key === "Exist" ? d.Exist.length > 0 ? <Typography>
                                                         Déjà présent
                                                     </Typography> : <Typography>
                                                         Nouveau
-                                                    </Typography> : <Typography>
-                                                        {d[key as keyof typeof d]}
+                                                    </Typography> : key !== "Exist" && <Typography>
+                                                        {(d[key as keyof typeof d] as ReactNode)}
                                                     </Typography>}
                                                 </TableCell>
                                             ))}
@@ -431,7 +493,7 @@ const ImportAssistance = () => {
                                             {Object.keys(d).map((key, index) => (
                                                 <TableCell key={index} align={index !== 3 ? "left" : "right"}>
                                                     <Typography>
-                                                        {d[key as keyof typeof d]}
+                                                        {(d[key as keyof typeof d] as ReactNode)}
                                                     </Typography>
                                                 </TableCell>
                                             ))}

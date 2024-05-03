@@ -69,13 +69,12 @@ const CustomersAccounts = (props: { instance: any, account: any, customers: Cust
 
         const isConfirmed = window.confirm("Êtes-vous sûr de vouloir supprimer ce client ?")
         if (isConfirmed) {
-            await fetch(`${process.env.REACT_APP_API}/tenant`, {
+            await fetch(`${process.env.REACT_APP_API}/tenant/${id}`, {
                 method: "DELETE",
                 headers: {
                     Authorization: `Bearer ${accessToken}`,
                     "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ IdTenant: id }),
+                }
             })
             const newClients = customers.filter((customer) => customer.IdTenant !== id)
             setCustomers(newClients)
