@@ -55,7 +55,7 @@ const AppRoutes = (props: { instance?: any }) => {
         await instance.initialize()
         const accessToken = await acquireToken(instance)
 
-        const response = await fetch(`${process.env.REACT_APP_API}/proposition-persona/associations-settings?IdTenant=${selectedCustomer?.IdTenant}`, {
+        const response = await fetch(`${process.env.REACT_APP_API}/proposition-persona/associations-settings/${selectedCustomer?.IdTenant}`, {
           method: "GET",
           headers: {
             Authorization: `Bearer ${accessToken}`,
