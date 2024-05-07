@@ -173,67 +173,100 @@ const Formatting = (props: { instance: any }) => {
                             Historique
                         </Typography>
 
-                        {data && <Stack>
-                            <Chart
-                                id="chart-container"
-                                type="line"
-                                width="100%"
-                                height="550px"
-                                series={[
-                                    {
-                                        name: data.find(d => d.Type === 'TOTAL CONTACT')?.Type,
-                                        data: data.filter(d => d.Type === 'TOTAL CONTACT').map(item => ({
-                                            x: new Date(item.Date).getTime(),
-                                            y: parseFloat(item.Data)
-                                        }))
-                                    },
-                                    {
-                                        name: data.find(d => d.Type === 'TOTAL COMPANIES')?.Type,
-                                        data: data.filter(d => d.Type === 'TOTAL COMPANIES').map(item => ({
-                                            x: new Date(item.Date).getTime(),
-                                            y: parseFloat(item.Data)
-                                        }))
-                                    }
-                                ]}
-                                options={{
-                                    xaxis: {
-                                        type: 'datetime',
-                                        labels: {
-                                            formatter: function (value) {
-                                                return format(new Date(value), 'yyyy-MM-dd HH:mm:ss')
-                                            }
-                                        }
-                                    }
-                                }}
-
-                            />
-
-                            <Chart
-                                id="remaining-chart-container"
-                                type="bar"
-                                width="100%"
-                                height="550px"
-                                series={data.filter(d => d.Type !== 'TOTAL CONTACT' && d.Type !== 'TOTAL COMPANIES')
-                                    .map(d => d.Type).map(type => ({
-                                        name: type,
-                                        data: data
-                                            .filter(d => d.Type === type)
-                                            .map(item => ({
+                        {data && <Stack spacing={2} direction={isDesktop ? "row" : "column"}>
+                            <Stack width="100%">
+                                <Chart
+                                    type="line"
+                                    width="100%"
+                                    height="550px"
+                                    series={[
+                                        {
+                                            name: data.find(d => d.Type === 'TOTAL CONTACT')?.Type,
+                                            data: data.filter(d => d.Type === 'TOTAL CONTACT').map(item => ({
                                                 x: new Date(item.Date).getTime(),
                                                 y: parseFloat(item.Data)
                                             }))
-                                    }))}
-                                options={{
-                                    xaxis: {
-                                        type: 'datetime',
-                                        labels: {
-                                            formatter: function (value) {
-                                                return format(new Date(value), 'yyyy-MM-dd HH:mm:ss')
-                                            }
+                                        },
+                                        {
+                                            name: data.find(d => d.Type === 'TOTAL COMPANIES')?.Type,
+                                            data: data.filter(d => d.Type === 'TOTAL COMPANIES').map(item => ({
+                                                x: new Date(item.Date).getTime(),
+                                                y: parseFloat(item.Data)
+                                            }))
                                         }
-                                    }
-                                }}
-                            />
+                                    ]}
+                                    options={{
+                                        xaxis: {
+                                            type: 'datetime',
+                                            labels: {
+                                                formatter: function (value) {
+                                                    return format(new Date(value), 'yyyy-MM-dd HH:mm:ss')
+                                                }
+                                            }
+                                        },
+                                        markers: {
+                                            size: 7,
+                                            hover: {
+                                                size: 10,
+                                            }
+                                        },
+                                        colors: [theme.palette.text.primary,
+                                        theme.palette.info.main,
+                                        theme.palette.primary.main,
+                                        theme.palette.text.disabled,
+                                        theme.palette.info.light,
+                                        theme.palette.secondary.main]
+                                    }}
+                                />
+                            </Stack>
+
+                            <Stack width="100%">
+                                <Chart
+                                    type="line"
+                                    width="100%"
+                                    height="550px"
+                                    series={(() => {
+                                        const groupedData: { [key: string]: { x: number; y: number }[] } = {}
+                                        data.forEach(d => {
+                                            if (d.Type !== 'TOTAL CONTACT' && d.Type !== 'TOTAL COMPANIES') {
+                                                if (!groupedData[d.Type]) {
+                                                    groupedData[d.Type] = []
+                                                }
+                                                groupedData[d.Type].push({
+                                                    x: new Date(d.Date).getTime(),
+                                                    y: parseFloat(d.Data)
+                                                })
+                                            }
+                                        })
+
+                                        return Object.keys(groupedData).map(type => ({
+                                            name: type,
+                                            data: groupedData[type]
+                                        }))
+                                    })()}
+                                    options={{
+                                        xaxis: {
+                                            type: 'datetime',
+                                            labels: {
+                                                formatter: function (value) {
+                                                    return format(new Date(value), 'yyyy-MM-dd HH:mm:ss')
+                                                }
+                                            }
+                                        },
+                                        markers: {
+                                            size: 7,
+                                            hover: {
+                                                size: 10,
+                                            }
+                                        },
+                                        colors: [theme.palette.text.primary,
+                                        theme.palette.info.main,
+                                        theme.palette.primary.main,
+                                        theme.palette.text.disabled,
+                                        theme.palette.secondary.main]
+                                    }}
+                                />
+                            </Stack>
                         </Stack>}
 
                         <Stack spacing={4} direction="row" alignItems="center" width="100%">
