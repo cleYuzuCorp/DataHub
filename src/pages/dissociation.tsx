@@ -7,8 +7,12 @@ import { yupResolver } from "@hookform/resolvers/yup"
 import * as XLSX from 'xlsx'
 import { useForm } from "react-hook-form"
 import theme from "../theme"
+import { acquireToken } from "../App"
 
-const Dissociation = () => {
+const Dissociation = (props: { instance: any }) => {
+
+    const { instance } = props
+
     const idTenant = new URLSearchParams(useLocation().search).get('id')
 
     const [loading, setLoading] = useState(false)
@@ -48,8 +52,15 @@ const Dissociation = () => {
                     }
                 }, interval)
 
+                await instance.initialize()
+                const accessToken = await acquireToken(instance)
+
                 const response = await fetch(`${process.env.REACT_APP_API}/dissociation/${idTenant}`, {
                     method: "POST",
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`,
+                        "Content-Type": "application/json"
+                    },
                     body: formData,
                 })
 

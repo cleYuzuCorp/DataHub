@@ -12,8 +12,12 @@ import MFileUpload from '../components/molecules/m-file-upload'
 import { DataFile } from '../interfaces/data-file'
 import * as XLSX from 'xlsx'
 import { Exist } from '../interfaces/exist'
+import { acquireToken } from '../App'
 
-const ImportAssistance = () => {
+const ImportAssistance = (props: { instance: any }) => {
+
+    const { instance } = props
+
     const idTenant = new URLSearchParams(useLocation().search).get('id')
 
     const [loading, setLoading] = useState(false)
@@ -74,8 +78,15 @@ const ImportAssistance = () => {
                     }
                 }, interval)
 
+                await instance.initialize()
+                const accessToken = await acquireToken(instance)
+
                 const response = await fetch(`${process.env.REACT_APP_API}/import/check/${idTenant}`, {
                     method: "POST",
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`,
+                        "Content-Type": "application/json"
+                    },
                     body: formData,
                 })
 
@@ -206,27 +217,27 @@ const ImportAssistance = () => {
 
             if (file && idTenant) {
 
-                const allCompleted = dataMatched.every((item) => item.Status === 'Terminé');
+                const allCompleted = dataMatched.every((item) => item.Status === 'Terminé')
 
                 if (!allCompleted) {
-                    setError('status', { message: 'Toutes les données doivent être terminées avant de pouvoir les importer' });
-                    setLoading(false);
-                    setOpen(true);
-                    return;
+                    setError('status', { message: 'Toutes les données doivent être terminées avant de pouvoir les importer' })
+                    setLoading(false)
+                    setOpen(true)
+                    return
                 }
 
-                const wb = XLSX.utils.book_new();
-                const ws = XLSX.utils.json_to_sheet(dataMatched);
-                XLSX.utils.book_append_sheet(wb, ws, 'Data Matched');
-                const excelBuffer = XLSX.write(wb, { type: 'array', bookType: 'xlsx' });
-                const excelBlob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-                const excelBlobUrl = URL.createObjectURL(excelBlob);
-                const link = document.createElement('a');
-                link.href = excelBlobUrl;
-                link.setAttribute('download', 'data_matched.xlsx');
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
+                const wb = XLSX.utils.book_new()
+                const ws = XLSX.utils.json_to_sheet(dataMatched)
+                XLSX.utils.book_append_sheet(wb, ws, 'Data Matched')
+                const excelBuffer = XLSX.write(wb, { type: 'array', bookType: 'xlsx' })
+                const excelBlob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+                const excelBlobUrl = URL.createObjectURL(excelBlob)
+                const link = document.createElement('a')
+                link.href = excelBlobUrl
+                link.setAttribute('download', 'data_matched.xlsx')
+                document.body.appendChild(link)
+                link.click()
+                document.body.removeChild(link)
 
                 setLoading(false)
                 setOpen(true)

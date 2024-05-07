@@ -239,7 +239,7 @@ const THeader = (props: {
 
     const choices = [
         "Persona",
-        "Maison Mère",
+        // "Maison Mère",
         "Aide à l'import",
         "Dissociation",
         "Formatage"
@@ -321,39 +321,39 @@ const THeader = (props: {
                         <AHeaderSelect values={enrichissement} active={active} setActive={setActive} />
                     }
                 </Stack>
-            </Stack>
 
-            <Stack
-                spacing={1}
-                direction="row"
-                alignItems="center"
-                paddingTop="50px"
-                paddingBottom="50px"
-                sx={{
-                    cursor: 'pointer'
-                }}
-            >
-                {account ? <Stack spacing={2} alignItems="center">
-                    <Stack spacing={1} direction="row" alignItems="center">
-                        {/*<img src={graphData} alt="Profile" style={{ borderRadius: "50%", width: "50px", height: "50px" }} />*/}
+                <Stack
+                    spacing={1}
+                    direction="row"
+                    alignItems="center"
+                    paddingTop="50px"
+                    paddingBottom="50px"
+                    sx={{
+                        cursor: 'pointer'
+                    }}
+                >
+                    {account ? <Stack spacing={2} alignItems="center">
+                        <Stack spacing={1} direction="row" alignItems="center">
+                            {/*<img src={graphData} alt="Profile" style={{ borderRadius: "50%", width: "50px", height: "50px" }} />*/}
 
+                            <Typography>
+                                {account}
+                            </Typography>
+                        </Stack>
+
+                        <Stack spacing={1} direction="row" alignItems="center" onClick={handleSignOut}>
+                            <FontAwesomeIcon icon={faRightFromBracket} color={theme.palette.text.primary} />
+                            <Typography>
+                                Sign Out
+                            </Typography>
+                        </Stack>
+                    </Stack> : <Stack spacing={1} direction="row" alignItems="center" onClick={handleSignIn}>
+                        <FontAwesomeIcon icon={faRightToBracket} color={theme.palette.text.primary} />
                         <Typography>
-                            {account}
+                            Sign In
                         </Typography>
-                    </Stack>
-
-                    <Stack spacing={1} direction="row" alignItems="center" onClick={handleSignOut}>
-                        <FontAwesomeIcon icon={faRightFromBracket} color={theme.palette.text.primary} />
-                        <Typography>
-                            Sign Out
-                        </Typography>
-                    </Stack>
-                </Stack> : <Stack spacing={1} direction="row" alignItems="center" onClick={handleSignIn}>
-                    <FontAwesomeIcon icon={faRightToBracket} color={theme.palette.text.primary} />
-                    <Typography>
-                        Sign In
-                    </Typography>
-                </Stack>}
+                    </Stack>}
+                </Stack>
             </Stack>
 
             <Modal open={open} onClose={handleClose}>
