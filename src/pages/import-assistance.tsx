@@ -201,7 +201,6 @@ const ImportAssistance = () => {
 
     const importData = async () => {
         try {
-            clearErrors('data')
             clearErrors('status')
             setLoading(true)
 
@@ -216,28 +215,18 @@ const ImportAssistance = () => {
                     return;
                 }
 
-                const wb = XLSX.utils.book_new()
-                const ws = XLSX.utils.json_to_sheet(dataMatched)
-                XLSX.utils.book_append_sheet(wb, ws, "Sheet1")
-                const excelBuffer = XLSX.write(wb, { type: 'array', bookType: 'xlsx' })
-
-                const excelFile = new File([new Uint8Array(excelBuffer)], "data.xlsx", { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
-
-                const formData = new FormData()
-                formData.append("file", excelFile)
-
-                const response = await fetch(`${process.env.REACT_APP_API}/import/${idTenant}`, {
-                    method: "POST",
-                    body: formData,
-                })
-
-                if (!response.ok) {
-                    const errorData = await response.json()
-                    setError('data', { message: errorData.message })
-                    setLoading(false)
-                    setOpen(true)
-                    return
-                }
+                const wb = XLSX.utils.book_new();
+                const ws = XLSX.utils.json_to_sheet(dataMatched);
+                XLSX.utils.book_append_sheet(wb, ws, 'Data Matched');
+                const excelBuffer = XLSX.write(wb, { type: 'array', bookType: 'xlsx' });
+                const excelBlob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                const excelBlobUrl = URL.createObjectURL(excelBlob);
+                const link = document.createElement('a');
+                link.href = excelBlobUrl;
+                link.setAttribute('download', 'data_matched.xlsx');
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
 
                 setLoading(false)
                 setOpen(true)
