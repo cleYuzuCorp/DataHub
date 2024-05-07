@@ -2,7 +2,7 @@ import { ReactNode, useEffect, useState } from 'react'
 import { Container, Stack, Typography, CircularProgress, RadioGroup, Radio, FormControlLabel, TextField, MenuItem, TableHead, Paper, Table, TableBody, TableCell, TableRow, TablePagination, Alert, Snackbar } from "@mui/material"
 import { useLocation } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faArrowDown, faArrowUp, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons'
+import { faArrowDown, faArrowUp, faCircle, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons'
 import theme from '../theme'
 import * as yup from "yup"
 import { yupResolver } from "@hookform/resolvers/yup"
@@ -29,8 +29,8 @@ const ImportAssistance = () => {
     const [selectedData, setSelectedData] = useState<DataFile>()
     const [searchTerm, setSearchTerm] = useState("")
 
-    const [companies, setCompanies] = useState([])
-    const [selectedCompagnies, setSelectedCompagnies] = useState("")
+    const [companies, setCompanies] = useState<Exist[]>([])
+    const [selectedCompanie, setSelectedCompanie] = useState("")
 
     const [pageMatched, setPageMatched] = useState(0)
     const [rowsPerPageMatched, setRowsPerPageMatched] = useState(10)
@@ -42,6 +42,7 @@ const ImportAssistance = () => {
 
     const schema = yup.object().shape({
         data: yup.mixed().default('Une erreur est survenu'),
+        status: yup.mixed().required('Toutes les données doivent être terminées avant de pouvoir les importer'),
         companies: yup.string().required('Vous devez séléctionner au moins une entreprise')
     })
 
@@ -93,14 +94,6 @@ const ImportAssistance = () => {
 
                 const data = await response.json()
 
-                const domains = data.matched.map((d: DataFile) => {
-                    if (d.Exist && d.Exist.length > 0) {
-                        return d.Exist.map((e: Exist) => e.domain)
-                    }
-                    return []
-                }).flat()
-
-                setCompanies(domains)
                 setDataMatched(data.matched)
                 setDataCantMatched(data.cantMatched)
                 setLoading(false)
@@ -121,8 +114,15 @@ const ImportAssistance = () => {
         setProposition((event.target as HTMLInputElement).value)
     }
 
-    const handleCompagniesChange = (value: string) => {
-        setSelectedCompagnies(value)
+    const handleSelectedDataChange = (value: DataFile) => {
+        if (value.Exist.length > 0) {
+            setSelectedData(value)
+            setCompanies(value.Exist)
+        }
+    }
+
+    const handleSelectedCompanieChange = (value: string) => {
+        setSelectedCompanie(value)
         clearErrors('companies')
     }
 
@@ -202,9 +202,20 @@ const ImportAssistance = () => {
     const importData = async () => {
         try {
             clearErrors('data')
+            clearErrors('status')
             setLoading(true)
 
             if (file && idTenant) {
+
+                const allCompleted = dataMatched.every((item) => item.Status === 'Terminé');
+
+                if (!allCompleted) {
+                    setError('status', { message: 'Toutes les données doivent être terminées avant de pouvoir les importer' });
+                    setLoading(false);
+                    setOpen(true);
+                    return;
+                }
+
                 const wb = XLSX.utils.book_new()
                 const ws = XLSX.utils.json_to_sheet(dataMatched)
                 XLSX.utils.book_append_sheet(wb, ws, "Sheet1")
@@ -324,8 +335,8 @@ const ImportAssistance = () => {
                                 {proposition !== "create" ? <TextField
                                     select
                                     label="Entreprise"
-                                    value={selectedCompagnies}
-                                    onChange={(e) => handleCompagniesChange(e.target.value)}
+                                    value={selectedCompanie}
+                                    onChange={(e) => handleSelectedCompanieChange(e.target.value)}
                                     helperText={errors.companies?.message}
                                     sx={{
                                         borderColor: errors.companies ? theme.palette.error.main : '#E0E0E0',
@@ -336,8 +347,8 @@ const ImportAssistance = () => {
                                         height: '50px'
                                     }}
                                 >
-                                    {companies?.map((companies) => <MenuItem key={companies} value={companies}>
-                                        {companies}
+                                    {companies?.map((companie) => <MenuItem key={companie.id} value={companie.domain}>
+                                        {companie.domain}
                                     </MenuItem>
                                     )}
                                 </TextField> : null}
@@ -373,9 +384,19 @@ const ImportAssistance = () => {
                                 }}
                             />
 
-                            <AButton variant="contained" onClick={importData}>
-                                Importer les données
-                            </AButton>
+                            <Stack spacing={1}>
+                                <AButton
+                                    variant={!errors.status?.message ? "contained" : "outlined"}
+                                    color={!errors.status?.message ? "white" : "error"}
+                                    onClick={importData}
+                                >
+                                    Importer les données
+                                </AButton>
+
+                                {errors.status?.message && <Typography color={theme.palette.error.main}>
+                                    {errors.status.message}
+                                </Typography>}
+                            </Stack>
                         </Stack>
 
                         <Stack spacing={2}>
@@ -387,11 +408,12 @@ const ImportAssistance = () => {
                                 <TableHead sx={{ background: theme.palette.text.primary }}>
                                     <TableRow>
                                         {Object.keys(filteredDataMatched[0]).map((key, index) => (
-                                            <TableCell key={index} align={key !== "Status" ? "left" : "right"}>
+                                            <TableCell key={index} align={index === 0 ? "left" : key !== "Status" ? "center" : "right"}>
                                                 {key === "Exist" ? <Stack
                                                     spacing={1}
                                                     direction="row"
                                                     alignItems="center"
+                                                    justifyContent="center"
                                                     onClick={toggleSortDataExist}
                                                     sx={{
                                                         cursor: 'pointer'
@@ -435,18 +457,43 @@ const ImportAssistance = () => {
                                             key={index}
                                             onMouseEnter={() => setHovered(index)}
                                             onMouseLeave={() => setHovered(undefined)}
-                                            onClick={() => setSelectedData(d)}
+                                            onClick={() => handleSelectedDataChange(d)}
                                             sx={{
                                                 background: selectedData === d || hovered === index ? theme.palette.secondary.light : 'none'
                                             }}
                                         >
                                             {Object.keys(d).map((key, index) => (
-                                                <TableCell key={index} align={index !== 3 ? "left" : "right"}>
+                                                <TableCell key={index} align={index === 0 ? "left" : key !== "Status" ? "center" : "right"}>
                                                     {key === "Exist" ? d.Exist.length > 0 ? <Typography>
                                                         Déjà présent
                                                     </Typography> : <Typography>
                                                         Nouveau
-                                                    </Typography> : key !== "Exist" && <Typography>
+                                                    </Typography> : key === "Status" ? <Stack alignItems="flex-end">
+                                                        <Stack
+                                                            spacing={1}
+                                                            direction="row"
+                                                            alignItems="center"
+                                                            padding="5px 10px 5px 10px"
+                                                            sx={{
+                                                                width: 'fit-content',
+                                                                borderRadius: '15px',
+                                                                background: d.Status === "Terminé" ? 'rgba(25, 153, 109, 0.20)' : d.Status === "En cours" ? 'rgba(254, 167, 34, 0.20)' : theme.palette.error.light
+                                                            }}
+                                                        >
+                                                            <FontAwesomeIcon
+                                                                icon={faCircle}
+                                                                size="xs"
+                                                                color={d.Status === "Terminé" ? "#19996D" : d.Status === "En cours" ? "#FEA722" : theme.palette.error.main}
+                                                            />
+                                                            <Typography
+                                                                sx={{
+                                                                    color: d.Status === "Terminé" ? "#19996D" : d.Status === "En cours" ? "#FEA722" : theme.palette.error.main
+                                                                }}
+                                                            >
+                                                                {(d[key as keyof typeof d] as ReactNode)}
+                                                            </Typography>
+                                                        </Stack>
+                                                    </Stack> : <Typography>
                                                         {(d[key as keyof typeof d] as ReactNode)}
                                                     </Typography>}
                                                 </TableCell>

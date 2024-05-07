@@ -163,7 +163,6 @@ const History = (props: { instance: any }) => {
         const account = instance.getActiveAccount()
 
         const body = {
-            emailModified: account.username,
             tableOfValues: dbPersona,
             propositions: [{ contacts: data }]
         }

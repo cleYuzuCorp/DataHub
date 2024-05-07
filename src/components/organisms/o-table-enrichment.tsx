@@ -110,7 +110,6 @@ const OTableEnrichment = (props: {
         const account = instance.getActiveAccount()
 
         const body = {
-            emailModified: account.username,
             tableOfValues: dbPersona,
             propositions: selectedContacts,
         }
