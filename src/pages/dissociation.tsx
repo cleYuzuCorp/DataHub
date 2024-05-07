@@ -1,13 +1,16 @@
-import { Alert, Container, Snackbar, Stack, Typography } from "@mui/material"
+import { Alert, Container, Paper, Snackbar, Stack, Table, TableBody, TableCell, TableHead, TablePagination, TableRow, TextField, Typography } from "@mui/material"
 import { useLocation } from 'react-router-dom'
 import MFileUpload from "../components/molecules/m-file-upload"
 import { useEffect, useState } from "react"
 import * as yup from "yup"
 import { yupResolver } from "@hookform/resolvers/yup"
-import * as XLSX from 'xlsx'
 import { useForm } from "react-hook-form"
 import theme from "../theme"
 import { acquireToken } from "../App"
+import { format } from "date-fns"
+import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons"
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import { HistoryDissociation } from "../interfaces/history-dissociation"
 
 const Dissociation = (props: { instance: any }) => {
 
@@ -20,6 +23,13 @@ const Dissociation = (props: { instance: any }) => {
     const [progress, setProgress] = useState(0)
     const [file, setFile] = useState<File>()
 
+    const [searchTerm, setSearchTerm] = useState("")
+    const [histories, setHistories] = useState<Array<HistoryDissociation>>([])
+    const [filteredHistories, setFilteredHistories] = useState<HistoryDissociation[]>([])
+
+    const [page, setPage] = useState(0)
+    const [rowsPerPage, setRowsPerPage] = useState(10)
+
     const schema = yup.object().shape({
         data: yup.mixed().default('Une erreur est survenu')
     })
@@ -27,6 +37,33 @@ const Dissociation = (props: { instance: any }) => {
     const { clearErrors, setError, formState: { errors } } = useForm({
         resolver: yupResolver(schema),
     })
+
+    useEffect(() => {
+        setLoading(true)
+
+        const fetchData = async () => {
+            try {
+                const response = await fetch(`${process.env.REACT_APP_API}/historique-dissociation/${idTenant}`, {
+                    method: "GET"
+                })
+
+                const data = await response.json()
+
+                console.log(data, 'data')
+
+                const sortedHistories = data.sort((a: { Date: string }, b: { Date: string }) => {
+                    return new Date(b.Date as string).getTime() - new Date(a.Date as string).getTime()
+                })
+
+                setHistories(sortedHistories)
+                setLoading(false)
+            } catch (error) {
+                console.error("Une erreur s'est produite lors de la requête :", error)
+            }
+        }
+
+        fetchData()
+    }, [])
 
     const loadData = async () => {
         try {
@@ -58,8 +95,7 @@ const Dissociation = (props: { instance: any }) => {
                 const response = await fetch(`${process.env.REACT_APP_API}/dissociation/${idTenant}`, {
                     method: "POST",
                     headers: {
-                        Authorization: `Bearer ${accessToken}`,
-                        "Content-Type": "application/json"
+                        Authorization: `Bearer ${accessToken}`
                     },
                     body: formData,
                 })
@@ -95,6 +131,34 @@ const Dissociation = (props: { instance: any }) => {
         }
     }, [file])
 
+    const handleFilteredChange = (value: string) => {
+        setSearchTerm(value)
+    }
+
+    useEffect(() => {
+        const filtered = histories.filter(history =>
+            history.FromObjectID.includes(searchTerm) ||
+            history.ToObjectsID.includes(searchTerm) ||
+            history.Emailmodified?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            history.Date?.includes(searchTerm) ||
+            history.FromObject?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            history.ToObject?.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+
+        setFilteredHistories(filtered)
+    }, [searchTerm, histories])
+
+    const startIndex = page * rowsPerPage
+    const endIndex = startIndex + rowsPerPage
+
+    const formatDate = (dateString: string) => {
+        const date = new Date(dateString)
+
+        const formattedDate = format(date, 'yyyy-MM-dd HH:mm:ss')
+
+        return formattedDate
+    }
+
     return (
         <Container maxWidth="lg">
             <Stack spacing={8} alignItems="center" marginTop="100px" marginBottom="100px">
@@ -129,6 +193,132 @@ const Dissociation = (props: { instance: any }) => {
                         Fichier traité avec succès !
                     </Alert>
                 </Snackbar>}
+
+                <Stack spacing={2} width="100%">
+                    <TextField
+                        placeholder="Recherche par ID, Date, Email ou Objet"
+                        value={searchTerm}
+                        onChange={(e) => handleFilteredChange(e.target.value)}
+                        sx={{
+                            width: "100%",
+                            borderColor: '#E0E0E0',
+                            boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)'
+                        }}
+                        InputProps={{
+                            endAdornment: <FontAwesomeIcon
+                                icon={faMagnifyingGlass}
+                                color={theme.palette.text.primary}
+                                opacity={0.5}
+                            />
+                        }}
+                    />
+
+                    <Table component={Paper} sx={{ background: theme.palette.background.default }}>
+                        <TableHead sx={{ background: theme.palette.text.primary }}>
+                            <TableRow>
+                                <TableCell align="left">
+                                    <Typography variant="body2" color={theme.palette.background.default}>
+                                        À partir de l'ID
+                                    </Typography>
+                                </TableCell>
+                                <TableCell align="center">
+                                    <Typography variant="body2" color={theme.palette.background.default}>
+                                        Vers l'ID
+                                    </Typography>
+                                </TableCell>
+                                <TableCell align="center">
+                                    <Typography variant="body2" color={theme.palette.background.default}>
+                                        Email modifié
+                                    </Typography>
+                                </TableCell>
+                                <TableCell align="center">
+                                    <Typography variant="body2" color={theme.palette.background.default}>
+                                        À partir de l'objet
+                                    </Typography>
+                                </TableCell>
+                                <TableCell align="center">
+                                    <Typography variant="body2" color={theme.palette.background.default}>
+                                        Vers l'objet
+                                    </Typography>
+                                </TableCell>
+                                <TableCell align="center">
+                                    <Typography variant="body2" color={theme.palette.background.default}>
+                                        Date/Heure
+                                    </Typography>
+                                </TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {filteredHistories.slice(startIndex, endIndex).map((history, index) =>
+                                <TableRow key={index}>
+                                    <TableCell>
+                                        <Typography
+                                            fontSize="11px"
+                                            textAlign="center"
+                                            padding="10px"
+                                            borderRadius="15px"
+                                            sx={{
+                                                width: `${history.FromObjectID.length}ch`,
+                                                background: theme.palette.secondary.light
+                                            }}
+                                        >
+                                            {history.FromObjectID}
+                                        </Typography>
+                                    </TableCell>
+                                    <TableCell align="center">
+                                        <Typography
+                                            fontSize="11px"
+                                            textAlign="center"
+                                            padding="10px"
+                                            borderRadius="15px"
+                                            sx={{
+                                                width: `${history.ToObjectsID.length}ch`,
+                                                background: theme.palette.info.light
+                                            }}
+                                        >
+                                            {history.ToObjectsID}
+                                        </Typography>
+                                    </TableCell>
+                                    <TableCell align="center">
+                                        <Typography>
+                                            {history.Emailmodified}
+                                        </Typography>
+                                    </TableCell>
+                                    <TableCell align="center">
+                                        <Typography>
+                                            {history.FromObject}
+                                        </Typography>
+                                    </TableCell>
+                                    <TableCell align="center">
+                                        <Typography>
+                                            {history.ToObject}
+                                        </Typography>
+                                    </TableCell>
+                                    <TableCell align="center">
+                                        <Stack>
+                                            <Typography>
+                                                {formatDate(history.Date)}
+                                            </Typography>
+                                        </Stack>
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
+
+                    <TablePagination
+                        rowsPerPageOptions={[10, 25, 50, 100]}
+                        component="div"
+                        count={filteredHistories.length}
+                        rowsPerPage={rowsPerPage}
+                        page={page}
+                        onPageChange={(event, newPage) => setPage(newPage)}
+                        onRowsPerPageChange={(event) => {
+                            setRowsPerPage(parseInt(event.target.value, 10))
+                            setPage(0)
+                        }}
+                    />
+                </Stack>
             </Stack>
         </Container>
     )

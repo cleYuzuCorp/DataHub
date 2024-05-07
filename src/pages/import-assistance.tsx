@@ -84,8 +84,7 @@ const ImportAssistance = (props: { instance: any }) => {
                 const response = await fetch(`${process.env.REACT_APP_API}/import/check/${idTenant}`, {
                     method: "POST",
                     headers: {
-                        Authorization: `Bearer ${accessToken}`,
-                        "Content-Type": "application/json"
+                        Authorization: `Bearer ${accessToken}`
                     },
                     body: formData,
                 })
