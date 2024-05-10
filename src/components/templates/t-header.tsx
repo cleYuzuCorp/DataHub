@@ -34,7 +34,6 @@ const THeader = (props: {
 
     const [hovered, setHovered] = useState("")
     const [interactionInProgress, setInteractionInProgress] = useState(false)
-    const [graphData, setGraphData] = useState<string>()
     const [customersNames, setCustomersNames] = useState<Array<string>>()
 
     const handleOpen = () => {

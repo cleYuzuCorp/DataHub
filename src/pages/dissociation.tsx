@@ -194,7 +194,7 @@ const Dissociation = (props: { instance: any }) => {
                     </Alert>
                 </Snackbar>}
 
-                <Stack spacing={2} width="100%">
+                {loading ? <CircularProgress /> : <Stack spacing={2} width="100%">
                     <TextField
                         placeholder="Recherche par ID, Date, Email ou Objet"
                         value={searchTerm}
@@ -318,7 +318,7 @@ const Dissociation = (props: { instance: any }) => {
                             setPage(0)
                         }}
                     />
-                </Stack>
+                </Stack>}
             </Stack>
         </Container>
     )

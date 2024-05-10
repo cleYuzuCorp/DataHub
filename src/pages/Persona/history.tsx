@@ -160,8 +160,6 @@ const History = (props: { instance: any }) => {
             proposedPersona: row.PersonaBefore
         }))
 
-        const account = instance.getActiveAccount()
-
         const body = {
             tableOfValues: dbPersona,
             propositions: [{ contacts: data }]

@@ -1,5 +1,5 @@
 import { ReactNode, useEffect, useState } from 'react'
-import { Container, Stack, Typography, CircularProgress, RadioGroup, Radio, FormControlLabel, TextField, MenuItem, TableHead, Paper, Table, TableBody, TableCell, TableRow, TablePagination, Alert, Snackbar } from "@mui/material"
+import { Container, Stack, Typography, CircularProgress, TextField, MenuItem, TableHead, Paper, Table, TableBody, TableCell, TableRow, TablePagination, Alert, Snackbar } from "@mui/material"
 import { useLocation } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowDown, faArrowUp, faCircle, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons'
@@ -11,7 +11,6 @@ import AButton from '../components/atoms/a-button'
 import MFileUpload from '../components/molecules/m-file-upload'
 import { DataFile } from '../interfaces/data-file'
 import * as XLSX from 'xlsx'
-import { Exist } from '../interfaces/exist'
 import { acquireToken } from '../App'
 
 const ImportAssistance = (props: { instance: any }) => {
@@ -23,31 +22,26 @@ const ImportAssistance = (props: { instance: any }) => {
     const [loading, setLoading] = useState(false)
     const [open, setOpen] = useState(false)
     const [progress, setProgress] = useState(0)
-    const [proposition, setProposition] = useState("choice")
+    const [proposition, setProposition] = useState<{ [key: string]: string }>({})
+    const [companie, setCompanie] = useState<{ [key: string]: string }>({})
 
     const [file, setFile] = useState<File>()
     const [dataMatched, setDataMatched] = useState<DataFile[]>([])
     const [dataCantMatched, setDataCantMatched] = useState<DataFile[]>([])
     const [filteredDataMatched, setFilteredDataMatched] = useState<DataFile[]>([])
     const [filteredDataCantMatched, setFilteredDataCantMatched] = useState<DataFile[]>([])
-    const [selectedData, setSelectedData] = useState<DataFile>()
     const [searchTerm, setSearchTerm] = useState("")
-
-    const [companies, setCompanies] = useState<Exist[]>([])
-    const [selectedCompanie, setSelectedCompanie] = useState("")
 
     const [pageMatched, setPageMatched] = useState(0)
     const [rowsPerPageMatched, setRowsPerPageMatched] = useState(10)
     const [pageCantMatched, setPageCantMatched] = useState(0)
     const [rowsPerPageCantMatched, setRowsPerPageCantMatched] = useState(10)
-    const [hovered, setHovered] = useState<number | undefined>()
     const [sortOrderExist, setSortOrderExist] = useState<'asc' | 'desc'>('asc')
     const [sortOrderStatus, setSortOrderStatus] = useState<'asc' | 'desc'>('asc')
 
     const schema = yup.object().shape({
         data: yup.mixed().default('Une erreur est survenu'),
         status: yup.mixed().required('Toutes les données doivent être terminées avant de pouvoir les importer'),
-        companies: yup.string().required('Vous devez séléctionner au moins une entreprise')
     })
 
     const { clearErrors, setError, formState: { errors } } = useForm({
@@ -104,6 +98,15 @@ const ImportAssistance = (props: { instance: any }) => {
 
                 const data = await response.json()
 
+                data.matched.map((d: DataFile) => {
+                    if (d.Status === "Terminé") {
+                        setProposition(prevSelections => ({
+                            ...prevSelections,
+                            [d.Domain]: "create"
+                        }))
+                    }
+                })
+
                 setDataMatched(data.matched)
                 setDataCantMatched(data.cantMatched)
                 setLoading(false)
@@ -120,20 +123,18 @@ const ImportAssistance = (props: { instance: any }) => {
         }
     }, [file])
 
-    const handlePropositionChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setProposition((event.target as HTMLInputElement).value)
+    const handlePropositionChange = (value: string, domain: string) => {
+        setProposition(prevSelections => ({
+            ...prevSelections,
+            [domain]: value
+        }))
     }
 
-    const handleSelectedDataChange = (value: DataFile) => {
-        if (value.Exist.length > 0) {
-            setSelectedData(value)
-            setCompanies(value.Exist)
-        }
-    }
-
-    const handleSelectedCompanieChange = (value: string) => {
-        setSelectedCompanie(value)
-        clearErrors('companies')
+    const handleSelectedCompanieChange = (value: string, domain: string) => {
+        setCompanie(prevSelections => ({
+            ...prevSelections,
+            [domain]: value
+        }))
     }
 
     const handleFilteredChange = (value: string) => {
@@ -282,87 +283,6 @@ const ImportAssistance = (props: { instance: any }) => {
                         </Alert>
                     </Snackbar>}
 
-                    {selectedData && <Stack
-                        width="100%"
-                        sx={{
-                            background: theme.palette.background.default,
-                            boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)',
-                            borderRadius: '15px',
-                        }}
-                    >
-                        <Stack
-                            padding="16px"
-                            borderRadius="15px"
-                            sx={{
-                                background: theme.palette.text.primary
-                            }}
-                        >
-                            <Typography variant="h4" color={theme.palette.background.default}>
-                                Propositions
-                            </Typography>
-                        </Stack>
-
-                        <Stack spacing={1} padding="16px">
-                            <Stack spacing={4} direction="row">
-                                <RadioGroup value={proposition} onChange={handlePropositionChange}>
-                                    <FormControlLabel
-                                        value="choice"
-                                        control={<Radio />}
-                                        label="Choisir une entreprise existante"
-                                        sx={{
-                                            margin: '10px 0px 10px 0px'
-                                        }}
-                                    />
-                                    <FormControlLabel
-                                        value="replace"
-                                        control={<Radio />}
-                                        label="Remplacer par une entreprise de mon import"
-                                        sx={{
-                                            margin: '10px 0px 10px 0px'
-                                        }}
-                                    />
-                                    <FormControlLabel
-                                        value="create"
-                                        control={<Radio />}
-                                        label="Créer une nouvelle entreprise"
-                                        sx={{
-                                            margin: '10px 0px 10px 0px'
-                                        }}
-                                    />
-                                </RadioGroup>
-
-                                {proposition !== "create" ? <TextField
-                                    select
-                                    label="Entreprise"
-                                    value={selectedCompanie}
-                                    onChange={(e) => handleSelectedCompanieChange(e.target.value)}
-                                    helperText={errors.companies?.message}
-                                    sx={{
-                                        borderColor: errors.companies ? theme.palette.error.main : '#E0E0E0',
-                                        '& .MuiFormHelperText-root': {
-                                            color: errors.companies ? theme.palette.error.main : 'inherit'
-                                        },
-                                        width: '100%',
-                                        height: '50px'
-                                    }}
-                                >
-                                    {companies?.map((companie) => <MenuItem key={companie.id} value={companie.domain}>
-                                        {companie.domain}
-                                    </MenuItem>
-                                    )}
-                                </TextField> : null}
-                            </Stack>
-
-                            <Stack alignItems="center">
-                                <Stack width="350px">
-                                    <AButton variant="contained">
-                                        Valider
-                                    </AButton>
-                                </Stack>
-                            </Stack>
-                        </Stack>
-                    </Stack>}
-
                     {filteredDataMatched.length > 0 && !errors.data?.message && <Stack spacing={4} width="100%">
                         <Stack spacing={4} direction="row">
                             <TextField
@@ -407,7 +327,7 @@ const ImportAssistance = (props: { instance: any }) => {
                                 <TableHead sx={{ background: theme.palette.text.primary }}>
                                     <TableRow>
                                         {Object.keys(filteredDataMatched[0]).map((key, index) => (
-                                            <TableCell key={index} align={index === 0 ? "left" : key !== "Status" ? "center" : "right"}>
+                                            <TableCell key={index} align={index === 0 ? "left" : "center"}>
                                                 {key === "Exist" ? <Stack
                                                     spacing={1}
                                                     direction="row"
@@ -448,21 +368,23 @@ const ImportAssistance = (props: { instance: any }) => {
                                                     </Typography>}
                                             </TableCell>
                                         ))}
+                                        <TableCell align="center">
+                                            <Typography variant="body2" color={theme.palette.background.default}>
+                                                Propostion
+                                            </Typography>
+                                        </TableCell>
+                                        <TableCell align="right">
+                                            <Typography variant="body2" color={theme.palette.background.default}>
+                                                Entreprise
+                                            </Typography>
+                                        </TableCell>
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
                                     {filteredDataMatched.length > 0 && filteredDataMatched.slice(startIndexMatched, endIndexMatched).map((d, index) =>
-                                        <TableRow
-                                            key={index}
-                                            onMouseEnter={() => setHovered(index)}
-                                            onMouseLeave={() => setHovered(undefined)}
-                                            onClick={() => handleSelectedDataChange(d)}
-                                            sx={{
-                                                background: selectedData === d || hovered === index ? theme.palette.secondary.light : 'none'
-                                            }}
-                                        >
+                                        <TableRow key={index}>
                                             {Object.keys(d).map((key, index) => (
-                                                <TableCell key={index} align={index === 0 ? "left" : key !== "Status" ? "center" : "right"}>
+                                                <TableCell key={index} align={index === 0 ? "left" : "center"}>
                                                     {key === "Exist" ? d.Exist.length > 0 ? <Typography>
                                                         Déjà présent
                                                     </Typography> : <Typography>
@@ -497,6 +419,44 @@ const ImportAssistance = (props: { instance: any }) => {
                                                     </Typography>}
                                                 </TableCell>
                                             ))}
+                                            <TableCell>
+                                                <TextField
+                                                    select
+                                                    value={proposition[d.Domain]}
+                                                    onChange={(e) => handlePropositionChange(e.target.value, d.Domain)}
+                                                    sx={{
+                                                        border: 'none',
+                                                        width: '100%',
+                                                        height: '50px'
+                                                    }}
+                                                >
+                                                    <MenuItem value="choice">
+                                                        Choisir une entreprise existante
+                                                    </MenuItem>
+                                                    <MenuItem value="replace">
+                                                        Remplacer par une entreprise de mon import
+                                                    </MenuItem>
+                                                    <MenuItem value="create">
+                                                        Créer une nouvelle entreprise
+                                                    </MenuItem>
+                                                </TextField>
+                                            </TableCell>
+                                            <TableCell>
+                                                <TextField
+                                                    select
+                                                    value={companie[d.Domain]}
+                                                    onChange={(e) => handleSelectedCompanieChange(e.target.value, d.Domain)}
+                                                    sx={{
+                                                        border: 'none',
+                                                        width: '100%',
+                                                        height: '50px'
+                                                    }}
+                                                >
+                                                    {d.Exist.map((e) => <MenuItem value={e.id}>
+                                                        {e.name}
+                                                    </MenuItem>)}
+                                                </TextField>
+                                            </TableCell>
                                         </TableRow>
                                     )}
                                 </TableBody>

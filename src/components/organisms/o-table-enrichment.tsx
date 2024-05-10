@@ -107,7 +107,6 @@ const OTableEnrichment = (props: {
 
     const handleSubmit = async () => {
         setLoading(true)
-        const account = instance.getActiveAccount()
 
         const body = {
             tableOfValues: dbPersona,

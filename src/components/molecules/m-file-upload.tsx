@@ -3,8 +3,7 @@ import { faFolderOpen } from "@fortawesome/free-regular-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { Button, Divider, LinearProgress, Stack, Typography } from "@mui/material"
 import theme from "../../theme"
-import AButton from "../atoms/a-button"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { IconProp } from "@fortawesome/fontawesome-svg-core"
 
 const MFileUpload = (props: { progress: number, file: File | undefined, setFile: (value: File | undefined) => void }) => {
