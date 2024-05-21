@@ -36,8 +36,7 @@ const ImportAssistance = (props: { instance: any }) => {
     const [rowsPerPageMatched, setRowsPerPageMatched] = useState(10)
     const [pageCantMatched, setPageCantMatched] = useState(0)
     const [rowsPerPageCantMatched, setRowsPerPageCantMatched] = useState(10)
-    const [sortOrderExist, setSortOrderExist] = useState<'asc' | 'desc'>('asc')
-    const [sortOrderStatus, setSortOrderStatus] = useState<'asc' | 'desc'>('asc')
+    const [sortCriteria, setSortCriteria] = useState<{ column: string; order: 'asc' | 'desc' }>({ column: '', order: 'asc' })
 
     const schema = yup.object().shape({
         data: yup.mixed().default('Une erreur est survenu'),
@@ -128,6 +127,20 @@ const ImportAssistance = (props: { instance: any }) => {
             ...prevSelections,
             [domain]: value
         }))
+
+        if (value === "create" || (value && companie[domain])) {
+            setDataMatched(prevData =>
+                prevData.map(item => {
+                    if (item.Domain === domain) {
+                        return {
+                            ...item,
+                            Status: "Terminé"
+                        }
+                    }
+                    return item
+                })
+            )
+        }
     }
 
     const handleSelectedCompanieChange = (value: string, domain: string) => {
@@ -135,6 +148,20 @@ const ImportAssistance = (props: { instance: any }) => {
             ...prevSelections,
             [domain]: value
         }))
+
+        if (proposition[domain] && value) {
+            setDataMatched(prevData =>
+                prevData.map(item => {
+                    if (item.Domain === domain) {
+                        return {
+                            ...item,
+                            Status: "Terminé"
+                        }
+                    }
+                    return item
+                })
+            )
+        }
     }
 
     const handleFilteredChange = (value: string) => {
@@ -142,73 +169,46 @@ const ImportAssistance = (props: { instance: any }) => {
     }
 
     useEffect(() => {
-        const filteredMatched = dataMatched.filter(d =>
+        let filteredMatched = dataMatched.filter(d =>
             dataMatched[0].Domain ? d.Domain.toLowerCase().includes(searchTerm.toLowerCase()) :
                 d.Email.toLowerCase().includes(searchTerm.toLowerCase())
         )
 
-        const filteredCantMatched = dataCantMatched.filter(d =>
+        let filteredCantMatched = dataCantMatched.filter(d =>
             dataCantMatched[0].Domain ? d.Domain.toLowerCase().includes(searchTerm.toLowerCase()) :
                 d.Email.toLowerCase().includes(searchTerm.toLowerCase())
         )
 
+        if (sortCriteria.column) {
+            filteredMatched = filteredMatched.sort((a, b) => {
+                if (sortCriteria.column === 'Exist') {
+                    return sortCriteria.order === 'asc' ? a.Exist.length - b.Exist.length : b.Exist.length - a.Exist.length
+                } else if (sortCriteria.column === 'Status') {
+                    return sortCriteria.order === 'asc' ? a.Status.localeCompare(b.Status) : b.Status.localeCompare(a.Status)
+                }
+                return 0
+            })
+        }
+
         setFilteredDataMatched(filteredMatched)
         setFilteredDataCantMatched(filteredCantMatched)
-    }, [searchTerm, dataMatched, dataCantMatched])
-
-    const toggleSortDataExist = () => {
-        filteredDataMatched.sort((a, b) => {
-            if (sortOrderExist === 'asc') {
-                if (a.Exist.length === 0 && b.Exist.length > 0) {
-                    return -1
-                } else if (a.Exist.length > 0 && b.Exist.length === 0) {
-                    return 1
-                } else {
-                    return 0
-                }
-            } else {
-                if (a.Exist.length === 0 && b.Exist.length > 0) {
-                    return 1
-                } else if (a.Exist.length > 0 && b.Exist.length === 0) {
-                    return -1
-                } else {
-                    return 0
-                }
-            }
-        })
-
-        setSortOrderExist(sortOrderExist === 'asc' ? 'desc' : 'asc')
-    }
-
-    const toggleSortDataStatus = () => {
-        filteredDataMatched.sort((a, b) => {
-            if (sortOrderStatus === 'asc') {
-                if (a.Status === 'En cours' && b.Status !== 'En cours') {
-                    return -1
-                } else if (a.Status !== 'En cours' && b.Status === 'En cours') {
-                    return 1
-                } else {
-                    return 0
-                }
-            } else {
-                if (a.Status === 'Terminé' && b.Status !== 'Terminé') {
-                    return -1
-                } else if (a.Status !== 'Terminé' && b.Status === 'Terminé') {
-                    return 1
-                } else {
-                    return 0
-                }
-            }
-        })
-
-        setSortOrderStatus(sortOrderStatus === 'asc' ? 'desc' : 'asc')
-    }
+    }, [searchTerm, dataMatched, dataCantMatched, sortCriteria])
 
     const startIndexMatched = pageMatched * rowsPerPageMatched
     const endIndexMatched = startIndexMatched + rowsPerPageMatched
 
     const startIndexCantMatched = pageCantMatched * rowsPerPageCantMatched
     const endIndexCantMatched = startIndexCantMatched + rowsPerPageCantMatched
+
+    const toggleSortDataExist = () => {
+        const newOrder = sortCriteria.order === 'asc' ? 'desc' : 'asc'
+        setSortCriteria({ column: 'Exist', order: newOrder })
+    }
+    
+    const toggleSortDataStatus = () => {
+        const newOrder = sortCriteria.order === 'asc' ? 'desc' : 'asc'
+        setSortCriteria({ column: 'Status', order: newOrder })
+    }    
 
     const importData = async () => {
         try {
@@ -226,8 +226,18 @@ const ImportAssistance = (props: { instance: any }) => {
                     return
                 }
 
+                const transformedData = dataMatched.map(item => {
+                    const { Domain, Exist, Status, ...rest } = item
+                    const ID = companie[Domain] || ""
+                    return {
+                        Domain: ID ? "" : Domain,
+                        ...rest,
+                        ID
+                    }
+                })
+
                 const wb = XLSX.utils.book_new()
-                const ws = XLSX.utils.json_to_sheet(dataMatched)
+                const ws = XLSX.utils.json_to_sheet(transformedData)
                 XLSX.utils.book_append_sheet(wb, ws, 'Data Matched')
                 const excelBuffer = XLSX.write(wb, { type: 'array', bookType: 'xlsx' })
                 const excelBlob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
@@ -283,7 +293,7 @@ const ImportAssistance = (props: { instance: any }) => {
                         </Alert>
                     </Snackbar>}
 
-                    {filteredDataMatched.length > 0 && !errors.data?.message && <Stack spacing={4} width="100%">
+                    {dataMatched.length > 0 && !errors.data?.message && <Stack spacing={4} width="100%">
                         <Stack spacing={4} direction="row">
                             <TextField
                                 placeholder="Recherche par Domaine ou Email"
@@ -318,7 +328,7 @@ const ImportAssistance = (props: { instance: any }) => {
                             </Stack>
                         </Stack>
 
-                        <Stack spacing={2}>
+                        {filteredDataMatched.length > 0 && <Stack spacing={2}>
                             <Typography variant="h4">
                                 Données traitées
                             </Typography>
@@ -341,7 +351,7 @@ const ImportAssistance = (props: { instance: any }) => {
                                                     <Typography variant="body2" color={theme.palette.background.default}>
                                                         {key}
                                                     </Typography>
-                                                    {sortOrderExist === 'asc' ?
+                                                    {sortCriteria.column === 'Exist' && sortCriteria.order === 'asc' ?
                                                         <FontAwesomeIcon icon={faArrowUp} color={theme.palette.background.default} /> :
                                                         <FontAwesomeIcon icon={faArrowDown} color={theme.palette.background.default} />
                                                     }
@@ -358,7 +368,7 @@ const ImportAssistance = (props: { instance: any }) => {
                                                     <Typography variant="body2" color={theme.palette.background.default}>
                                                         {key}
                                                     </Typography>
-                                                    {sortOrderStatus === 'asc' ?
+                                                    {sortCriteria.column === 'Status' && sortCriteria.order === 'asc' ?
                                                         <FontAwesomeIcon icon={faArrowUp} color={theme.palette.background.default} /> :
                                                         <FontAwesomeIcon icon={faArrowDown} color={theme.palette.background.default} />
                                                     }
@@ -442,7 +452,7 @@ const ImportAssistance = (props: { instance: any }) => {
                                                 </TextField>
                                             </TableCell>
                                             <TableCell>
-                                                <TextField
+                                            {proposition[d.Domain] !== "create" && ( <TextField
                                                     select
                                                     value={companie[d.Domain]}
                                                     onChange={(e) => handleSelectedCompanieChange(e.target.value, d.Domain)}
@@ -455,7 +465,7 @@ const ImportAssistance = (props: { instance: any }) => {
                                                     {d.Exist.map((e) => <MenuItem value={e.id}>
                                                         {e.name}
                                                     </MenuItem>)}
-                                                </TextField>
+                                                </TextField>)}
                                             </TableCell>
                                         </TableRow>
                                     )}
@@ -474,9 +484,9 @@ const ImportAssistance = (props: { instance: any }) => {
                                     setPageMatched(0)
                                 }}
                             />
-                        </Stack>
+                        </Stack>}
 
-                        <Stack spacing={2}>
+                        {filteredDataCantMatched.length > 0 && <Stack spacing={2}>
                             <Typography variant="h4">
                                 Données non traitées
                             </Typography>
@@ -520,7 +530,7 @@ const ImportAssistance = (props: { instance: any }) => {
                                     setPageCantMatched(0)
                                 }}
                             />
-                        </Stack>
+                        </Stack>}
                     </Stack>}
                 </Stack>}
             </Stack>
