@@ -97,7 +97,7 @@ const Formatting = (props: { instance: any }) => {
 
     useEffect(() => {
         const filtered = histories.filter(history =>
-            history.hs_object_id.toString().includes(searchTerm) ||
+            history.hs_object_id?.toString().includes(searchTerm) ||
             history.Date.includes(searchTerm) ||
             history.Type.toLowerCase().includes(searchTerm.toLowerCase())
         )

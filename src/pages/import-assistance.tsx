@@ -98,13 +98,24 @@ const ImportAssistance = (props: { instance: any }) => {
                 const data = await response.json()
 
                 data.matched.map((d: DataFile) => {
-                    if (d.Status === "Terminé") {
+                    if (d.Status === "Terminé" && d.Exist.length > 0) {
+                        setProposition(prevSelections => ({
+                            ...prevSelections,
+                            [d.Domain]: "choice"
+                        }))
+                        setCompanie(prevSelections => ({
+                            ...prevSelections,
+                            [d.Domain]: d.Exist[0].id
+                        }))
+                    } else if (d.Status === "Terminé") {
                         setProposition(prevSelections => ({
                             ...prevSelections,
                             [d.Domain]: "create"
                         }))
                     }
                 })
+
+                console.log(data.matched)
 
                 setDataMatched(data.matched)
                 setDataCantMatched(data.cantMatched)
@@ -443,9 +454,6 @@ const ImportAssistance = (props: { instance: any }) => {
                                                     <MenuItem value="choice">
                                                         Choisir une entreprise existante
                                                     </MenuItem>
-                                                    <MenuItem value="replace">
-                                                        Remplacer par une entreprise de mon import
-                                                    </MenuItem>
                                                     <MenuItem value="create">
                                                         Créer une nouvelle entreprise
                                                     </MenuItem>
@@ -462,7 +470,7 @@ const ImportAssistance = (props: { instance: any }) => {
                                                         height: '50px'
                                                     }}
                                                 >
-                                                    {d.Exist.map((e) => <MenuItem value={e.id}>
+                                                    {d.Exist.map((e) => <MenuItem key={e.id} value={e.id}>
                                                         {e.name}
                                                     </MenuItem>)}
                                                 </TextField>)}

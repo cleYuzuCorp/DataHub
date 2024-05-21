@@ -1,4 +1,4 @@
-import { Alert, CircularProgress, Container, Paper, Snackbar, Stack, Table, TableBody, TableCell, TableHead, TablePagination, TableRow, TextField, Typography } from "@mui/material"
+import { Alert, CircularProgress, Container, Paper, Snackbar, Stack, Table, TableBody, TableCell, TableHead, TablePagination, TableRow, TextField, Typography, useMediaQuery } from "@mui/material"
 import { useLocation } from 'react-router-dom'
 import MFileUpload from "../components/molecules/m-file-upload"
 import { useEffect, useState } from "react"
@@ -17,6 +17,8 @@ const Dissociation = (props: { instance: any }) => {
     const { instance } = props
 
     const idTenant = new URLSearchParams(useLocation().search).get('id')
+
+    const isDesktop = useMediaQuery('(min-width:1000px)')
 
     const [loading, setLoading] = useState(false)
     const [open, setOpen] = useState(false)
@@ -43,8 +45,15 @@ const Dissociation = (props: { instance: any }) => {
 
         const fetchData = async () => {
             try {
+                await instance.initialize()
+                const accessToken = await acquireToken(instance)
+
                 const response = await fetch(`${process.env.REACT_APP_API}/historique-dissociation/${idTenant}`, {
-                    method: "GET"
+                    method: "GET",
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`,
+                        "Content-Type": "application/json",
+                    }
                 })
 
                 const data = await response.json()
@@ -213,7 +222,7 @@ const Dissociation = (props: { instance: any }) => {
                         }}
                     />
 
-                    <Table component={Paper} sx={{ background: theme.palette.background.default }}>
+                    {isDesktop ? <Table component={Paper} sx={{ background: theme.palette.background.default }}>
                         <TableHead sx={{ background: theme.palette.text.primary }}>
                             <TableRow>
                                 <TableCell align="left">
@@ -241,7 +250,7 @@ const Dissociation = (props: { instance: any }) => {
                                         Vers l'objet
                                     </Typography>
                                 </TableCell>
-                                <TableCell align="center">
+                                <TableCell align="right">
                                     <Typography variant="body2" color={theme.palette.background.default}>
                                         Date/Heure
                                     </Typography>
@@ -294,7 +303,7 @@ const Dissociation = (props: { instance: any }) => {
                                             {history.ToObject}
                                         </Typography>
                                     </TableCell>
-                                    <TableCell align="center">
+                                    <TableCell align="right">
                                         <Stack>
                                             <Typography>
                                                 {formatDate(history.Date)}
@@ -304,7 +313,67 @@ const Dissociation = (props: { instance: any }) => {
                                 </TableRow>
                             )}
                         </TableBody>
-                    </Table>
+                    </Table> : 
+                    <Table component={Paper} sx={{ background: theme.palette.background.default }}>
+                        <TableHead sx={{ background: theme.palette.text.primary }}>
+                            <TableRow>
+                                <TableCell align="left">
+                                    <Typography variant="body2" color={theme.palette.background.default}>
+                                        Id
+                                    </Typography>
+                                </TableCell>
+                                <TableCell align="center">
+                                    <Typography variant="body2" color={theme.palette.background.default}>
+                                        Email modifié
+                                    </Typography>
+                                </TableCell>
+                                <TableCell align="right">
+                                    <Typography variant="body2" color={theme.palette.background.default}>
+                                        Objet
+                                    </Typography>
+                                </TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {filteredHistories.slice(startIndex, endIndex).map((history, index) =>
+                                <TableRow key={index}>
+                                    <TableCell>
+                                        <Stack
+                                            textAlign="center"
+                                            padding="5px"
+                                            borderRadius="15px"
+                                            sx={{
+                                                width: `${history.ToObjectsID.toString().length}ch`,
+                                                background: theme.palette.secondary.light
+                                            }}
+                                        >
+                                            <Typography fontSize="11px">
+                                                {history.FromObjectID}
+                                            </Typography>
+
+                                            <Typography fontSize="11px">
+                                                {history.ToObjectsID}
+                                            </Typography>
+                                        </Stack>
+                                    </TableCell>
+                                    <TableCell align="center">
+                                        <Typography>
+                                            {history.Emailmodified}
+                                        </Typography>
+                                    </TableCell>
+                                    <TableCell align="right">
+                                        <Typography>
+                                            {history.FromObject}
+                                        </Typography>
+
+                                        <Typography>
+                                            {history.ToObject}
+                                        </Typography>
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>}
 
                     <TablePagination
                         rowsPerPageOptions={[10, 25, 50, 100]}
