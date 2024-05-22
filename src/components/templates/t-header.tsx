@@ -274,7 +274,7 @@ const THeader = (props: {
             }}
         >
             <img
-                src={process.env.PUBLIC_URL + "/images/logo/logo_yuzu.png"}
+                src={process.env.PUBLIC_URL + "/images/logo/data_lab_logo.png"}
                 alt="Logo"
                 style={{
                     width: '100px',

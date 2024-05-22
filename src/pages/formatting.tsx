@@ -77,6 +77,8 @@ const Formatting = (props: { instance: any }) => {
 
                 const dataHistories = await responseHistories.json()
 
+                console.log(dataHistories, 'h')
+
                 const sortedHistories = dataHistories.sort((a: { Date: string }, b: { Date: string }) => {
                     return new Date(b.Date as string).getTime() - new Date(a.Date as string).getTime()
                 })
@@ -97,7 +99,7 @@ const Formatting = (props: { instance: any }) => {
 
     useEffect(() => {
         const filtered = histories.filter(history =>
-            history.hs_object_id?.toString().includes(searchTerm) ||
+            history.Hs_object_id.toString().includes(searchTerm) ||
             history.Date.includes(searchTerm) ||
             history.Type.toLowerCase().includes(searchTerm.toLowerCase())
         )
@@ -173,8 +175,12 @@ const Formatting = (props: { instance: any }) => {
                             Historique
                         </Typography>
 
-                        {data && <Stack spacing={2} direction={isDesktop ? "row" : "column"}>
-                            <Stack width="100%">
+                        {data && <Stack spacing={2}>
+                            <Stack spacing={1} width="100%">
+                                <Typography>
+                                    Évolution du nombre de contacts et d'entreprises Hubspot au fil du temps
+                                </Typography>
+
                                 <Chart
                                     type="line"
                                     width="100%"
@@ -220,7 +226,11 @@ const Formatting = (props: { instance: any }) => {
                                 />
                             </Stack>
 
-                            <Stack width="100%">
+                            <Stack spacing={1} width="100%">
+                                <Typography>
+                                    Taille des listes au fil du temps
+                                </Typography>
+
                                 <Chart
                                     type="line"
                                     width="100%"
@@ -330,11 +340,11 @@ const Formatting = (props: { instance: any }) => {
                                                     padding="10px"
                                                     borderRadius="15px"
                                                     sx={{
-                                                        width: `${history.hs_object_id ? history.hs_object_id.toString().length : 0}ch`,
+                                                        width: `${history.Hs_object_id ? history.Hs_object_id.toString().length : 0}ch`,
                                                         background: theme.palette.secondary.light
                                                     }}
                                                 >
-                                                    {history.hs_object_id}
+                                                    {history.Hs_object_id}
                                                 </Typography>
                                             </TableCell>
                                             <TableCell align="center">
@@ -392,12 +402,12 @@ const Formatting = (props: { instance: any }) => {
                                                         padding="5px"
                                                         borderRadius="15px"
                                                         sx={{
-                                                            width: `${history.hs_object_id ? history.hs_object_id.toString().length : 0}ch`,
+                                                            width: `${history.Hs_object_id ? history.Hs_object_id.toString().length : 0}ch`,
                                                             background: theme.palette.secondary.light
                                                         }}
                                                     >
                                                         <Typography fontSize="11px">
-                                                            {history.hs_object_id}
+                                                            {history.Hs_object_id}
                                                         </Typography>
                                                     </Stack>
                                                 </TableCell>

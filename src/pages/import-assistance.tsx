@@ -347,9 +347,14 @@ const ImportAssistance = (props: { instance: any }) => {
                             <Table component={Paper} sx={{ background: theme.palette.background.default }} style={{ overflowX: 'auto' }}>
                                 <TableHead sx={{ background: theme.palette.text.primary }}>
                                     <TableRow>
-                                        {Object.keys(filteredDataMatched[0]).map((key, index) => (
+                                        {['Domain', 'Name', 'Exist', 'Status'].map((key, index) => (
                                             <TableCell key={index} align={index === 0 ? "left" : "center"}>
-                                                {key === "Exist" ? <Stack
+                                                {key === "Domain" || key === "Name" ? <Typography
+                                                    variant="body2"
+                                                    color={theme.palette.background.default}
+                                                >
+                                                        {key}
+                                                </Typography> : key === "Exist" ? <Stack
                                                     spacing={1}
                                                     direction="row"
                                                     alignItems="center"
@@ -383,10 +388,7 @@ const ImportAssistance = (props: { instance: any }) => {
                                                         <FontAwesomeIcon icon={faArrowUp} color={theme.palette.background.default} /> :
                                                         <FontAwesomeIcon icon={faArrowDown} color={theme.palette.background.default} />
                                                     }
-                                                </Stack> :
-                                                    <Typography variant="body2" color={theme.palette.background.default}>
-                                                        {key}
-                                                    </Typography>}
+                                                </Stack> : null }
                                             </TableCell>
                                         ))}
                                         <TableCell align="center">
@@ -404,9 +406,11 @@ const ImportAssistance = (props: { instance: any }) => {
                                 <TableBody>
                                     {filteredDataMatched.length > 0 && filteredDataMatched.slice(startIndexMatched, endIndexMatched).map((d, index) =>
                                         <TableRow key={index}>
-                                            {Object.keys(d).map((key, index) => (
+                                            {['Domain', 'Name', 'Exist', 'Status'].map((key, index) => (
                                                 <TableCell key={index} align={index === 0 ? "left" : "center"}>
-                                                    {key === "Exist" ? d.Exist.length > 0 ? <Typography>
+                                                    {key === "Domain"  || key == "Name" ? <Typography>
+                                                        {(d[key as keyof typeof d] as ReactNode)}
+                                                    </Typography> : key === "Exist" ? d.Exist.length > 0 ? <Typography>
                                                         Déjà présent
                                                     </Typography> : <Typography>
                                                         Nouveau
@@ -435,9 +439,7 @@ const ImportAssistance = (props: { instance: any }) => {
                                                                 {(d[key as keyof typeof d] as ReactNode)}
                                                             </Typography>
                                                         </Stack>
-                                                    </Stack> : <Typography>
-                                                        {(d[key as keyof typeof d] as ReactNode)}
-                                                    </Typography>}
+                                                    </Stack> : null }
                                                 </TableCell>
                                             ))}
                                             <TableCell>
