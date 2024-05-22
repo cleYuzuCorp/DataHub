@@ -7,7 +7,7 @@ import { useEffect, useState } from "react"
 import theme from "../../theme"
 import { useNavigate } from "react-router-dom"
 import { Customer } from "../../interfaces/customer"
-import { acquireToken } from "../../App"
+import { acquireGraphToken, acquireToken } from "../../App"
 import AButton from "../atoms/a-button"
 
 const THeader = (props: {
@@ -35,6 +35,7 @@ const THeader = (props: {
     const [hovered, setHovered] = useState("")
     const [interactionInProgress, setInteractionInProgress] = useState(false)
     const [customersNames, setCustomersNames] = useState<Array<string>>()
+    const [graphData, setGraphData] = useState("")
 
     const handleOpen = () => {
         const loadingCustomer = dataLoading.find(item => item.customerName === selectedCustomer?.NomClient)
@@ -78,58 +79,62 @@ const THeader = (props: {
             if (accounts.length !== 0) {
                 setAccount(accounts[0].name)
 
-                // await instance.initialize()
-                // const accessToken = await acquireToken(instance)
-                // fetch("https://graph.microsoft.com/v1.0/me/photo/$value", {
-                //     headers: {
-                //         Authorization: `Bearer ${accessToken}`,
-                //     },
-                //     method: "GET",
-                // })
-                //     .then((response) => response.arrayBuffer())
-                //     .then((data) => {
-                //         const blob = new Blob([new Uint8Array(data)], { type: "image/jpeg" })
-                //         const reader = new FileReader()
-                //         reader.readAsDataURL(blob)
-                //         reader.onloadend = function () {
-                //             const img = new Image()
-                //             if (typeof reader.result === 'string') {
-                //                 img.src = reader.result
-                //             }
-                //             img.onload = () => {
-                //                 const canvas = document.createElement("canvas")
-                //                 const ctx = canvas.getContext("2d")
-                //                 const maxWidth = 100
-                //                 const maxHeight = 100
-                //                 let width = img.width
-                //                 let height = img.height
+                await instance.initialize()
+                const accessGraphToken = await acquireGraphToken(instance)
+                const accessToken = await acquireToken(instance)
 
-                //                 if (width > height) {
-                //                     if (width > maxWidth) {
-                //                         height *= maxWidth / width
-                //                         width = maxWidth
-                //                     }
-                //                 } else {
-                //                     if (height > maxHeight) {
-                //                         width *= maxHeight / height
-                //                         height = maxHeight
-                //                     }
-                //                 }
+                console.log(accessToken)
 
-                //                 canvas.width = width
-                //                 canvas.height = height
-                //                 if (ctx) {
-                //                     ctx.drawImage(img, 0, 0, width, height)
-                //                 }
+                fetch("https://graph.microsoft.com/v1.0/me/photo/$value", {
+                    headers: {
+                        Authorization: `Bearer ${accessGraphToken}`,
+                    },
+                    method: "GET",
+                })
+                    .then((response) => response.arrayBuffer())
+                    .then((data) => {
+                        const blob = new Blob([new Uint8Array(data)], { type: "image/jpeg" })
+                        const reader = new FileReader()
+                        reader.readAsDataURL(blob)
+                        reader.onloadend = function () {
+                            const img = new Image()
+                            if (typeof reader.result === 'string') {
+                                img.src = reader.result
+                            }
+                            img.onload = () => {
+                                const canvas = document.createElement("canvas")
+                                const ctx = canvas.getContext("2d")
+                                const maxWidth = 100
+                                const maxHeight = 100
+                                let width = img.width
+                                let height = img.height
 
-                //                 const resizedImage = canvas.toDataURL("image/jpeg")
-                //                 setGraphData(resizedImage)
-                //             }
-                //         }
-                //     })
-                //     .catch((error) => {
-                //         console.log(error)
-                //     })
+                                if (width > height) {
+                                    if (width > maxWidth) {
+                                        height *= maxWidth / width
+                                        width = maxWidth
+                                    }
+                                } else {
+                                    if (height > maxHeight) {
+                                        width *= maxHeight / height
+                                        height = maxHeight
+                                    }
+                                }
+
+                                canvas.width = width
+                                canvas.height = height
+                                if (ctx) {
+                                    ctx.drawImage(img, 0, 0, width, height)
+                                }
+
+                                const resizedImage = canvas.toDataURL("image/jpeg")
+                                setGraphData(resizedImage)
+                            }
+                        }
+                    })
+                    .catch((error) => {
+                        console.log(error)
+                    })
             }
         }
 
@@ -331,9 +336,9 @@ const THeader = (props: {
                         cursor: 'pointer'
                     }}
                 >
-                    {account ? <Stack spacing={2} alignItems="center">
-                        <Stack spacing={1} direction="row" alignItems="center">
-                            {/*<img src={graphData} alt="Profile" style={{ borderRadius: "50%", width: "50px", height: "50px" }} />*/}
+                    {account ? <Stack spacing={1} alignItems="center">
+                        <Stack spacing={1} alignItems="center">
+                            <img src={graphData} alt="Profile" style={{ borderRadius: "50%", width: "50px", height: "50px" }} />
 
                             <Typography>
                                 {account}
@@ -341,8 +346,8 @@ const THeader = (props: {
                         </Stack>
 
                         <Stack spacing={1} direction="row" alignItems="center" onClick={handleSignOut}>
-                            <FontAwesomeIcon icon={faRightFromBracket} color={theme.palette.text.primary} />
-                            <Typography>
+                            <FontAwesomeIcon icon={faRightFromBracket} color={theme.palette.error.main} />
+                            <Typography color={theme.palette.error.main}>
                                 Sign Out
                             </Typography>
                         </Stack>

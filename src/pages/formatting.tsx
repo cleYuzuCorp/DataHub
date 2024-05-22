@@ -77,8 +77,6 @@ const Formatting = (props: { instance: any }) => {
 
                 const dataHistories = await responseHistories.json()
 
-                console.log(dataHistories, 'h')
-
                 const sortedHistories = dataHistories.sort((a: { Date: string }, b: { Date: string }) => {
                     return new Date(b.Date as string).getTime() - new Date(a.Date as string).getTime()
                 })

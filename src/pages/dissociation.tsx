@@ -58,8 +58,6 @@ const Dissociation = (props: { instance: any }) => {
 
                 const data = await response.json()
 
-                console.log(data, 'data')
-
                 const sortedHistories = data.sort((a: { Date: string }, b: { Date: string }) => {
                     return new Date(b.Date as string).getTime() - new Date(a.Date as string).getTime()
                 })
@@ -91,7 +89,7 @@ const Dissociation = (props: { instance: any }) => {
 
                 const timer = setInterval(() => {
                     if (temp < 90) {
-                        temp += progressIncrement;
+                        temp += progressIncrement
                         setProgress(Math.min(temp, 100))
                     } else {
                         clearInterval(timer)
@@ -122,9 +120,6 @@ const Dissociation = (props: { instance: any }) => {
 
                 clearInterval(timer)
                 setProgress(100)
-
-                const data = await response.json()
-                console.log(data)
 
                 setLoading(false)
                 setOpen(true)
@@ -313,67 +308,67 @@ const Dissociation = (props: { instance: any }) => {
                                 </TableRow>
                             )}
                         </TableBody>
-                    </Table> : 
-                    <Table component={Paper} sx={{ background: theme.palette.background.default }}>
-                        <TableHead sx={{ background: theme.palette.text.primary }}>
-                            <TableRow>
-                                <TableCell align="left">
-                                    <Typography variant="body2" color={theme.palette.background.default}>
-                                        Id
-                                    </Typography>
-                                </TableCell>
-                                <TableCell align="center">
-                                    <Typography variant="body2" color={theme.palette.background.default}>
-                                        Email modifié
-                                    </Typography>
-                                </TableCell>
-                                <TableCell align="right">
-                                    <Typography variant="body2" color={theme.palette.background.default}>
-                                        Objet
-                                    </Typography>
-                                </TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {filteredHistories.slice(startIndex, endIndex).map((history, index) =>
-                                <TableRow key={index}>
-                                    <TableCell>
-                                        <Stack
-                                            textAlign="center"
-                                            padding="5px"
-                                            borderRadius="15px"
-                                            sx={{
-                                                width: `${history.ToObjectsID.toString().length}ch`,
-                                                background: theme.palette.secondary.light
-                                            }}
-                                        >
-                                            <Typography fontSize="11px">
-                                                {history.FromObjectID}
-                                            </Typography>
-
-                                            <Typography fontSize="11px">
-                                                {history.ToObjectsID}
-                                            </Typography>
-                                        </Stack>
+                    </Table> :
+                        <Table component={Paper} sx={{ background: theme.palette.background.default }}>
+                            <TableHead sx={{ background: theme.palette.text.primary }}>
+                                <TableRow>
+                                    <TableCell align="left">
+                                        <Typography variant="body2" color={theme.palette.background.default}>
+                                            Id
+                                        </Typography>
                                     </TableCell>
                                     <TableCell align="center">
-                                        <Typography>
-                                            {history.Emailmodified}
+                                        <Typography variant="body2" color={theme.palette.background.default}>
+                                            Email modifié
                                         </Typography>
                                     </TableCell>
                                     <TableCell align="right">
-                                        <Typography>
-                                            {history.FromObject}
-                                        </Typography>
-
-                                        <Typography>
-                                            {history.ToObject}
+                                        <Typography variant="body2" color={theme.palette.background.default}>
+                                            Objet
                                         </Typography>
                                     </TableCell>
                                 </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>}
+                            </TableHead>
+                            <TableBody>
+                                {filteredHistories.slice(startIndex, endIndex).map((history, index) =>
+                                    <TableRow key={index}>
+                                        <TableCell>
+                                            <Stack
+                                                textAlign="center"
+                                                padding="5px"
+                                                borderRadius="15px"
+                                                sx={{
+                                                    width: `${history.ToObjectsID.toString().length}ch`,
+                                                    background: theme.palette.secondary.light
+                                                }}
+                                            >
+                                                <Typography fontSize="11px">
+                                                    {history.FromObjectID}
+                                                </Typography>
+
+                                                <Typography fontSize="11px">
+                                                    {history.ToObjectsID}
+                                                </Typography>
+                                            </Stack>
+                                        </TableCell>
+                                        <TableCell align="center">
+                                            <Typography>
+                                                {history.Emailmodified}
+                                            </Typography>
+                                        </TableCell>
+                                        <TableCell align="right">
+                                            <Typography>
+                                                {history.FromObject}
+                                            </Typography>
+
+                                            <Typography>
+                                                {history.ToObject}
+                                            </Typography>
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>}
 
                     <TablePagination
                         rowsPerPageOptions={[10, 25, 50, 100]}

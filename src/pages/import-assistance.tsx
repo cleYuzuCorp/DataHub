@@ -97,7 +97,7 @@ const ImportAssistance = (props: { instance: any }) => {
 
                 const data = await response.json()
 
-                data.matched.map((d: DataFile) => {
+                data.matched.forEach((d: DataFile) => {
                     if (d.Status === "Terminé" && d.Exist.length > 0) {
                         setProposition(prevSelections => ({
                             ...prevSelections,
@@ -114,8 +114,6 @@ const ImportAssistance = (props: { instance: any }) => {
                         }))
                     }
                 })
-
-                console.log(data.matched)
 
                 setDataMatched(data.matched)
                 setDataCantMatched(data.cantMatched)
@@ -215,11 +213,11 @@ const ImportAssistance = (props: { instance: any }) => {
         const newOrder = sortCriteria.order === 'asc' ? 'desc' : 'asc'
         setSortCriteria({ column: 'Exist', order: newOrder })
     }
-    
+
     const toggleSortDataStatus = () => {
         const newOrder = sortCriteria.order === 'asc' ? 'desc' : 'asc'
         setSortCriteria({ column: 'Status', order: newOrder })
-    }    
+    }
 
     const importData = async () => {
         try {
@@ -353,7 +351,7 @@ const ImportAssistance = (props: { instance: any }) => {
                                                     variant="body2"
                                                     color={theme.palette.background.default}
                                                 >
-                                                        {key}
+                                                    {key}
                                                 </Typography> : key === "Exist" ? <Stack
                                                     spacing={1}
                                                     direction="row"
@@ -388,7 +386,7 @@ const ImportAssistance = (props: { instance: any }) => {
                                                         <FontAwesomeIcon icon={faArrowUp} color={theme.palette.background.default} /> :
                                                         <FontAwesomeIcon icon={faArrowDown} color={theme.palette.background.default} />
                                                     }
-                                                </Stack> : null }
+                                                </Stack> : null}
                                             </TableCell>
                                         ))}
                                         <TableCell align="center">
@@ -408,7 +406,7 @@ const ImportAssistance = (props: { instance: any }) => {
                                         <TableRow key={index}>
                                             {['Domain', 'Name', 'Exist', 'Status'].map((key, index) => (
                                                 <TableCell key={index} align={index === 0 ? "left" : "center"}>
-                                                    {key === "Domain"  || key == "Name" ? <Typography>
+                                                    {key === "Domain" || key === "Name" ? <Typography>
                                                         {(d[key as keyof typeof d] as ReactNode)}
                                                     </Typography> : key === "Exist" ? d.Exist.length > 0 ? <Typography>
                                                         Déjà présent
@@ -439,7 +437,7 @@ const ImportAssistance = (props: { instance: any }) => {
                                                                 {(d[key as keyof typeof d] as ReactNode)}
                                                             </Typography>
                                                         </Stack>
-                                                    </Stack> : null }
+                                                    </Stack> : null}
                                                 </TableCell>
                                             ))}
                                             <TableCell>
@@ -462,7 +460,7 @@ const ImportAssistance = (props: { instance: any }) => {
                                                 </TextField>
                                             </TableCell>
                                             <TableCell>
-                                            {proposition[d.Domain] !== "create" && ( <TextField
+                                                {proposition[d.Domain] !== "create" && (<TextField
                                                     select
                                                     value={companie[d.Domain]}
                                                     onChange={(e) => handleSelectedCompanieChange(e.target.value, d.Domain)}
