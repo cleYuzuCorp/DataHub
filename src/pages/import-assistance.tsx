@@ -267,7 +267,7 @@ const ImportAssistance = (props: { instance: any }) => {
     }
 
     return (
-        <Container maxWidth="lg">
+        <Container maxWidth="lg" sx={{ background: theme.palette.background.paper }}>
             <Stack spacing={8} alignItems="center" marginTop="100px" marginBottom="100px">
                 <Typography variant="h3">
                     DataHub - Aide à l'import
@@ -346,7 +346,7 @@ const ImportAssistance = (props: { instance: any }) => {
                                 <TableHead sx={{ background: theme.palette.text.primary }}>
                                     <TableRow>
                                         {['Domain', 'Name', 'Exist', 'Status'].map((key, index) => (
-                                            <TableCell key={index} align={index === 0 ? "left" : "center"}>
+                                            <TableCell key={index}>
                                                 {key === "Domain" || key === "Name" ? <Typography
                                                     variant="body2"
                                                     color={theme.palette.background.default}
@@ -389,12 +389,12 @@ const ImportAssistance = (props: { instance: any }) => {
                                                 </Stack> : null}
                                             </TableCell>
                                         ))}
-                                        <TableCell align="center">
+                                        <TableCell>
                                             <Typography variant="body2" color={theme.palette.background.default}>
                                                 Propostion
                                             </Typography>
                                         </TableCell>
-                                        <TableCell align="right">
+                                        <TableCell>
                                             <Typography variant="body2" color={theme.palette.background.default}>
                                                 Entreprise
                                             </Typography>
@@ -405,7 +405,7 @@ const ImportAssistance = (props: { instance: any }) => {
                                     {filteredDataMatched.length > 0 && filteredDataMatched.slice(startIndexMatched, endIndexMatched).map((d, index) =>
                                         <TableRow key={index}>
                                             {['Domain', 'Name', 'Exist', 'Status'].map((key, index) => (
-                                                <TableCell key={index} align={index === 0 ? "left" : "center"}>
+                                                <TableCell key={index}>
                                                     {key === "Domain" || key === "Name" ? <Typography>
                                                         {(d[key as keyof typeof d] as ReactNode)}
                                                     </Typography> : key === "Exist" ? d.Exist.length > 0 ? <Typography>

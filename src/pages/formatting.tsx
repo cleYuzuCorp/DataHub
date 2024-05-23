@@ -146,7 +146,7 @@ const Formatting = (props: { instance: any }) => {
     }
 
     return (
-        <Container maxWidth="lg">
+        <Container maxWidth="lg" sx={{ background: theme.palette.background.paper }}>
             <Stack spacing={8} alignItems="center" marginTop="100px" marginBottom="100px">
                 <Typography variant="h3">
                     DataHub - Formatage
@@ -301,27 +301,27 @@ const Formatting = (props: { instance: any }) => {
                             {isDesktop ? <Table component={Paper} sx={{ background: theme.palette.background.default }}>
                                 <TableHead sx={{ background: theme.palette.text.primary }}>
                                     <TableRow>
-                                        <TableCell align="center">
+                                        <TableCell>
                                             <Typography variant="body2" color={theme.palette.background.default}>
                                                 Id objet
                                             </Typography>
                                         </TableCell>
-                                        <TableCell align="center">
+                                        <TableCell>
                                             <Typography variant="body2" color={theme.palette.background.default}>
                                                 Type de l'objet
                                             </Typography>
                                         </TableCell>
-                                        <TableCell align="center">
+                                        <TableCell>
                                             <Typography variant="body2" color={theme.palette.background.default}>
                                                 Objet modifié
                                             </Typography>
                                         </TableCell>
-                                        <TableCell align="center">
+                                        <TableCell>
                                             <Typography variant="body2" color={theme.palette.background.default}>
                                                 Nouvel objet
                                             </Typography>
                                         </TableCell>
-                                        <TableCell align="center">
+                                        <TableCell>
                                             <Typography variant="body2" color={theme.palette.background.default}>
                                                 Date/Heure
                                             </Typography>
@@ -331,7 +331,7 @@ const Formatting = (props: { instance: any }) => {
                                 <TableBody>
                                     {filteredHistories.slice(startIndex, endIndex).map((history, index) =>
                                         <TableRow key={index}>
-                                            <TableCell align="center">
+                                            <TableCell>
                                                 <Typography
                                                     fontSize="11px"
                                                     textAlign="center"
@@ -345,22 +345,22 @@ const Formatting = (props: { instance: any }) => {
                                                     {history.Hs_object_id}
                                                 </Typography>
                                             </TableCell>
-                                            <TableCell align="center">
+                                            <TableCell>
                                                 <Typography>
                                                     {history.Type}
                                                 </Typography>
                                             </TableCell>
-                                            <TableCell align="center">
+                                            <TableCell>
                                                 <Typography>
                                                     {history.Before}
                                                 </Typography>
                                             </TableCell>
-                                            <TableCell align="center">
+                                            <TableCell>
                                                 <Typography>
                                                     {history.After}
                                                 </Typography>
                                             </TableCell>
-                                            <TableCell align="center">
+                                            <TableCell>
                                                 <Stack>
                                                     <Typography>
                                                         {formatDate(history.Date)}
@@ -374,17 +374,17 @@ const Formatting = (props: { instance: any }) => {
                                 <Table component={Paper} sx={{ background: theme.palette.background.default }}>
                                     <TableHead sx={{ background: theme.palette.text.primary }}>
                                         <TableRow>
-                                            <TableCell align="left">
+                                            <TableCell>
                                                 <Typography variant="body2" color={theme.palette.background.default}>
                                                     Id
                                                 </Typography>
                                             </TableCell>
-                                            <TableCell align="center">
+                                            <TableCell>
                                                 <Typography variant="body2" color={theme.palette.background.default}>
                                                     Intitulé
                                                 </Typography>
                                             </TableCell>
-                                            <TableCell align="center">
+                                            <TableCell>
                                                 <Typography variant="body2" color={theme.palette.background.default}>
                                                     Persona
                                                 </Typography>
@@ -394,7 +394,7 @@ const Formatting = (props: { instance: any }) => {
                                     <TableBody>
                                         {filteredHistories.slice(startIndex, endIndex).map((history, index) =>
                                             <TableRow key={index}>
-                                                <TableCell align="center">
+                                                <TableCell>
                                                     <Stack
                                                         textAlign="center"
                                                         padding="5px"
@@ -409,12 +409,12 @@ const Formatting = (props: { instance: any }) => {
                                                         </Typography>
                                                     </Stack>
                                                 </TableCell>
-                                                <TableCell align="center">
+                                                <TableCell>
                                                     <Typography>
                                                         {history.Type}
                                                     </Typography>
                                                 </TableCell>
-                                                <TableCell align="center">
+                                                <TableCell>
                                                     <Typography>
                                                         {history.Before}
                                                     </Typography>

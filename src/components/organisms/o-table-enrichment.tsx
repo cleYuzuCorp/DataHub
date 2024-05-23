@@ -170,22 +170,21 @@ const OTableEnrichment = (props: {
                 <Table component={Paper} sx={{ background: theme.palette.background.default }}>
                     <TableHead sx={{ background: theme.palette.text.primary }}>
                         <TableRow>
-                            <TableCell align="left">
+                            <TableCell>
                                 <Typography variant="body2" color={theme.palette.background.default}>
                                     Intitulé de poste
                                 </Typography>
                             </TableCell>
-                            {!nothing && <TableCell align="center">
+                            {!nothing && <TableCell>
                                 <Typography variant="body2" color={theme.palette.background.default}>
                                     Persona proposé
                                 </Typography>
                             </TableCell>}
-                            <TableCell align={nothing ? "right" : "center"}>
+                            <TableCell>
                                 <Stack
                                     spacing={1}
                                     direction="row"
                                     alignItems="center"
-                                    justifyContent={nothing ? "right" : "center"}
                                     onClick={toggleSortOrder}
                                     sx={{
                                         cursor: 'pointer'
@@ -200,7 +199,7 @@ const OTableEnrichment = (props: {
                                     }
                                 </Stack>
                             </TableCell>
-                            {!nothing && <TableCell align="right">
+                            {!nothing && <TableCell>
                                 <Checkbox
                                     checked={selectedContacts?.length === filteredContacts.slice(startIndex, endIndex).length || selectedContacts?.length === filteredContacts.length}
                                     onChange={handleSelectAllPageChange}
@@ -241,17 +240,17 @@ const OTableEnrichment = (props: {
                                             </Typography>
                                         </Stack>
                                     </TableCell>
-                                    {!nothing && <TableCell align="center">
+                                    {!nothing && <TableCell>
                                         <Typography>
                                             {contact.personaProposed}
                                         </Typography>
                                     </TableCell>}
-                                    <TableCell align={nothing ? "right" : "center"} width="50%">
+                                    <TableCell>
                                         <Typography>
                                             {contact.occurence}
                                         </Typography>
                                     </TableCell>
-                                    {!nothing && <TableCell align="right">
+                                    {!nothing && <TableCell>
                                         <Checkbox
                                             checked={selectedContacts.includes(contact)}
                                             onChange={() => handleSelectChange(index)}
@@ -264,22 +263,22 @@ const OTableEnrichment = (props: {
                                             <Table component={Paper} sx={{ background: theme.palette.background.default }}>
                                                 <TableHead>
                                                     <TableRow sx={{ background: theme.palette.info.light }}>
-                                                        <TableCell align="left">
+                                                        <TableCell>
                                                             <Typography>
                                                                 hs_object_id
                                                             </Typography>
                                                         </TableCell>
-                                                        {find && <TableCell align="center">
+                                                        {find && <TableCell>
                                                             <Typography>
                                                                 Persona actuel
                                                             </Typography>
                                                         </TableCell>}
-                                                        <TableCell align="center">
+                                                        <TableCell>
                                                             <Typography>
                                                                 Prénom
                                                             </Typography>
                                                         </TableCell>
-                                                        <TableCell align="right">
+                                                        <TableCell>
                                                             <Typography>
                                                                 Nom
                                                             </Typography>
@@ -288,22 +287,22 @@ const OTableEnrichment = (props: {
                                                 </TableHead>
                                                 <TableBody>
                                                     {contact.contacts.map((c) => <TableRow key={c.hs_object_id}>
-                                                        <TableCell align="left">
+                                                        <TableCell>
                                                             <Typography>
                                                                 {c.hs_object_id}
                                                             </Typography>
                                                         </TableCell>
-                                                        {find && <TableCell align="center">
+                                                        {find && <TableCell>
                                                             <Typography>
                                                                 {c.persona}
                                                             </Typography>
                                                         </TableCell>}
-                                                        <TableCell align="center">
+                                                        <TableCell>
                                                             <Typography>
                                                                 {c.firsname}
                                                             </Typography>
                                                         </TableCell>
-                                                        <TableCell align="right">
+                                                        <TableCell>
                                                             <Typography>
                                                                 {c.lastname}
                                                             </Typography>

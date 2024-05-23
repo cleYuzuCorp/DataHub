@@ -83,7 +83,7 @@ const CustomersAccounts = (props: { instance: any, account: any, customers: Cust
     }
 
     return (
-        <Container maxWidth="lg">
+        <Container maxWidth="lg" sx={{ background: theme.palette.background.paper }}>
             <Stack spacing={8} alignItems="center" width="100%" marginTop="100px" marginBottom="100px">
                 <Typography variant="h3">
                     DataHub

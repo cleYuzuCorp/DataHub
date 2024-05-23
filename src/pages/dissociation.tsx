@@ -164,7 +164,7 @@ const Dissociation = (props: { instance: any }) => {
     }
 
     return (
-        <Container maxWidth="lg">
+        <Container maxWidth="lg" sx={{ background: theme.palette.background.paper }}>
             <Stack spacing={8} alignItems="center" marginTop="100px" marginBottom="100px">
                 <Typography variant="h3">
                     DataHub - Dissociation
@@ -220,32 +220,32 @@ const Dissociation = (props: { instance: any }) => {
                     {isDesktop ? <Table component={Paper} sx={{ background: theme.palette.background.default }}>
                         <TableHead sx={{ background: theme.palette.text.primary }}>
                             <TableRow>
-                                <TableCell align="left">
+                                <TableCell>
                                     <Typography variant="body2" color={theme.palette.background.default}>
                                         À partir de l'ID
                                     </Typography>
                                 </TableCell>
-                                <TableCell align="center">
+                                <TableCell>
                                     <Typography variant="body2" color={theme.palette.background.default}>
                                         Vers l'ID
                                     </Typography>
                                 </TableCell>
-                                <TableCell align="center">
+                                <TableCell>
                                     <Typography variant="body2" color={theme.palette.background.default}>
                                         Email modifié
                                     </Typography>
                                 </TableCell>
-                                <TableCell align="center">
+                                <TableCell>
                                     <Typography variant="body2" color={theme.palette.background.default}>
                                         À partir de l'objet
                                     </Typography>
                                 </TableCell>
-                                <TableCell align="center">
+                                <TableCell>
                                     <Typography variant="body2" color={theme.palette.background.default}>
                                         Vers l'objet
                                     </Typography>
                                 </TableCell>
-                                <TableCell align="right">
+                                <TableCell>
                                     <Typography variant="body2" color={theme.palette.background.default}>
                                         Date/Heure
                                     </Typography>
@@ -269,7 +269,7 @@ const Dissociation = (props: { instance: any }) => {
                                             {history.FromObjectID}
                                         </Typography>
                                     </TableCell>
-                                    <TableCell align="center">
+                                    <TableCell>
                                         <Typography
                                             fontSize="11px"
                                             textAlign="center"
@@ -283,22 +283,22 @@ const Dissociation = (props: { instance: any }) => {
                                             {history.ToObjectsID}
                                         </Typography>
                                     </TableCell>
-                                    <TableCell align="center">
+                                    <TableCell>
                                         <Typography>
                                             {history.Emailmodified}
                                         </Typography>
                                     </TableCell>
-                                    <TableCell align="center">
+                                    <TableCell>
                                         <Typography>
                                             {history.FromObject}
                                         </Typography>
                                     </TableCell>
-                                    <TableCell align="center">
+                                    <TableCell>
                                         <Typography>
                                             {history.ToObject}
                                         </Typography>
                                     </TableCell>
-                                    <TableCell align="right">
+                                    <TableCell>
                                         <Stack>
                                             <Typography>
                                                 {formatDate(history.Date)}
@@ -312,17 +312,17 @@ const Dissociation = (props: { instance: any }) => {
                         <Table component={Paper} sx={{ background: theme.palette.background.default }}>
                             <TableHead sx={{ background: theme.palette.text.primary }}>
                                 <TableRow>
-                                    <TableCell align="left">
+                                    <TableCell>
                                         <Typography variant="body2" color={theme.palette.background.default}>
                                             Id
                                         </Typography>
                                     </TableCell>
-                                    <TableCell align="center">
+                                    <TableCell>
                                         <Typography variant="body2" color={theme.palette.background.default}>
                                             Email modifié
                                         </Typography>
                                     </TableCell>
-                                    <TableCell align="right">
+                                    <TableCell>
                                         <Typography variant="body2" color={theme.palette.background.default}>
                                             Objet
                                         </Typography>
@@ -351,12 +351,12 @@ const Dissociation = (props: { instance: any }) => {
                                                 </Typography>
                                             </Stack>
                                         </TableCell>
-                                        <TableCell align="center">
+                                        <TableCell>
                                             <Typography>
                                                 {history.Emailmodified}
                                             </Typography>
                                         </TableCell>
-                                        <TableCell align="right">
+                                        <TableCell>
                                             <Typography>
                                                 {history.FromObject}
                                             </Typography>
