@@ -83,7 +83,6 @@ const THeader = (props: {
                 const accessGraphToken = await acquireGraphToken(instance)
                 const accessToken = await acquireToken(instance)
 
-                console.log(accessToken)
 
                 fetch("https://graph.microsoft.com/v1.0/me/photo/$value", {
                     headers: {

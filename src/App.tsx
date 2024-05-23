@@ -80,14 +80,14 @@ export const acquireToken = async (instance: any) => {
   try {
     const accounts = await instance.getAllAccounts()
     const data = await instance.acquireTokenSilent({
-      scopes: [],
+      scopes: ["api://8bbbed94-f29e-4371-a35e-1be5ab9b127a/.default"],
       account: accounts[0],
     })
     return data.accessToken
   } catch (silentError) {
     try {
       const interactiveResult = await instance.acquireTokenPopup({
-        scopes: [`api://${clientid}/User.read`],
+        scopes: ["api://8bbbed94-f29e-4371-a35e-1be5ab9b127a/.default"],
       })
       return interactiveResult.accessToken
     } catch (interactiveError) {
@@ -103,7 +103,7 @@ export const acquireGraphToken = async (instance: any) => {
       throw new Error("No accounts found.");
     }
     const data = await instance.acquireTokenSilent({
-      scopes: ["User.Read"],
+      scopes: ["user.read"],
       account: accounts[0],
     });
     return data.accessToken;
@@ -111,7 +111,7 @@ export const acquireGraphToken = async (instance: any) => {
     console.error("Erreur lors de l'acquisition du jeton de manière silencieuse : ", silentError);
     try {
       const interactiveResult = await instance.acquireTokenPopup({
-        scopes: ["User.Read"],
+        scopes: ["user.read"],
       });
       return interactiveResult.accessToken;
     } catch (interactiveError) {
