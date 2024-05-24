@@ -112,8 +112,8 @@ export const acquireGraphToken = async (instance: any) => {
     try {
       const interactiveResult = await instance.acquireTokenPopup({
         scopes: ["user.read"],
-      });
-      return interactiveResult.accessToken;
+      })
+      return interactiveResult.accessToken
     } catch (interactiveError) {
       console.error("Erreur lors de l'acquisition du jeton de manière interactive : ", interactiveError)
     }

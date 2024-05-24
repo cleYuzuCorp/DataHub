@@ -46,7 +46,7 @@ const ImportAssistance = (props: { instance: any }) => {
         status: yup.mixed().required('Toutes les données doivent être terminées avant de pouvoir les importer'),
     })
 
-    const { clearErrors, setError, formState: { errors } } = useForm({
+    const { clearErrors, formState: { errors } } = useForm({
         resolver: yupResolver(schema),
     })
 
@@ -86,7 +86,6 @@ const ImportAssistance = (props: { instance: any }) => {
                 })
 
                 if (error) {
-                    console.log(error)
                     clearInterval(timer)
                     setProgress(100)
                     showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
