@@ -205,7 +205,7 @@ const Formatting = (props: { instance: any }) => {
                         </Typography>
 
                         <Typography>
-                            En activant ce paramètre, un formatage de vos données s'effectuera chaque lundi à minuit.
+                            En activant ce paramètre, un formatage de vos données s'effectuera chaque jour à minuit.
                         </Typography>
 
                         <Stack spacing={1} direction="row" alignItems="center">
