@@ -2,10 +2,13 @@ import { faMagnifyingGlass, faChevronUp, faChevronDown, faArrowDown, faArrowUp, 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { Checkbox, CircularProgress, Collapse, IconButton, Modal, Paper, Stack, Table, TableBody, TableCell, TableHead, TablePagination, TableRow, TextField, Typography, useMediaQuery } from "@mui/material"
 import React, { useEffect, useState } from "react"
-import theme from "../../theme"
+import theme from "../../hooks/theme"
 import AButton from "../atoms/a-button"
 import { Contact } from "../../interfaces/contact"
 import { acquireToken } from "../../App"
+import useNotification from "../../hooks/use-notification"
+import ANotification from "../atoms/a-notifications"
+import { fetchData } from "../api"
 
 const OTableEnrichment = (props: {
     instance: any
@@ -20,6 +23,8 @@ const OTableEnrichment = (props: {
     const { instance, id, contacts, dbPersona, nothing, find, validate } = props
 
     const isDesktop = useMediaQuery('(min-width:1000px)')
+
+    const { notification, showNotification, closeNotification } = useNotification()
 
     const [loading, setLoading] = useState(false)
     const [open, setOpen] = useState(false)
@@ -108,31 +113,49 @@ const OTableEnrichment = (props: {
     const handleSubmit = async () => {
         setLoading(true)
 
-        const body = {
-            tableOfValues: dbPersona,
-            propositions: selectedContacts,
+        try {
+            const body = {
+                tableOfValues: dbPersona,
+                propositions: selectedContacts,
+            }
+
+            await instance.initialize()
+            const accessToken = await acquireToken(instance)
+
+            const { data, error } = await fetchData(`/hubspot/contacts/persona/${id}`, {
+                method: "PATCH",
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                    "Content-Type": "application/json"
+                },
+                data: JSON.stringify(body)
+            })
+
+            if (error) {
+                showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
+            } else if (data) {
+                showNotification("Enrichissement effectué avec succès !", 'success')
+                handleIgnoreProposal()
+                validate()
+            }
+        } catch (error) {
+            showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
+        } finally {
+            setLoading(false)
         }
-
-        await instance.initialize()
-        const accessToken = await acquireToken(instance)
-
-        await fetch(`${process.env.REACT_APP_API}/hubspot/contacts/persona/${id}`, {
-            method: "PATCH",
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(body)
-        })
-
-        handleIgnoreProposal()
-        validate()
-        setLoading(false)
     }
 
     return (
         <Stack width="100%" alignItems="center">
             {loading ? <CircularProgress /> : <Stack spacing={4} width="100%">
+
+                <ANotification
+                    open={notification.open}
+                    message={notification.message}
+                    severity={notification.severity}
+                    onClose={closeNotification}
+                />
+
                 <Stack spacing={4} direction={isDesktop ? "row" : "column"} alignItems="center" width="100%">
                     <TextField
                         placeholder="Recherche par Intitulé de poste"
@@ -141,6 +164,7 @@ const OTableEnrichment = (props: {
                         sx={{
                             width: "100%",
                             borderColor: '#E0E0E0',
+                            background: theme.palette.background.default,
                             boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)'
                         }}
                         InputProps={{

@@ -1,6 +1,6 @@
 import Button from '@mui/material/Button'
 import { FC, ReactNode, useState } from 'react'
-import theme from '../../theme'
+import theme from '../../hooks/theme'
 
 interface AButtonProps {
     variant?: 'text' | 'outlined' | 'contained'

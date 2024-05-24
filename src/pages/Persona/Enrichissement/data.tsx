@@ -10,7 +10,7 @@ import Chart from "react-apexcharts"
 import { useState, useEffect } from "react"
 import AButton from "../../../components/atoms/a-button"
 import MCardData from "../../../components/molecules/m-card-data"
-import theme from "../../../theme"
+import theme from "../../../hooks/theme"
 
 const Data = (props: {
     instance: any
@@ -288,6 +288,7 @@ const Data = (props: {
                                     sx={{
                                         width: "100%",
                                         borderColor: '#E0E0E0',
+                                        background: theme.palette.background.default,
                                         boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)'
                                     }}
                                     InputProps={{

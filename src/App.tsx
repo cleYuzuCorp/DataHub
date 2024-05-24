@@ -1,6 +1,6 @@
 import { ThemeProvider } from '@mui/material'
-import theme from './theme'
-import AppRoutes from './routes'
+import theme from './hooks/theme'
+import AppRoutes from './hooks/routes'
 import { PublicClientApplication, EventType } from '@azure/msal-browser'
 import { LogLevel } from 'msal'
 import { useEffect } from 'react'

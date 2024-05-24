@@ -1,6 +1,6 @@
 import { Stack, Typography } from "@mui/material"
 import { useState } from "react"
-import theme from "../../theme"
+import theme from "../../hooks/theme"
 
 const AHeaderSelect = (props: { values: string[], active: string[], setActive: (item: string[]) => void }) => {
 

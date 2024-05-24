@@ -1,7 +1,7 @@
 import { faChevronDown, faUser } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { Accordion, AccordionDetails, AccordionSummary, Stack, Typography } from "@mui/material"
-import theme from "../../theme"
+import theme from "../../hooks/theme"
 import { useState } from "react"
 
 const AAccordion = (props: { title: string, values: string[], active: string[], setActive: (item: string[]) => void }) => {

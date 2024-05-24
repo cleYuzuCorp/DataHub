@@ -9,13 +9,18 @@ import { yupResolver } from "@hookform/resolvers/yup"
 import AButton from "../../components/atoms/a-button"
 import { faXmark } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import theme from "../../theme"
+import theme from "../../hooks/theme"
+import useNotification from "../../hooks/use-notification"
+import ANotification from "../../components/atoms/a-notifications"
+import { fetchData } from "../../components/api"
 
 const Settings = (props: { instance: any, validate: () => void }) => {
 
     const { instance, validate } = props
 
     const isDesktop = useMediaQuery('(min-width:1000px)')
+
+    const { notification, showNotification, closeNotification } = useNotification()
 
     const location = useLocation()
     const [IdTenant, setIdTenant] = useState<string | null>()
@@ -59,7 +64,7 @@ const Settings = (props: { instance: any, validate: () => void }) => {
     })
 
     useEffect(() => {
-        const fetchData = async () => {
+        const fetchDataFromApi = async () => {
             try {
                 if (IdTenant) {
                     setLoading(true)
@@ -67,7 +72,7 @@ const Settings = (props: { instance: any, validate: () => void }) => {
                     await instance.initialize()
                     const accessToken = await acquireToken(instance)
 
-                    const responseSettings = await fetch(`${process.env.REACT_APP_API}/hubspot-settings/${IdTenant}`, {
+                    const { data, error } = await fetchData(`/hubspot-settings/${IdTenant}`, {
                         method: "GET",
                         headers: {
                             Authorization: `Bearer ${accessToken}`,
@@ -75,31 +80,43 @@ const Settings = (props: { instance: any, validate: () => void }) => {
                         }
                     })
 
-                    const dataSettings = await responseSettings.json()
-
-                    const SettingsData = {
-                        IntitulePoste_NomInterne: dataSettings.IntitulePoste_NomInterne,
-                        Persona_NomInterne: dataSettings.Persona_NomInterne
-                    }
-
-                    setPosteNomInterne(SettingsData.IntitulePoste_NomInterne)
-                    setPersonaNomInterne(SettingsData.Persona_NomInterne)
-
-                    const response = await fetch(`${process.env.REACT_APP_API}/proposition-persona/associations-settings/${IdTenant}`, {
-                        method: "GET",
-                        headers: {
-                            Authorization: `Bearer ${accessToken}`,
-                            "Content-Type": "application/json"
+                    if (error) {
+                        showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
+                    } else if (data) {
+                        const SettingsData = {
+                            IntitulePoste_NomInterne: data.IntitulePoste_NomInterne,
+                            Persona_NomInterne: data.Persona_NomInterne
                         }
-                    })
 
-                    const data = await response.json()
-
-                    if (data.statusCode === 404) {
-                        setLoading(false)
-                        setOpen(true)
+                        setPosteNomInterne(SettingsData.IntitulePoste_NomInterne)
+                        setPersonaNomInterne(SettingsData.Persona_NomInterne)
                     }
+                }
+            } catch (error) {
+                showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
+            } finally {
+                setLoading(false)
+            }
 
+            try {
+                setLoading(true)
+
+                await instance.initialize()
+                const accessToken = await acquireToken(instance)
+
+                const { data, error } = await fetchData(`/proposition-persona/associations-settings/${IdTenant}`, {
+                    method: "GET",
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`,
+                        "Content-Type": "application/json"
+                    }
+                })
+
+                if (error) {
+                    showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
+                    setLoading(false)
+                    setOpen(true)
+                } else if (data) {
                     if (data.personasRoles || data.rolesMotsClefs) {
                         const associationsPersonaRolesData = Object.keys(data.personasRoles).map((personaKey) => {
                             return {
@@ -120,17 +137,17 @@ const Settings = (props: { instance: any, validate: () => void }) => {
 
                         setAssociationsRoleKeywords(associationsRoleKeywordsData)
                         setBackupAssociationsRoleKeywords([...backupAssociationsRoleKeywords, associationsRoleKeywordsData])
-
-                        setLoading(false)
                     }
                 }
             } catch (error) {
-                console.error("Une erreur s'est produite lors de la requête :", error)
+                showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
+            } finally {
+                setLoading(false)
             }
         }
 
         setIsRestore(false)
-        fetchData()
+        fetchDataFromApi()
     }, [isRestore, IdTenant, settingsEdit])
 
     const addKeywords = () => {
@@ -336,42 +353,52 @@ const Settings = (props: { instance: any, validate: () => void }) => {
     const handleSubmit = async () => {
         setLoading(true)
 
-        const fetchData = async () => {
-            if (IdTenant) {
-                const parsedId = parseInt(IdTenant, 10)
+        const fetchDataFromApi = async () => {
+            try {
+                if (IdTenant) {
+                    const parsedId = parseInt(IdTenant, 10)
 
-                const body = {
-                    associationsRoleMotClef: associationsRoleKeywords.map((association) => {
-                        return {
-                            NomRole: association.parent,
-                            NomMotClef: association.childs,
-                        }
-                    }),
-                    associationsPersonaRole: associationsPersonaRoles.map((persona) => {
-                        return {
-                            NomPersona: persona.parent,
-                            NomRole: persona.childs,
-                        }
+                    const body = {
+                        associationsRoleMotClef: associationsRoleKeywords.map((association) => {
+                            return {
+                                NomRole: association.parent,
+                                NomMotClef: association.childs,
+                            }
+                        }),
+                        associationsPersonaRole: associationsPersonaRoles.map((persona) => {
+                            return {
+                                NomPersona: persona.parent,
+                                NomRole: persona.childs,
+                            }
+                        })
+                    }
+
+                    const accessToken = await acquireToken(instance)
+
+                    const { data, error } = await fetchData(`/proposition-persona/associations-settings/${parsedId}`, {
+                        method: "PATCH",
+                        headers: {
+                            Authorization: `Bearer ${accessToken}`,
+                            "Content-Type": "application/json"
+                        },
+
+                        data: JSON.stringify(body)
                     })
+
+                    if (error) {
+                        showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
+                    } else if (data) {
+                        showNotification("Sauvegarde effectué avec succès !", 'success')
+                    }
                 }
-
-                const accessToken = await acquireToken(instance)
-
-                await fetch(`${process.env.REACT_APP_API}/proposition-persona/associations-settings/${parsedId}`, {
-                    method: "PATCH",
-                    headers: {
-                        Authorization: `Bearer ${accessToken}`,
-                        "Content-Type": "application/json"
-                    },
-
-                    body: JSON.stringify(body)
-                })
+            } catch (error) {
+                showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
+            } finally {
+                setLoading(false)
             }
-
-            setLoading(false)
         }
 
-        fetchData()
+        fetchDataFromApi()
     }
 
     const handlePosteNomInterneChange = (event: { target: { value: string } }) => {
@@ -385,24 +412,33 @@ const Settings = (props: { instance: any, validate: () => void }) => {
     }
 
     const editSettings = async () => {
-        const accessToken = await acquireToken(instance)
+        try {
+            const accessToken = await acquireToken(instance)
 
-        const payloadSettings = {
-            IntitulePoste_NomInterne: posteNomInterne,
-            Persona_NomInterne: personaNomInterne
+            const payloadSettings = {
+                IntitulePoste_NomInterne: posteNomInterne,
+                Persona_NomInterne: personaNomInterne
+            }
+
+            const { data, error } = await fetchData(`/hubspot-settings/${IdTenant}`, {
+                method: "PATCH",
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                    "Content-Type": "application/json"
+                },
+                data: JSON.stringify(payloadSettings)
+            })
+
+            if (error) {
+                showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
+            } else if (data) {
+                showNotification("Paramètres modifiés avec succès !", 'success')
+                setOpen(false)
+                setSettingsEdit(!settingsEdit)
+            }
+        } catch (error) {
+            showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
         }
-
-        await fetch(`${process.env.REACT_APP_API}/hubspot-settings/${IdTenant}`, {
-            method: "PATCH",
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(payloadSettings)
-        })
-
-        setOpen(false)
-        setSettingsEdit(!settingsEdit)
     }
 
     return (
@@ -411,6 +447,13 @@ const Settings = (props: { instance: any, validate: () => void }) => {
                 <Typography variant="h3">
                     DataHub - Persona
                 </Typography>
+
+                <ANotification
+                    open={notification.open}
+                    message={notification.message}
+                    severity={notification.severity}
+                    onClose={closeNotification}
+                />
 
                 {loading ? <CircularProgress /> : <Stack spacing={8} alignItems="center" width="100%">
                     <Stack spacing={2} alignItems={isDesktop ? "flex-end" : "normal"} width="100%">
@@ -465,7 +508,7 @@ const Settings = (props: { instance: any, validate: () => void }) => {
                     />
                 </Stack>}
 
-                <Modal open={open} onClose={() => setOpen(false)}>
+                <Modal open={open}>
                     <Stack
                         spacing={4}
                         alignItems="center"
@@ -479,18 +522,6 @@ const Settings = (props: { instance: any, validate: () => void }) => {
                             padding: '30px 50px 30px 50px'
                         }}
                     >
-                        <IconButton
-                            sx={{
-                                position: 'absolute',
-                                top: '10px',
-                                right: '10px',
-                                width: '40px',
-                                height: '40px'
-                            }}
-                            onClick={() => setOpen(false)}
-                        >
-                            <FontAwesomeIcon icon={faXmark} color={theme.palette.text.primary} />
-                        </IconButton>
                         <Typography variant="h4">
                             Les propriétés du client
                         </Typography>
@@ -503,6 +534,7 @@ const Settings = (props: { instance: any, validate: () => void }) => {
                             onChange={handlePosteNomInterneChange}
                             sx={{
                                 borderColor: '#E0E0E0',
+                                background: theme.palette.background.default,
                                 boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)'
                             }}
                         />
@@ -515,6 +547,7 @@ const Settings = (props: { instance: any, validate: () => void }) => {
                             onChange={handlePersonaNomInterneChange}
                             sx={{
                                 borderColor: '#E0E0E0',
+                                background: theme.palette.background.default,
                                 boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)'
                             }}
                         />

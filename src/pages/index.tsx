@@ -1,15 +1,20 @@
 import { faGear, faTrash, faXmark } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { CircularProgress, Container, IconButton, Modal, Paper, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography } from "@mui/material"
-import theme from "../theme"
+import theme from "../hooks/theme"
 import AButton from "../components/atoms/a-button"
 import { useState } from "react"
 import { acquireToken } from "../App"
 import { Customer } from "../interfaces/customer"
+import useNotification from "../hooks/use-notification"
+import ANotification from "../components/atoms/a-notifications"
+import { fetchData } from "../components/api"
 
 const CustomersAccounts = (props: { instance: any, account: any, customers: Customer[], setCustomers: (value: Customer[]) => void, loading: boolean }) => {
 
     const { instance, account, customers, setCustomers, loading } = props
+
+    const { notification, showNotification, closeNotification } = useNotification()
 
     const [open, setOpen] = useState(false)
     const [selectedCustomer, setSelectedCustomer] = useState<Customer>()
@@ -38,26 +43,35 @@ const CustomersAccounts = (props: { instance: any, account: any, customers: Cust
     }
 
     const editCustomer = async () => {
-        const accessToken = await acquireToken(instance)
+        try {
+            const accessToken = await acquireToken(instance)
 
-        const payloadName = {
-            NomClient: selectedCustomer?.NomClient
+            const payloadName = {
+                NomClient: selectedCustomer?.NomClient
+            }
+
+            const { data, error } = await fetchData(`/tenant/${selectedCustomer?.IdTenant}`, {
+                method: "PATCH",
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                    "Content-Type": "application/json"
+                },
+                data: JSON.stringify(payloadName)
+            })
+
+            if (error) {
+                showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
+            } else if (data) {
+                showNotification("Client modifié avec succès !", 'success')
+                setCustomers(customers.map((customer) =>
+                    customer.IdTenant === selectedCustomer?.IdTenant ? { ...customer, ...payloadName } : customer
+                ) as Customer[])
+
+                setOpen(false)
+            }
+        } catch (error) {
+            showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
         }
-
-        await fetch(`${process.env.REACT_APP_API}/tenant/${selectedCustomer?.IdTenant}`, {
-            method: "PATCH",
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(payloadName)
-        })
-
-        setCustomers(customers.map((customer) =>
-            customer.IdTenant === selectedCustomer?.IdTenant ? { ...customer, ...payloadName } : customer
-        ) as Customer[])
-
-        setOpen(false)
     }
 
     const addCustomers = () => {
@@ -65,21 +79,31 @@ const CustomersAccounts = (props: { instance: any, account: any, customers: Cust
     }
 
     const deleteCustomer = async (id: number) => {
-        const accessToken = await acquireToken(instance)
+        try {
+            const accessToken = await acquireToken(instance)
 
-        const isConfirmed = window.confirm("Êtes-vous sûr de vouloir supprimer ce client ?")
-        if (isConfirmed) {
-            await fetch(`${process.env.REACT_APP_API}/tenant/${id}`, {
-                method: "DELETE",
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                    "Content-Type": "application/json",
+            const isConfirmed = window.confirm("Êtes-vous sûr de vouloir supprimer ce client ?")
+
+            if (isConfirmed) {
+                const { data, error } = await fetchData(`/tenant/${id}`, {
+                    method: "DELETE",
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`,
+                        "Content-Type": "application/json",
+                    }
+                })
+
+                if (error) {
+                    showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
+                } else if (data) {
+                    showNotification("Client supprimé avec succès !", 'success')
+                    const newClients = customers.filter((customer) => customer.IdTenant !== id)
+                    setCustomers(newClients)
                 }
-            })
-            const newClients = customers.filter((customer) => customer.IdTenant !== id)
-            setCustomers(newClients)
+            }
+        } catch (error) {
+            showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
         }
-
     }
 
     return (
@@ -88,6 +112,13 @@ const CustomersAccounts = (props: { instance: any, account: any, customers: Cust
                 <Typography variant="h3">
                     DataHub
                 </Typography>
+
+                <ANotification
+                    open={notification.open}
+                    message={notification.message}
+                    severity={notification.severity}
+                    onClose={closeNotification}
+                />
 
                 {!account ? <Typography textAlign="center">
                     Veuillez vous connectez pour accéder aux services de l'application.
@@ -213,6 +244,7 @@ const CustomersAccounts = (props: { instance: any, account: any, customers: Cust
                             onChange={handleNameChange}
                             sx={{
                                 borderColor: '#E0E0E0',
+                                background: theme.palette.background.default,
                                 boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)'
                             }}
                         />

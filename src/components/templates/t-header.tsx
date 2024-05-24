@@ -4,11 +4,14 @@ import { IconButton, Modal, Stack, Typography } from "@mui/material"
 import AAccordion from "../atoms/a-accordion"
 import AHeaderSelect from "../atoms/a-header-select"
 import { useEffect, useState } from "react"
-import theme from "../../theme"
+import theme from "../../hooks/theme"
 import { useNavigate } from "react-router-dom"
 import { Customer } from "../../interfaces/customer"
 import { acquireGraphToken, acquireToken } from "../../App"
 import AButton from "../atoms/a-button"
+import { fetchData } from "../api"
+import useNotification from "../../hooks/use-notification"
+import ANotification from "../atoms/a-notifications"
 
 const THeader = (props: {
     instance?: any
@@ -31,6 +34,8 @@ const THeader = (props: {
     const { instance, account, setAccount, customers, setCustomers, open, setOpen, active, setActive, dataLoading, setDataLoading, selectedCustomer, setSelectedCustomer, setLoading, validate } = props
 
     const navigate = useNavigate()
+
+    const { notification, showNotification, closeNotification } = useNotification()
 
     const [hovered, setHovered] = useState("")
     const [interactionInProgress, setInteractionInProgress] = useState(false)
@@ -74,7 +79,7 @@ const THeader = (props: {
     }
 
     useEffect(() => {
-        const fetchData = async () => {
+        const fetchDataFromApi = async () => {
             const accounts = instance.getAllAccounts()
             if (accounts.length !== 0) {
                 setAccount(accounts[0].name)
@@ -135,7 +140,7 @@ const THeader = (props: {
             }
         }
 
-        fetchData()
+        fetchDataFromApi()
     }, [account])
 
     useEffect(() => {
@@ -159,31 +164,32 @@ const THeader = (props: {
     useEffect(() => {
         setLoading(true)
 
-        const fetchData = async () => {
+        const fetchDataFromApi = async () => {
             try {
                 await instance.initialize()
                 const accessToken = await acquireToken(instance)
-                const response = await fetch(`${process.env.REACT_APP_API}/tenant`, {
+
+                const { data, error } = await fetchData(`/tenant`, {
                     headers: {
                         Authorization: `Bearer ${accessToken}`,
                         "Content-Type": "application/json",
                     },
                 })
 
-                const responseData = await response.json()
-
-                if (responseData.statusCode !== 401) {
-                    setCustomers(responseData)
+                if (error) {
+                    showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
+                } else if (data) {
+                    setCustomers(data)
                 }
-
-                setLoading(false)
             } catch (error) {
-                setTimeout(() => { fetchData() }, 10000)
+                setTimeout(() => { fetchDataFromApi() }, 10000)
 
+            } finally {
+                setLoading(false)
             }
         }
 
-        fetchData()
+        fetchDataFromApi()
     }, [instance])
 
     useEffect(() => {
@@ -286,6 +292,14 @@ const THeader = (props: {
                 }}
             />
             <Stack alignItems="center" height="100%" paddingTop="100px">
+
+                <ANotification
+                    open={notification.open}
+                    message={notification.message}
+                    severity={notification.severity}
+                    onClose={closeNotification}
+                />
+
                 <Stack paddingBottom="17px" overflow="hidden">
                     <Stack
                         spacing={2}

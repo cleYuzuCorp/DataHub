@@ -1,6 +1,6 @@
 import { IconButton, MenuItem, Modal, Paper, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography, useMediaQuery } from "@mui/material"
 import { useState } from "react"
-import theme from "../../theme"
+import theme from "../../hooks/theme"
 import { faTrash, faGear, faPlus, faXmark, faArrowRotateRight, faGripVertical, faFloppyDisk } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import AButton from "../atoms/a-button"
@@ -82,7 +82,14 @@ const OFormAssociation = (props: {
                     </AButton>
                 </Stack> : null}
 
-                <Stack width="100%" borderRadius="15px" sx={{ boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)' }}>
+                <Stack
+                    width="100%"
+                    borderRadius="15px"
+                    sx={{
+                        background: theme.palette.background.default,
+                        boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)'
+                    }}
+                >
                     <Stack
                         spacing={2}
                         direction="row"
@@ -185,7 +192,7 @@ const OFormAssociation = (props: {
                                     borderColor: errors.childs?.[index] ? theme.palette.error.main : '#E0E0E0',
                                     transition: 'all ease-in-out 0.4s',
                                     boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)',
-                                    background: hovered === index ? theme.palette.secondary.light : null,
+                                    background: hovered === index ? theme.palette.secondary.light : theme.palette.background.default,
                                     '& .MuiFormHelperText-root': {
                                         color: errors.parent ? theme.palette.error.main : 'inherit'
                                     }
@@ -207,7 +214,7 @@ const OFormAssociation = (props: {
                                     borderColor: errors.childs?.[index] ? theme.palette.error.main : '#E0E0E0',
                                     transition: 'all ease-in-out 0.4s',
                                     boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)',
-                                    background: hovered === index ? theme.palette.secondary.light : null,
+                                    background: hovered === index ? theme.palette.secondary.light : theme.palette.background.default,
                                     '& .MuiFormHelperText-root': {
                                         color: errors.parent ? theme.palette.error.main : 'inherit'
                                     }
@@ -290,18 +297,28 @@ const OFormAssociation = (props: {
                                 >
                                     <TableHead sx={{ background: theme.palette.text.primary }}>
                                         <TableRow>
-                                            <TableCell align="left">
-                                                <Typography variant="body2" color={theme.palette.background.default}>
+                                            <TableCell>
+                                                <Typography
+                                                    variant="body2"
+                                                    color={theme.palette.background.default}
+                                                >
                                                     {parentLabel}
                                                 </Typography>
                                             </TableCell>
-                                            <TableCell align="center">
-                                                <Typography variant="body2" color={theme.palette.background.default}>
+                                            <TableCell>
+                                                <Typography
+                                                    variant="body2"
+                                                    color={theme.palette.background.default}
+                                                >
                                                     {childLabel}
                                                 </Typography>
                                             </TableCell>
-                                            <TableCell align="right">
-                                                <Typography variant="body2" color={theme.palette.background.default}>
+                                            <TableCell>
+                                                <Typography
+                                                    variant="body2"
+                                                    textAlign="right"
+                                                    color={theme.palette.background.default}
+                                                >
                                                     Actions
                                                 </Typography>
                                             </TableCell>
@@ -333,11 +350,10 @@ const OFormAssociation = (props: {
                                                                 </Typography>
                                                             </Stack>
                                                         </TableCell>
-                                                        <TableCell align="center">
+                                                        <TableCell>
                                                             <Stack
                                                                 spacing={1}
                                                                 direction={isDesktop ? "row" : "column"}
-                                                                justifyContent="center"
                                                                 alignItems="center"
                                                                 width="100%"
                                                             >

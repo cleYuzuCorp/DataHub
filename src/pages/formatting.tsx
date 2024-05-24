@@ -2,13 +2,16 @@ import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { CircularProgress, Container, Paper, Stack, Switch, Table, TableBody, TableCell, TableHead, TablePagination, TableRow, TextField, Typography, useMediaQuery } from "@mui/material"
 import { useEffect, useState } from "react"
-import theme from "../theme"
+import theme from "../hooks/theme"
 import { useLocation } from "react-router-dom"
 import { acquireToken } from "../App"
 import { HistoryFormatting } from "../interfaces/history-formatting"
 import { format } from 'date-fns'
 import { DataFormatting } from "../interfaces/data-formatting"
 import Chart from "react-apexcharts"
+import useNotification from "../hooks/use-notification"
+import ANotification from "../components/atoms/a-notifications"
+import { fetchData } from "../components/api"
 
 const Formatting = (props: { instance: any }) => {
 
@@ -17,6 +20,8 @@ const Formatting = (props: { instance: any }) => {
     const idTenant = new URLSearchParams(useLocation().search).get('id')
 
     const isDesktop = useMediaQuery('(min-width:1000px)')
+
+    const { notification, showNotification, closeNotification } = useNotification()
 
     const [loading, setLoading] = useState(false)
     const [fetchDataInit, setFetchDataInit] = useState(false)
@@ -38,12 +43,12 @@ const Formatting = (props: { instance: any }) => {
     useEffect(() => {
         setLoading(true)
 
-        const fetchData = async () => {
+        const fetchDataFromApi = async () => {
             try {
                 await instance.initialize()
                 const accessToken = await acquireToken(instance)
 
-                const responseStatus = await fetch(`${process.env.REACT_APP_API}/settings-formatage/${idTenant}`, {
+                const { data, error } = await fetchData(`/settings-formatage/${idTenant}`, {
                     method: "GET",
                     headers: {
                         Authorization: `Bearer ${accessToken}`,
@@ -51,44 +56,69 @@ const Formatting = (props: { instance: any }) => {
                     }
                 })
 
-                const dataStatus = await responseStatus.json()
-
-                setChecked(dataStatus)
-
-                const responseData = await fetch(`${process.env.REACT_APP_API}/dataformatage/${idTenant}`, {
-                    method: "GET",
-                    headers: {
-                        Authorization: `Bearer ${accessToken}`,
-                        "Content-Type": "application/json"
-                    }
-                })
-
-                const data = await responseData.json()
-
-                setData(data)
-
-                const responseHistories = await fetch(`${process.env.REACT_APP_API}/historique-formatage/${idTenant}`, {
-                    method: "GET",
-                    headers: {
-                        Authorization: `Bearer ${accessToken}`,
-                        "Content-Type": "application/json"
-                    }
-                })
-
-                const dataHistories = await responseHistories.json()
-
-                const sortedHistories = dataHistories.sort((a: { Date: string }, b: { Date: string }) => {
-                    return new Date(b.Date as string).getTime() - new Date(a.Date as string).getTime()
-                })
-
-                setHistories(sortedHistories)
-                setLoading(false)
+                if (error) {
+                    showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
+                } else if (data) {
+                    setChecked(data)
+                }
             } catch (error) {
-                console.error("Une erreur s'est produite lors de la requête :", error)
+                showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
+            } finally {
+                setLoading(false)
+            }
+
+            try {
+                await instance.initialize()
+                const accessToken = await acquireToken(instance)
+
+                const { data, error } = await fetchData(`/dataformatage/${idTenant}`, {
+                    method: "GET",
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`,
+                        "Content-Type": "application/json"
+                    }
+                })
+
+                if (error) {
+                    showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
+                } else if (data) {
+                    setData(data)
+                }
+            } catch (error) {
+                showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
+            } finally {
+                setLoading(false)
+            }
+
+            try {
+                await instance.initialize()
+                const accessToken = await acquireToken(instance)
+
+                const { data, error } = await fetchData(`/historique-formatage/${idTenant}`, {
+                    method: "GET",
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`,
+                        "Content-Type": "application/json"
+                    }
+                })
+
+                if (error) {
+                    showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
+                } else if (data) {
+                    const sortedHistories = data.sort((a: { Date: string }, b: { Date: string }) => {
+                        return new Date(b.Date as string).getTime() - new Date(a.Date as string).getTime()
+                    })
+
+                    setHistories(sortedHistories)
+                }
+            } catch (error) {
+                showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
+            } finally {
+                setLoading(false)
             }
         }
 
-        fetchData()
+        fetchDataFromApi()
     }, [fetchDataInit])
 
     const handleFilteredChange = (value: string) => {
@@ -117,9 +147,10 @@ const Formatting = (props: { instance: any }) => {
     }
 
     const handleCheckChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setLoading(true)
         setChecked(event.target.checked)
 
-        const fetchData = async () => {
+        const fetchDataFromApi = async () => {
             try {
                 await instance.initialize()
                 const accessToken = await acquireToken(instance)
@@ -128,21 +159,29 @@ const Formatting = (props: { instance: any }) => {
                     actif: event.target.checked
                 }
 
-                await fetch(`${process.env.REACT_APP_API}/settings-formatage/${idTenant}`, {
+                const { data, error } = await fetchData(`/settings-formatage/${idTenant}`, {
                     method: "PATCH",
                     headers: {
                         Authorization: `Bearer ${accessToken}`,
                         "Content-Type": "application/json"
                     },
-                    body: JSON.stringify(body)
+                    data: JSON.stringify(body)
                 })
 
+                if (error) {
+                    showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
+                } else if (data) {
+                    showNotification(event.target.checked === true ? "Formatage activé avec succès !" : "Formatage désactivé avec succès !", 'success')
+                }
+
             } catch (error) {
-                console.error("Une erreur s'est produite lors de la requête :", error)
+                showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
+            } finally {
+                setLoading(false)
             }
         }
 
-        fetchData()
+        fetchDataFromApi()
     }
 
     return (
@@ -151,6 +190,13 @@ const Formatting = (props: { instance: any }) => {
                 <Typography variant="h3">
                     DataHub - Formatage
                 </Typography>
+
+                <ANotification
+                    open={notification.open}
+                    message={notification.message}
+                    severity={notification.severity}
+                    onClose={closeNotification}
+                />
 
                 {loading ? <CircularProgress /> : <Stack spacing={8} width="100%">
                     <Stack spacing={4} width="100%">
@@ -285,6 +331,7 @@ const Formatting = (props: { instance: any }) => {
                                 sx={{
                                     width: "100%",
                                     borderColor: '#E0E0E0',
+                                    background: theme.palette.background.default,
                                     boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)'
                                 }}
                                 InputProps={{

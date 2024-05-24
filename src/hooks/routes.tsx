@@ -1,21 +1,26 @@
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom'
-import THeader from './components/templates/t-header'
+import THeader from '../components/templates/t-header'
 import { Drawer, IconButton, Stack, ThemeProvider, useMediaQuery } from '@mui/material'
 import theme from './theme'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faBars } from '@fortawesome/free-solid-svg-icons'
 import { useEffect, useState } from 'react'
-import CustomersAccounts from './pages'
-import { Customer } from './interfaces/customer'
-import { JobTitle } from './interfaces/job-title'
-import { Contact } from './interfaces/contact'
-import { acquireToken } from './App'
+import CustomersAccounts from '../pages'
+import { Customer } from '../interfaces/customer'
+import { JobTitle } from '../interfaces/job-title'
+import { Contact } from '../interfaces/contact'
+import { acquireToken } from '../App'
+import useNotification from './use-notification'
+import ANotification from '../components/atoms/a-notifications'
+import { fetchData } from '../components/api'
 
 const AppRoutes = (props: { instance?: any }) => {
 
   const { instance } = props
 
   const isDesktop = useMediaQuery('(min-width:1000px)')
+
+  const { notification, showNotification, closeNotification } = useNotification()
 
   const [loading, setLoading] = useState(false)
   const [open, setOpen] = useState(false)
@@ -44,18 +49,18 @@ const AppRoutes = (props: { instance?: any }) => {
   const [changeFound, setChangeFound] = useState<Array<Contact>>([])
   const [noChangeFound, setNoChangeFound] = useState<Array<Contact>>([])
 
-  const pagesContext = (require as any).context('./pages', true, /\.(tsx|jsx)$/)
+  const pagesContext = (require as any).context('../pages', true, /\.(tsx|jsx)$/)
 
   const validate = () => {
     setOpenConfirm(false)
     setLoading(true)
 
-    const fetchData = async () => {
+    const fetchDataFromApi = async () => {
       try {
         await instance.initialize()
         const accessToken = await acquireToken(instance)
 
-        const response = await fetch(`${process.env.REACT_APP_API}/proposition-persona/associations-settings/${selectedCustomer?.IdTenant}`, {
+        const { data, error } = await fetchData(`/proposition-persona/associations-settings/${selectedCustomer?.IdTenant}`, {
           method: "GET",
           headers: {
             Authorization: `Bearer ${accessToken}`,
@@ -63,144 +68,153 @@ const AppRoutes = (props: { instance?: any }) => {
           }
         })
 
-        const data = await response.json()
+        if (error) {
+          showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
+        } else if (data) {
+          if (data.personasRoles || data.rolesMotsClefs || data.dbPersona) {
+            const associationsPersonaRolesData = Object.keys(data.personasRoles).map((personaKey) => {
+              return {
+                parent: personaKey,
+                childs: data.personasRoles[personaKey].Roles.map((role: any, rolesIndex: number) => ({
+                  id: rolesIndex + 1,
+                  value: role,
+                }))
+              }
+            })
 
-        if (data.personasRoles || data.rolesMotsClefs || data.dbPersona) {
-          const associationsPersonaRolesData = Object.keys(data.personasRoles).map((personaKey) => {
-            return {
-              parent: personaKey,
-              childs: data.personasRoles[personaKey].Roles.map((role: any, rolesIndex: number) => ({
-                id: rolesIndex + 1,
-                value: role,
+            setAssociationsPersonaRoles(associationsPersonaRolesData)
+
+            const associationsRoleKeywordsData = Object.keys(data.rolesMotsClefs).map((roleKey) => {
+              return {
+                parent: roleKey,
+                childs: data.rolesMotsClefs[roleKey].MotsClefs.length !== 0 ? data.rolesMotsClefs[roleKey].MotsClefs : [""]
+              }
+            })
+
+            setAssociationsRoleKeywords(associationsRoleKeywordsData)
+
+            const personas = data.dbPersona.map((persona: { description: string, value: string }) => {
+              return {
+                description: persona.description,
+                value: persona.value
+              }
+            })
+
+            setDbPersona(personas)
+
+            setDataLoading(prevDataLoading => {
+              return prevDataLoading.map(item => ({
+                ...item,
+                isLoading: item.customerName === selectedCustomer?.NomClient
               }))
-            }
-          })
+            })
 
-          setAssociationsPersonaRoles(associationsPersonaRolesData)
-
-          const associationsRoleKeywordsData = Object.keys(data.rolesMotsClefs).map((roleKey) => {
-            return {
-              parent: roleKey,
-              childs: data.rolesMotsClefs[roleKey].MotsClefs.length !== 0 ? data.rolesMotsClefs[roleKey].MotsClefs : [""]
-            }
-          })
-
-          setAssociationsRoleKeywords(associationsRoleKeywordsData)
-
-          const personas = data.dbPersona.map((persona: { description: string, value: string }) => {
-            return {
-              description: persona.description,
-              value: persona.value
-            }
-          })
-
-          setDbPersona(personas)
-
-          setDataLoading(prevDataLoading => {
-            return prevDataLoading.map(item => ({
-              ...item,
-              isLoading: item.customerName === selectedCustomer?.NomClient
+            setDataLoading(prevDataLoading => prevDataLoading.map(item => {
+              if (item.customerName === selectedCustomer?.NomClient) {
+                return { ...item, isLoading: true }
+              }
+              return item
             }))
-          })
-
-          setDataLoading(prevDataLoading => prevDataLoading.map(item => {
-            if (item.customerName === selectedCustomer?.NomClient) {
-              return { ...item, isLoading: true }
-            }
-            return item
-          }))
-          setDataInit(true)
-          setActive([active[0], active[1], "Enrichissement", "Données"])
-          setLoading(false)
+            setDataInit(true)
+            setActive([active[0], active[1], "Enrichissement", "Données"])
+          }
         }
-
       } catch (error) {
-        console.error("Une erreur s'est produite lors de la requête :", error)
-      }
-    }
-
-    fetchData()
-  }
-
-  useEffect(() => {
-    const fetchData = async () => {
-      if (selectedCustomer?.IdTenant && dataInit) {
-        setLoading(true)
-
-        const parsedId = selectedCustomer?.IdTenant
-
-        const body = {
-          dbPersona: dbPersona,
-          associationsRoleMotClef: associationsRoleKeywords.map((roleKeywords) => {
-            if (roleKeywords.parent !== "" && roleKeywords.childs.every((child) => child !== "")) {
-              return {
-                NomRole: roleKeywords.parent,
-                NomMotClef: roleKeywords.childs,
-              }
-            } else {
-              return undefined
-            }
-          }).filter((association) => association !== undefined),
-          associationsPersonaRole: associationsPersonaRoles.map((personaRoles) => {
-            if (personaRoles.parent !== "" && personaRoles.childs.every((child) => child.value !== "")) {
-              return {
-                NomPersona: personaRoles.parent,
-                NomRole: personaRoles.childs,
-              }
-            } else {
-              return undefined
-            }
-          }).filter((association) => association !== undefined)
-        }
-
-        const accessToken = await acquireToken(instance)
-
-        const response = await fetch(`${process.env.REACT_APP_API}/proposition-persona/process/${parsedId}`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(body)
-        })
-
-        const data = await response.json()
-
-        setNumberContacts(data.dashboard.totalOfDifferentContacts)
-        setNumberRoles(data.dashboard.totalOfDifferentRoles)
-        setNumberPersonas(data.dashboard.totalOfDifferentPersonas)
-
-        setInitiallyNull(data.enrichment.contactsWithProposedPersonaAndNull)
-        setChangeFound(data.enrichment.contactsWithProposedPersonaAndValue)
-        setNoChangeFound(data.enrichment.contactsWithoutProposedPersona)
-
-        const rolesData = Object.entries(data.dashboard.occurencesByRoles).map(([jobTitle, occurences]) => ({
-          jobTitle: jobTitle as string,
-          occurences: occurences as number
-        }))
-
-        setRoles(rolesData)
-
-        const personasData = Object.entries(data.dashboard.occurencesByPersonas).map(([jobTitle, occurences]) => ({
-          jobTitle: jobTitle as string,
-          occurences: occurences as number
-        }))
-
-        setPersonas(personasData)
-
-        const linksData = Object.entries(data.dashboard.occurencesByLiaisons).map(([jobTitle, occurences]) => ({
-          jobTitle: jobTitle as string,
-          occurences: occurences as number
-        }))
-
-        setLinks(linksData)
-
-        setDataInit(false)
+        showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
+      } finally {
         setLoading(false)
       }
     }
 
-    fetchData()
+    fetchDataFromApi()
+  }
+
+  useEffect(() => {
+    const fetchDataFromApi = async () => {
+      if (selectedCustomer?.IdTenant && dataInit) {
+        setLoading(true)
+
+        try {
+          const parsedId = selectedCustomer?.IdTenant
+
+          const body = {
+            dbPersona: dbPersona,
+            associationsRoleMotClef: associationsRoleKeywords.map((roleKeywords) => {
+              if (roleKeywords.parent !== "" && roleKeywords.childs.every((child) => child !== "")) {
+                return {
+                  NomRole: roleKeywords.parent,
+                  NomMotClef: roleKeywords.childs,
+                }
+              } else {
+                return undefined
+              }
+            }).filter((association) => association !== undefined),
+            associationsPersonaRole: associationsPersonaRoles.map((personaRoles) => {
+              if (personaRoles.parent !== "" && personaRoles.childs.every((child) => child.value !== "")) {
+                return {
+                  NomPersona: personaRoles.parent,
+                  NomRole: personaRoles.childs,
+                }
+              } else {
+                return undefined
+              }
+            }).filter((association) => association !== undefined)
+          }
+
+          const accessToken = await acquireToken(instance)
+
+          const { data, error } = await fetchData(`/proposition-persona/process/${parsedId}`, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              "Content-Type": "application/json"
+            },
+            data: JSON.stringify(body)
+          })
+
+          if (error) {
+            showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
+          } else if (data) {
+            setNumberContacts(data.dashboard.totalOfDifferentContacts)
+            setNumberRoles(data.dashboard.totalOfDifferentRoles)
+            setNumberPersonas(data.dashboard.totalOfDifferentPersonas)
+
+            setInitiallyNull(data.enrichment.contactsWithProposedPersonaAndNull)
+            setChangeFound(data.enrichment.contactsWithProposedPersonaAndValue)
+            setNoChangeFound(data.enrichment.contactsWithoutProposedPersona)
+
+            const rolesData = Object.entries(data.dashboard.occurencesByRoles).map(([jobTitle, occurences]) => ({
+              jobTitle: jobTitle as string,
+              occurences: occurences as number
+            }))
+
+            setRoles(rolesData)
+
+            const personasData = Object.entries(data.dashboard.occurencesByPersonas).map(([jobTitle, occurences]) => ({
+              jobTitle: jobTitle as string,
+              occurences: occurences as number
+            }))
+
+            setPersonas(personasData)
+
+            const linksData = Object.entries(data.dashboard.occurencesByLiaisons).map(([jobTitle, occurences]) => ({
+              jobTitle: jobTitle as string,
+              occurences: occurences as number
+            }))
+
+            setLinks(linksData)
+
+            setDataInit(false)
+          }
+        } catch (error) {
+          showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
+        } finally {
+          setLoading(false)
+        }
+      }
+    }
+
+    fetchDataFromApi()
   }, [dataInit])
 
   return (
@@ -208,6 +222,13 @@ const AppRoutes = (props: { instance?: any }) => {
       <Routes>
         <Route path="/" element={<ThemeProvider theme={theme}>
           <Stack direction="row">
+            <ANotification
+              open={notification.open}
+              message={notification.message}
+              severity={notification.severity}
+              onClose={closeNotification}
+            />
+
             {isDesktop ? <THeader
               instance={instance}
               account={account}

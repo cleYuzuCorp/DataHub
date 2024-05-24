@@ -1,17 +1,20 @@
 import { ReactNode, useEffect, useState } from 'react'
-import { Container, Stack, Typography, CircularProgress, TextField, MenuItem, TableHead, Paper, Table, TableBody, TableCell, TableRow, TablePagination, Alert, Snackbar } from "@mui/material"
+import { Container, Stack, Typography, CircularProgress, TextField, MenuItem, TableHead, Paper, Table, TableBody, TableCell, TableRow, TablePagination } from "@mui/material"
 import { useLocation } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowDown, faArrowUp, faCircle, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons'
-import theme from '../theme'
-import * as yup from "yup"
-import { yupResolver } from "@hookform/resolvers/yup"
-import { useForm } from 'react-hook-form'
+import theme from '../hooks/theme'
 import AButton from '../components/atoms/a-button'
 import MFileUpload from '../components/molecules/m-file-upload'
 import { DataFile } from '../interfaces/data-file'
 import * as XLSX from 'xlsx'
 import { acquireToken } from '../App'
+import * as yup from "yup"
+import { yupResolver } from "@hookform/resolvers/yup"
+import { useForm } from 'react-hook-form'
+import { fetchData } from '../components/api'
+import ANotification from '../components/atoms/a-notifications'
+import useNotification from '../hooks/use-notification'
 
 const ImportAssistance = (props: { instance: any }) => {
 
@@ -19,8 +22,9 @@ const ImportAssistance = (props: { instance: any }) => {
 
     const idTenant = new URLSearchParams(useLocation().search).get('id')
 
+    const { notification, showNotification, closeNotification } = useNotification()
+
     const [loading, setLoading] = useState(false)
-    const [open, setOpen] = useState(false)
     const [progress, setProgress] = useState(0)
     const [proposition, setProposition] = useState<{ [key: string]: string }>({})
     const [companie, setCompanie] = useState<{ [key: string]: string }>({})
@@ -39,7 +43,6 @@ const ImportAssistance = (props: { instance: any }) => {
     const [sortCriteria, setSortCriteria] = useState<{ column: string; order: 'asc' | 'desc' }>({ column: '', order: 'asc' })
 
     const schema = yup.object().shape({
-        data: yup.mixed().default('Une erreur est survenu'),
         status: yup.mixed().required('Toutes les données doivent être terminées avant de pouvoir les importer'),
     })
 
@@ -49,7 +52,6 @@ const ImportAssistance = (props: { instance: any }) => {
 
     const loadData = async () => {
         try {
-            clearErrors('data')
             setProgress(0)
 
             if (file && idTenant) {
@@ -74,54 +76,50 @@ const ImportAssistance = (props: { instance: any }) => {
                 await instance.initialize()
                 const accessToken = await acquireToken(instance)
 
-                const response = await fetch(`${process.env.REACT_APP_API}/import/check/${idTenant}`, {
+                const { data, error } = await fetchData(`/import/check/${idTenant}`, {
                     method: "POST",
                     headers: {
                         Authorization: `Bearer ${accessToken}`
                     },
-                    body: formData,
+                    data: formData,
                 })
 
-                if (!response.ok) {
+                if (error) {
+                    console.log(error)
                     clearInterval(timer)
                     setProgress(100)
-                    const errorData = await response.json()
-                    setError('data', { message: errorData.message })
-                    setLoading(false)
-                    setOpen(true)
-                    return
+                    showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
+                } else if (data) {
+                    clearInterval(timer)
+                    setProgress(100)
+
+                    data.matched.forEach((d: DataFile) => {
+                        if (d.Status === "Terminé" && d.Exist.length > 0) {
+                            setProposition(prevSelections => ({
+                                ...prevSelections,
+                                [d.Domain]: "choice"
+                            }))
+                            setCompanie(prevSelections => ({
+                                ...prevSelections,
+                                [d.Domain]: d.Exist[0].id
+                            }))
+                        } else if (d.Status === "Terminé") {
+                            setProposition(prevSelections => ({
+                                ...prevSelections,
+                                [d.Domain]: "create"
+                            }))
+                        }
+                    })
+
+                    setDataMatched(data.matched)
+                    setDataCantMatched(data.cantMatched)
+                    showNotification("Fichier traité avec succès !", 'success')
                 }
-
-                clearInterval(timer)
-                setProgress(100)
-
-                const data = await response.json()
-
-                data.matched.forEach((d: DataFile) => {
-                    if (d.Status === "Terminé" && d.Exist.length > 0) {
-                        setProposition(prevSelections => ({
-                            ...prevSelections,
-                            [d.Domain]: "choice"
-                        }))
-                        setCompanie(prevSelections => ({
-                            ...prevSelections,
-                            [d.Domain]: d.Exist[0].id
-                        }))
-                    } else if (d.Status === "Terminé") {
-                        setProposition(prevSelections => ({
-                            ...prevSelections,
-                            [d.Domain]: "create"
-                        }))
-                    }
-                })
-
-                setDataMatched(data.matched)
-                setDataCantMatched(data.cantMatched)
-                setLoading(false)
-                setOpen(true)
             }
         } catch (error) {
-            console.error("Error uploading file:", error)
+            showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
+        } finally {
+            setLoading(false)
         }
     }
 
@@ -229,9 +227,8 @@ const ImportAssistance = (props: { instance: any }) => {
                 const allCompleted = dataMatched.every((item) => item.Status === 'Terminé')
 
                 if (!allCompleted) {
-                    setError('status', { message: 'Toutes les données doivent être terminées avant de pouvoir les importer' })
+                    showNotification("Toutes les données doivent être terminées avant de pouvoir les importer", 'error')
                     setLoading(false)
-                    setOpen(true)
                     return
                 }
 
@@ -258,11 +255,11 @@ const ImportAssistance = (props: { instance: any }) => {
                 link.click()
                 document.body.removeChild(link)
 
+                showNotification("Fichier téléchargé avec succès !", 'success')
                 setLoading(false)
-                setOpen(true)
             }
         } catch (error) {
-            console.error("Error uploading file:", error)
+            showNotification("Toutes les données doivent être terminées avant de pouvoir les importer", 'error')
         }
     }
 
@@ -273,36 +270,17 @@ const ImportAssistance = (props: { instance: any }) => {
                     DataHub - Aide à l'import
                 </Typography>
 
+                <ANotification
+                    open={notification.open}
+                    message={notification.message}
+                    severity={notification.severity}
+                    onClose={closeNotification}
+                />
+
                 {loading ? <CircularProgress /> : <Stack spacing={6} alignItems="center" width="100%">
                     <MFileUpload progress={progress} file={file} setFile={setFile} />
 
-                    {errors.data?.message ? <Snackbar
-                        open={open}
-                        onClose={() => setOpen(false)}
-                        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                    >
-                        <Alert
-                            onClose={() => setOpen(false)}
-                            severity="error"
-                            variant="filled"
-                        >
-                            {errors?.data?.message}
-                        </Alert>
-                    </Snackbar> : <Snackbar
-                        open={open}
-                        onClose={() => setOpen(false)}
-                        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                    >
-                        <Alert
-                            onClose={() => setOpen(false)}
-                            severity="success"
-                            variant="filled"
-                        >
-                            Fichier traité avec succès !
-                        </Alert>
-                    </Snackbar>}
-
-                    {dataMatched.length > 0 && !errors.data?.message && <Stack spacing={4} width="100%">
+                    {dataMatched.length > 0 && <Stack spacing={4} width="100%">
                         <Stack spacing={4} direction="row">
                             <TextField
                                 placeholder="Recherche par Domaine ou Email"
@@ -311,6 +289,7 @@ const ImportAssistance = (props: { instance: any }) => {
                                 sx={{
                                     width: "100%",
                                     borderColor: '#E0E0E0',
+                                    background: theme.palette.background.default,
                                     boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)'
                                 }}
                                 InputProps={{
@@ -356,7 +335,6 @@ const ImportAssistance = (props: { instance: any }) => {
                                                     spacing={1}
                                                     direction="row"
                                                     alignItems="center"
-                                                    justifyContent="center"
                                                     onClick={toggleSortDataExist}
                                                     sx={{
                                                         cursor: 'pointer'
@@ -372,7 +350,6 @@ const ImportAssistance = (props: { instance: any }) => {
                                                 </Stack> : key === "Status" ? <Stack
                                                     spacing={1}
                                                     direction="row"
-                                                    justifyContent="flex-end"
                                                     alignItems="center"
                                                     onClick={toggleSortDataStatus}
                                                     sx={{
@@ -412,7 +389,7 @@ const ImportAssistance = (props: { instance: any }) => {
                                                         Déjà présent
                                                     </Typography> : <Typography>
                                                         Nouveau
-                                                    </Typography> : key === "Status" ? <Stack alignItems="flex-end">
+                                                    </Typography> : key === "Status" ? <Stack>
                                                         <Stack
                                                             spacing={1}
                                                             direction="row"
@@ -503,7 +480,7 @@ const ImportAssistance = (props: { instance: any }) => {
                                 <TableHead sx={{ background: theme.palette.text.primary }}>
                                     <TableRow>
                                         {Object.keys(filteredDataCantMatched[0]).map((key, index) => (
-                                            <TableCell key={index} align={index !== 3 ? "left" : "right"}>
+                                            <TableCell key={index}>
                                                 <Typography variant="body2" color={theme.palette.background.default}>
                                                     {key}
                                                 </Typography>
@@ -515,7 +492,7 @@ const ImportAssistance = (props: { instance: any }) => {
                                     {filteredDataCantMatched.length > 0 && filteredDataCantMatched.slice(startIndexCantMatched, endIndexCantMatched).map((d, index) =>
                                         <TableRow key={index}>
                                             {Object.keys(d).map((key, index) => (
-                                                <TableCell key={index} align={index !== 3 ? "left" : "right"}>
+                                                <TableCell key={index}>
                                                     <Typography>
                                                         {(d[key as keyof typeof d] as ReactNode)}
                                                     </Typography>

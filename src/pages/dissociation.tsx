@@ -1,16 +1,16 @@
-import { Alert, CircularProgress, Container, Paper, Snackbar, Stack, Table, TableBody, TableCell, TableHead, TablePagination, TableRow, TextField, Typography, useMediaQuery } from "@mui/material"
+import { CircularProgress, Container, Paper, Stack, Table, TableBody, TableCell, TableHead, TablePagination, TableRow, TextField, Typography, useMediaQuery } from "@mui/material"
 import { useLocation } from 'react-router-dom'
 import MFileUpload from "../components/molecules/m-file-upload"
 import { useEffect, useState } from "react"
-import * as yup from "yup"
-import { yupResolver } from "@hookform/resolvers/yup"
-import { useForm } from "react-hook-form"
-import theme from "../theme"
+import theme from "../hooks/theme"
 import { acquireToken } from "../App"
 import { format } from "date-fns"
 import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { HistoryDissociation } from "../interfaces/history-dissociation"
+import ANotification from "../components/atoms/a-notifications"
+import useNotification from "../hooks/use-notification"
+import { fetchData } from "../components/api"
 
 const Dissociation = (props: { instance: any }) => {
 
@@ -20,8 +20,9 @@ const Dissociation = (props: { instance: any }) => {
 
     const isDesktop = useMediaQuery('(min-width:1000px)')
 
+    const { notification, showNotification, closeNotification } = useNotification()
+
     const [loading, setLoading] = useState(false)
-    const [open, setOpen] = useState(false)
     const [progress, setProgress] = useState(0)
     const [file, setFile] = useState<File>()
 
@@ -32,23 +33,15 @@ const Dissociation = (props: { instance: any }) => {
     const [page, setPage] = useState(0)
     const [rowsPerPage, setRowsPerPage] = useState(10)
 
-    const schema = yup.object().shape({
-        data: yup.mixed().default('Une erreur est survenu')
-    })
-
-    const { clearErrors, setError, formState: { errors } } = useForm({
-        resolver: yupResolver(schema),
-    })
-
     useEffect(() => {
-        setLoading(true)
+        const fetchDataFromApi = async () => {
+            setLoading(true)
 
-        const fetchData = async () => {
             try {
                 await instance.initialize()
                 const accessToken = await acquireToken(instance)
 
-                const response = await fetch(`${process.env.REACT_APP_API}/historique-dissociation/${idTenant}`, {
+                const { data, error } = await fetchData(`/historique-dissociation/${idTenant}`, {
                     method: "GET",
                     headers: {
                         Authorization: `Bearer ${accessToken}`,
@@ -56,27 +49,28 @@ const Dissociation = (props: { instance: any }) => {
                     }
                 })
 
-                const data = await response.json()
-
-                const sortedHistories = data.sort((a: { Date: string }, b: { Date: string }) => {
-                    return new Date(b.Date as string).getTime() - new Date(a.Date as string).getTime()
-                })
-
-                setHistories(sortedHistories)
-                setLoading(false)
+                if (error) {
+                    showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
+                } else if (data) {
+                    const sortedHistories = data.sort((a: { Date: string }, b: { Date: string }) => {
+                        return new Date(b.Date).getTime() - new Date(a.Date).getTime()
+                    })
+                    setHistories(sortedHistories)
+                }
             } catch (error) {
-                console.error("Une erreur s'est produite lors de la requête :", error)
+                showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
+            } finally {
+                setLoading(false)
             }
         }
 
-        fetchData()
+        fetchDataFromApi()
     }, [])
 
     const loadData = async () => {
-        try {
-            clearErrors('data')
-            setLoading(true)
+        setLoading(true)
 
+        try {
             if (file && idTenant) {
                 const formData = new FormData()
                 formData.append("file", file)
@@ -99,33 +93,28 @@ const Dissociation = (props: { instance: any }) => {
                 await instance.initialize()
                 const accessToken = await acquireToken(instance)
 
-                const response = await fetch(`${process.env.REACT_APP_API}/dissociation/${idTenant}`, {
+                const { data, error } = await fetchData(`/dissociation/${idTenant}`, {
                     method: "POST",
                     headers: {
                         Authorization: `Bearer ${accessToken}`
                     },
-                    body: formData,
+                    data: formData,
                 })
 
-                if (!response.ok) {
+                if (error) {
                     clearInterval(timer)
                     setProgress(100)
-                    const errorData = await response.json()
-                    setError('data', { message: errorData.message })
-                    setLoading(false)
-                    setOpen(true)
-
-                    return
+                    showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
+                } else if (data) {
+                    clearInterval(timer)
+                    setProgress(100)
+                    showNotification("Fichier traité avec succès !", 'success')
                 }
-
-                clearInterval(timer)
-                setProgress(100)
-
-                setLoading(false)
-                setOpen(true)
             }
         } catch (error) {
-            console.error("Error uploading file:", error)
+            showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
+        } finally {
+            setLoading(false)
         }
     }
 
@@ -170,33 +159,14 @@ const Dissociation = (props: { instance: any }) => {
                     DataHub - Dissociation
                 </Typography>
 
-                <MFileUpload progress={progress} file={file} setFile={setFile} />
+                <ANotification
+                    open={notification.open}
+                    message={notification.message}
+                    severity={notification.severity}
+                    onClose={closeNotification}
+                />
 
-                {errors.data?.message ? <Snackbar
-                    open={open}
-                    onClose={() => setOpen(false)}
-                    anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                >
-                    <Alert
-                        onClose={() => setOpen(false)}
-                        severity="error"
-                        variant="filled"
-                    >
-                        {errors.data.message}
-                    </Alert>
-                </Snackbar> : <Snackbar
-                    open={open}
-                    onClose={() => setOpen(false)}
-                    anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                >
-                    <Alert
-                        onClose={() => setOpen(false)}
-                        severity="success"
-                        variant="filled"
-                    >
-                        Fichier traité avec succès !
-                    </Alert>
-                </Snackbar>}
+                <MFileUpload progress={progress} file={file} setFile={setFile} />
 
                 {loading ? <CircularProgress /> : <Stack spacing={2} width="100%">
                     <TextField
@@ -206,6 +176,7 @@ const Dissociation = (props: { instance: any }) => {
                         sx={{
                             width: "100%",
                             borderColor: '#E0E0E0',
+                            background: theme.palette.background.default,
                             boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)'
                         }}
                         InputProps={{

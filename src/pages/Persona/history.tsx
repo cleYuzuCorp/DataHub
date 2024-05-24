@@ -3,11 +3,14 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { Checkbox, CircularProgress, Container, Paper, Stack, Table, TableBody, TableCell, TableHead, TablePagination, TableRow, TextField, Typography, useMediaQuery } from "@mui/material"
 import { useEffect, useState } from "react"
 import AButton from "../../components/atoms/a-button"
-import theme from "../../theme"
+import theme from "../../hooks/theme"
 import { useLocation } from "react-router-dom"
 import { acquireToken } from "../../App"
 import { HistoryPersona } from "../../interfaces/history-persona"
 import { format } from 'date-fns'
+import useNotification from "../../hooks/use-notification"
+import ANotification from "../../components/atoms/a-notifications"
+import { fetchData } from "../../components/api"
 
 const History = (props: { instance: any }) => {
 
@@ -16,6 +19,8 @@ const History = (props: { instance: any }) => {
     const idTenant = new URLSearchParams(useLocation().search).get('id')
 
     const isDesktop = useMediaQuery('(min-width:1000px)')
+
+    const { notification, showNotification, closeNotification } = useNotification()
 
     const [loading, setLoading] = useState(false)
     const [fetchDataInit, setFetchDataInit] = useState(false)
@@ -38,13 +43,13 @@ const History = (props: { instance: any }) => {
     useEffect(() => {
         setLoading(true)
 
-        const fetchData = async () => {
+        const fetchDataFromApi = async () => {
             if (fetchDataInit) {
                 try {
                     await instance.initialize()
                     const accessToken = await acquireToken(instance)
 
-                    const response = await fetch(`${process.env.REACT_APP_API}/proposition-persona/associations-settings/${idTenant}`, {
+                    const { data, error } = await fetchData(`/proposition-persona/associations-settings/${idTenant}`, {
                         method: "GET",
                         headers: {
                             Authorization: `Bearer ${accessToken}`,
@@ -52,34 +57,38 @@ const History = (props: { instance: any }) => {
                         }
                     })
 
-                    const data = await response.json()
+                    if (error) {
+                        showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
+                    } else if (data) {
+                        const personas = data.dbPersona.map((persona: { description: string, value: string }) => {
+                            return {
+                                description: persona.description,
+                                value: persona.value
+                            }
+                        })
 
-                    const personas = data.dbPersona.map((persona: { description: string, value: string }) => {
-                        return {
-                            description: persona.description,
-                            value: persona.value
-                        }
-                    })
-
-                    setDbPersona(personas)
+                        setDbPersona(personas)
+                    }
                 } catch (error) {
-                    console.error("Une erreur s'est produite lors de la requête :", error)
+                    showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
+                } finally {
+                    setLoading(false)
                 }
             }
         }
 
-        fetchData()
+        fetchDataFromApi()
     }, [fetchDataInit])
 
     useEffect(() => {
         setLoading(true)
 
-        const fetchData = async () => {
+        const fetchDataFromApi = async () => {
             try {
                 await instance.initialize()
                 const accessToken = await acquireToken(instance)
 
-                const response = await fetch(`${process.env.REACT_APP_API}/historique-persona/${idTenant}`, {
+                const { data, error } = await fetchData(`/historique-persona/${idTenant}`, {
                     method: "GET",
                     headers: {
                         Authorization: `Bearer ${accessToken}`,
@@ -87,20 +96,23 @@ const History = (props: { instance: any }) => {
                     }
                 })
 
-                const data = await response.json()
+                if (error) {
+                    showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
+                } else if (data) {
+                    const sortedHistories = data.sort((a: { Date: string }, b: { Date: string }) => {
+                        return new Date(b.Date as string).getTime() - new Date(a.Date as string).getTime()
+                    })
 
-                const sortedHistories = data.sort((a: { Date: string }, b: { Date: string }) => {
-                    return new Date(b.Date as string).getTime() - new Date(a.Date as string).getTime()
-                })
-
-                setHistories(sortedHistories)
-                setLoading(false)
+                    setHistories(sortedHistories)
+                }
             } catch (error) {
-                console.error("Une erreur s'est produite lors de la requête :", error)
+                showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
+            } finally {
+                setLoading(false)
             }
         }
 
-        fetchData()
+        fetchDataFromApi()
     }, [isRestored])
 
     const handleFilteredChange = (value: string) => {
@@ -153,33 +165,41 @@ const History = (props: { instance: any }) => {
     const handleRestore = async () => {
         setLoading(true)
 
-        const data = selectedRows.map((row) => ({
-            hs_object_id: row.IdObjectModifiedReal,
-            role: row.IntitulePoste,
-            persona: "restaured",
-            proposedPersona: row.PersonaBefore
-        }))
+        try {
+            const dataInit = selectedRows.map((row) => ({
+                hs_object_id: row.IdObjectModifiedReal,
+                role: row.IntitulePoste,
+                persona: "restaured",
+                proposedPersona: row.PersonaBefore
+            }))
 
-        const body = {
-            tableOfValues: dbPersona,
-            propositions: [{ contacts: data }]
+            const body = {
+                tableOfValues: dbPersona,
+                propositions: [{ contacts: dataInit }]
+            }
+
+            const accessToken = await acquireToken(instance)
+
+            const { data, error } = await fetchData(`/hubspot/contacts/persona/${idTenant}`, {
+                method: "PATCH",
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                    "Content-Type": "application/json"
+                },
+                data: JSON.stringify(body)
+            })
+
+            if (error) {
+                showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
+            } else if (data) {
+                showNotification("Restauration effectué avec succès !", 'success')
+                setIsRestored(!isRestored)
+            }
+        } catch (error) {
+            showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
+        } finally {
+            setLoading(false)
         }
-
-        const accessToken = await acquireToken(instance)
-
-        const response = fetch(`${process.env.REACT_APP_API}/hubspot/contacts/persona/${idTenant}`, {
-            method: "PATCH",
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(body)
-        })
-
-        if ((await response).status) {
-            setIsRestored(!isRestored)
-        }
-        setLoading(false)
     }
 
     const formatDate = (dateString: string) => {
@@ -197,6 +217,13 @@ const History = (props: { instance: any }) => {
                     DataHub - Persona
                 </Typography>
 
+                <ANotification
+                    open={notification.open}
+                    message={notification.message}
+                    severity={notification.severity}
+                    onClose={closeNotification}
+                />
+
                 {loading ? <CircularProgress /> : <Stack spacing={4} width="100%">
                     <Stack spacing={4} direction="row" alignItems="center" width="100%">
                         <TextField
@@ -206,6 +233,7 @@ const History = (props: { instance: any }) => {
                             sx={{
                                 width: "100%",
                                 borderColor: '#E0E0E0',
+                                background: theme.palette.background.default,
                                 boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)'
                             }}
                             InputProps={{

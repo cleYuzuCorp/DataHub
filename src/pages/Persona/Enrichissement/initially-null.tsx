@@ -2,7 +2,7 @@ import { CircularProgress, Container, Stack, Typography } from "@mui/material"
 import OTableEnrichment from "../../../components/organisms/o-table-enrichment"
 import { useLocation } from "react-router-dom"
 import { Contact } from "../../../interfaces/contact"
-import theme from "../../../theme"
+import theme from "../../../hooks/theme"
 
 const InitiallyNull = (props: {
     instance: any
