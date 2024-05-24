@@ -96,7 +96,8 @@ const Dissociation = (props: { instance: any }) => {
                 const { data, error } = await fetchData(`/dissociation/${idTenant}`, {
                     method: "POST",
                     headers: {
-                        Authorization: `Bearer ${accessToken}`
+                        Authorization: `Bearer ${accessToken}`,
+                        'Content-Type': 'multipart/form-data'
                     },
                     data: formData,
                 })
@@ -153,7 +154,7 @@ const Dissociation = (props: { instance: any }) => {
     }
 
     return (
-        <Container maxWidth="lg" sx={{ background: theme.palette.background.paper }}>
+        <Container maxWidth="lg">
             <Stack spacing={8} alignItems="center" marginTop="100px" marginBottom="100px">
                 <Typography variant="h3">
                     DataHub - Dissociation

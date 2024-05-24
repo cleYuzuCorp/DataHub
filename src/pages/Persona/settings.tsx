@@ -1,4 +1,4 @@
-import { CircularProgress, Container, IconButton, Modal, Stack, TextField, Typography, useMediaQuery } from "@mui/material"
+import { CircularProgress, Container, Modal, Stack, TextField, Typography, useMediaQuery } from "@mui/material"
 import OFormAssociation from "../../components/organisms/o-form-association"
 import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
@@ -7,8 +7,6 @@ import { acquireToken } from "../../App"
 import * as yup from "yup"
 import { yupResolver } from "@hookform/resolvers/yup"
 import AButton from "../../components/atoms/a-button"
-import { faXmark } from "@fortawesome/free-solid-svg-icons"
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import theme from "../../hooks/theme"
 import useNotification from "../../hooks/use-notification"
 import ANotification from "../../components/atoms/a-notifications"
@@ -99,44 +97,46 @@ const Settings = (props: { instance: any, validate: () => void }) => {
             }
 
             try {
-                setLoading(true)
+                if (IdTenant) {
+                    setLoading(true)
 
-                await instance.initialize()
-                const accessToken = await acquireToken(instance)
+                    await instance.initialize()
+                    const accessToken = await acquireToken(instance)
 
-                const { data, error } = await fetchData(`/proposition-persona/associations-settings/${IdTenant}`, {
-                    method: "GET",
-                    headers: {
-                        Authorization: `Bearer ${accessToken}`,
-                        "Content-Type": "application/json"
-                    }
-                })
+                    const { data, error } = await fetchData(`/proposition-persona/associations-settings/${IdTenant}`, {
+                        method: "GET",
+                        headers: {
+                            Authorization: `Bearer ${accessToken}`,
+                            "Content-Type": "application/json"
+                        }
+                    })
 
-                if (error) {
-                    showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
-                    setLoading(false)
-                    setOpen(true)
-                } else if (data) {
-                    if (data.personasRoles || data.rolesMotsClefs) {
-                        const associationsPersonaRolesData = Object.keys(data.personasRoles).map((personaKey) => {
-                            return {
-                                parent: personaKey,
-                                childs: data.personasRoles[personaKey].Roles.length !== 0 ? data.personasRoles[personaKey].Roles : [""]
-                            }
-                        })
+                    if (error) {
+                        showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
+                        setLoading(false)
+                        setOpen(true)
+                    } else if (data) {
+                        if (data.personasRoles || data.rolesMotsClefs) {
+                            const associationsPersonaRolesData = Object.keys(data.personasRoles).map((personaKey) => {
+                                return {
+                                    parent: personaKey,
+                                    childs: data.personasRoles[personaKey].Roles.length !== 0 ? data.personasRoles[personaKey].Roles : [""]
+                                }
+                            })
 
-                        setAssociationsPersonaRoles(associationsPersonaRolesData)
-                        setBackupAssociationsPersonaRoles([...backupAssociationsPersonaRoles, associationsPersonaRolesData])
+                            setAssociationsPersonaRoles(associationsPersonaRolesData)
+                            setBackupAssociationsPersonaRoles([...backupAssociationsPersonaRoles, associationsPersonaRolesData])
 
-                        const associationsRoleKeywordsData = Object.keys(data.rolesMotsClefs).map((roleKey) => {
-                            return {
-                                parent: roleKey,
-                                childs: data.rolesMotsClefs[roleKey].MotsClefs.length !== 0 ? data.rolesMotsClefs[roleKey].MotsClefs : [""]
-                            }
-                        })
+                            const associationsRoleKeywordsData = Object.keys(data.rolesMotsClefs).map((roleKey) => {
+                                return {
+                                    parent: roleKey,
+                                    childs: data.rolesMotsClefs[roleKey].MotsClefs.length !== 0 ? data.rolesMotsClefs[roleKey].MotsClefs : [""]
+                                }
+                            })
 
-                        setAssociationsRoleKeywords(associationsRoleKeywordsData)
-                        setBackupAssociationsRoleKeywords([...backupAssociationsRoleKeywords, associationsRoleKeywordsData])
+                            setAssociationsRoleKeywords(associationsRoleKeywordsData)
+                            setBackupAssociationsRoleKeywords([...backupAssociationsRoleKeywords, associationsRoleKeywordsData])
+                        }
                     }
                 }
             } catch (error) {
@@ -442,7 +442,7 @@ const Settings = (props: { instance: any, validate: () => void }) => {
     }
 
     return (
-        <Container maxWidth="lg" sx={{ background: theme.palette.background.paper }}>
+        <Container maxWidth="lg">
             <Stack spacing={8} alignItems="center" marginTop="100px" marginBottom="100px">
                 <Typography variant="h3">
                     DataHub - Persona

@@ -17,7 +17,7 @@ const InitiallyNull = (props: {
     const idTenant = new URLSearchParams(useLocation().search).get('id')
 
     return (
-        <Container maxWidth="lg" sx={{ background: theme.palette.background.paper }}>
+        <Container maxWidth="lg">
             <Stack spacing={8} alignItems="center" marginTop="100px" marginBottom="100px">
                 <Typography variant="h3">
                     DataHub - Persona
