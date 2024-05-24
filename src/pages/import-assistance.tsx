@@ -307,7 +307,7 @@ const ImportAssistance = (props: { instance: any }) => {
                                     color={!errors.status?.message ? "white" : "error"}
                                     onClick={importData}
                                 >
-                                    Importer les données
+                                    Nouveau Fichier d'import
                                 </AButton>
 
                                 {errors.status?.message && <Typography color={theme.palette.error.main}>
