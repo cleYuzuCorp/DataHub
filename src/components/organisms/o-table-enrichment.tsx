@@ -112,6 +112,7 @@ const OTableEnrichment = (props: {
 
     const handleSubmit = async () => {
         setLoading(true)
+        showNotification(`Requête en cours d'exécution`, 'warning')
 
         try {
             const body = {

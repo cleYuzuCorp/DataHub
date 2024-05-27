@@ -54,6 +54,7 @@ const AppRoutes = (props: { instance?: any }) => {
   const validate = () => {
     setOpenConfirm(false)
     setLoading(true)
+    showNotification(`Requête en cours d'exécution`, 'warning')
 
     const fetchDataFromApi = async () => {
       try {
@@ -133,6 +134,7 @@ const AppRoutes = (props: { instance?: any }) => {
     const fetchDataFromApi = async () => {
       if (selectedCustomer?.IdTenant && dataInit) {
         setLoading(true)
+        showNotification(`Requête en cours d'exécution`, 'warning')
 
         try {
           const parsedId = selectedCustomer?.IdTenant

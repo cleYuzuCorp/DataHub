@@ -42,6 +42,7 @@ const Formatting = (props: { instance: any }) => {
 
     useEffect(() => {
         setLoading(true)
+        showNotification(`Requête en cours d'exécution`, 'warning')
 
         const fetchDataFromApi = async () => {
             try {
@@ -148,6 +149,7 @@ const Formatting = (props: { instance: any }) => {
 
     const handleCheckChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setLoading(true)
+        showNotification(`Requête en cours d'exécution`, 'warning')
         setChecked(event.target.checked)
 
         const fetchDataFromApi = async () => {

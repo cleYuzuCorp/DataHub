@@ -12,7 +12,7 @@ const ANotification = (props: { open: boolean, message: string, severity: string
             anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
             autoHideDuration={6000}
         >
-            <Alert onClose={onClose} severity={severity === "success" ? 'success' : 'error'} variant="filled">
+            <Alert onClose={onClose} severity={severity === "success" ? 'success' : severity === "error" ? 'error' : 'warning'} variant="filled">
                 {message}
             </Alert>
         </Snackbar>

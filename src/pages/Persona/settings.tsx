@@ -66,6 +66,7 @@ const Settings = (props: { instance: any, validate: () => void }) => {
             try {
                 if (IdTenant) {
                     setLoading(true)
+                    showNotification(`Requête en cours d'exécution`, 'warning')
 
                     await instance.initialize()
                     const accessToken = await acquireToken(instance)
@@ -99,6 +100,7 @@ const Settings = (props: { instance: any, validate: () => void }) => {
             try {
                 if (IdTenant) {
                     setLoading(true)
+                    showNotification(`Requête en cours d'exécution`, 'warning')
 
                     await instance.initialize()
                     const accessToken = await acquireToken(instance)
@@ -352,6 +354,7 @@ const Settings = (props: { instance: any, validate: () => void }) => {
 
     const handleSubmit = async () => {
         setLoading(true)
+        showNotification(`Requête en cours d'exécution`, 'warning')
 
         const fetchDataFromApi = async () => {
             try {

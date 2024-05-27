@@ -163,6 +163,7 @@ const THeader = (props: {
 
     useEffect(() => {
         setLoading(true)
+        showNotification(`Requête en cours d'exécution`, 'warning')
 
         const fetchDataFromApi = async () => {
             try {

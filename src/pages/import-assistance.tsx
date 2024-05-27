@@ -221,6 +221,7 @@ const ImportAssistance = (props: { instance: any }) => {
         try {
             clearErrors('status')
             setLoading(true)
+            showNotification(`Requête en cours d'exécution`, 'warning')
 
             if (file && idTenant) {
 

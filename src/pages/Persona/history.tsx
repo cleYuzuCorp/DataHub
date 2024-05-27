@@ -42,6 +42,7 @@ const History = (props: { instance: any }) => {
 
     useEffect(() => {
         setLoading(true)
+        showNotification(`Requête en cours d'exécution`, 'warning')
 
         const fetchDataFromApi = async () => {
             if (fetchDataInit) {
@@ -82,6 +83,7 @@ const History = (props: { instance: any }) => {
 
     useEffect(() => {
         setLoading(true)
+        showNotification(`Requête en cours d'exécution`, 'warning')
 
         const fetchDataFromApi = async () => {
             try {
@@ -164,6 +166,7 @@ const History = (props: { instance: any }) => {
 
     const handleRestore = async () => {
         setLoading(true)
+        showNotification(`Requête en cours d'exécution`, 'warning')
 
         try {
             const dataInit = selectedRows.map((row) => ({

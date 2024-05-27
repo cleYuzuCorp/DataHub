@@ -36,6 +36,7 @@ const Dissociation = (props: { instance: any }) => {
     useEffect(() => {
         const fetchDataFromApi = async () => {
             setLoading(true)
+            showNotification(`Requête en cours d'exécution`, 'warning')
 
             try {
                 await instance.initialize()
@@ -69,6 +70,7 @@ const Dissociation = (props: { instance: any }) => {
 
     const loadData = async () => {
         setLoading(true)
+        showNotification(`Requête en cours d'exécution`, 'warning')
 
         try {
             if (file && idTenant) {
