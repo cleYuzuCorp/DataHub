@@ -257,10 +257,11 @@ const ImportAssistance = (props: { instance: any }) => {
                 document.body.removeChild(link)
 
                 showNotification("Fichier téléchargé avec succès !", 'success')
-                setLoading(false)
             }
         } catch (error) {
             showNotification("Toutes les données doivent être terminées avant de pouvoir les importer", 'error')
+        } finally {
+            setLoading(false)
         }
     }
 

@@ -11,6 +11,8 @@ import { useState, useEffect } from "react"
 import AButton from "../../../components/atoms/a-button"
 import MCardData from "../../../components/molecules/m-card-data"
 import theme from "../../../hooks/theme"
+import useNotification from "../../../hooks/use-notification"
+import ANotification from "../../../components/atoms/a-notifications"
 
 const Data = (props: {
     instance: any
@@ -28,6 +30,8 @@ const Data = (props: {
 
     const isDesktop = useMediaQuery('(min-width:1000px)')
 
+    const { notification, showNotification, closeNotification } = useNotification()
+
     const [pdfGenerate, setPdfGenerate] = useState(false)
 
     const [searchTerm, setSearchTerm] = useState("")
@@ -39,6 +43,12 @@ const Data = (props: {
     const [filteredLinks, setFilteredLinks] = useState<JobTitle[]>()
 
     useEffect(() => {
+        if (loading) {
+            showNotification(`Requête en cours d'exécution`, 'warning')
+        } else {
+            closeNotification()
+        }
+
         const jobTitles: string[] = []
         const occurences: number[] = []
 
@@ -245,6 +255,13 @@ const Data = (props: {
                 <Typography variant="h3">
                     DataHub - Persona
                 </Typography>
+
+                <ANotification
+                    open={notification.open}
+                    message={notification.message}
+                    severity={notification.severity}
+                    onClose={closeNotification}
+                />
 
                 <Stack>
                     {loading ? <CircularProgress /> : <Stack spacing={8} width="100%">

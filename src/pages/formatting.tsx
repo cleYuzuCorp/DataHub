@@ -66,6 +66,7 @@ const Formatting = (props: { instance: any }) => {
                 showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
             } finally {
                 setLoading(false)
+                closeNotification()
             }
 
             try {
@@ -89,6 +90,7 @@ const Formatting = (props: { instance: any }) => {
                 showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
             } finally {
                 setLoading(false)
+                closeNotification()
             }
 
             try {
@@ -116,6 +118,7 @@ const Formatting = (props: { instance: any }) => {
                 showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
             } finally {
                 setLoading(false)
+                closeNotification()
             }
         }
 

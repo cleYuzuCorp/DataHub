@@ -187,6 +187,7 @@ const THeader = (props: {
 
             } finally {
                 setLoading(false)
+                closeNotification()
             }
         }
 
@@ -292,7 +293,7 @@ const THeader = (props: {
                     left: '5px'
                 }}
             />
-            <Stack alignItems="center" height="100%" paddingTop="100px">
+            <Stack alignItems="center" height="100%" paddingTop="120px">
 
                 <ANotification
                     open={notification.open}

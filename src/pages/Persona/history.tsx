@@ -74,6 +74,7 @@ const History = (props: { instance: any }) => {
                     showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
                 } finally {
                     setLoading(false)
+                    closeNotification()
                 }
             }
         }
@@ -111,6 +112,7 @@ const History = (props: { instance: any }) => {
                 showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
             } finally {
                 setLoading(false)
+                closeNotification()
             }
         }
 

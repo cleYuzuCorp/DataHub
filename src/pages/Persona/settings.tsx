@@ -95,6 +95,7 @@ const Settings = (props: { instance: any, validate: () => void }) => {
                 showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
             } finally {
                 setLoading(false)
+                closeNotification()
             }
 
             try {
@@ -115,7 +116,6 @@ const Settings = (props: { instance: any, validate: () => void }) => {
 
                     if (error) {
                         showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
-                        setLoading(false)
                         setOpen(true)
                     } else if (data) {
                         if (data.personasRoles || data.rolesMotsClefs) {
@@ -145,6 +145,7 @@ const Settings = (props: { instance: any, validate: () => void }) => {
                 showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
             } finally {
                 setLoading(false)
+                closeNotification()
             }
         }
 

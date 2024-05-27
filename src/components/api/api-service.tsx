@@ -20,9 +20,6 @@ export const fetchData = async (endpoint: string, options: AxiosRequestConfig<an
         const response = await api(endpoint, options)
         return { data: response.data }
     } catch (error) {
-        if (axios.isAxiosError(error)) {
-            return { error: error.message }
-        }
-        return { error: 'Une erreur inconnue est survenue' }
+        return { error: (error as Error).message }
     }
 }
