@@ -9,24 +9,24 @@ const App = () => {
 
   const mslInstance = new PublicClientApplication(mslInstanceConfig)
 
-  const initializeMsal = async () => {
-    await mslInstance.initialize()
-    await mslInstance.handleRedirectPromise()
-
-    if (!mslInstance.getActiveAccount() && mslInstance.getAllAccounts().length > 0) {
-      mslInstance.setActiveAccount(mslInstance.getAllAccounts()[0])
-    }
-    mslInstance.addEventCallback((event) => {
-      if (event.eventType === EventType.LOGIN_SUCCESS && event.payload && 'account' in event.payload && event.payload.account !== undefined) {
-        const account = event.payload.account
-        mslInstance.setActiveAccount(account)
-      }
-    })
-  }
-
   useEffect(() => {
+    const initializeMsal = async () => {
+      await mslInstance.initialize()
+      await mslInstance.handleRedirectPromise()
+
+      if (!mslInstance.getActiveAccount() && mslInstance.getAllAccounts().length > 0) {
+        mslInstance.setActiveAccount(mslInstance.getAllAccounts()[0])
+      }
+      mslInstance.addEventCallback((event) => {
+        if (event.eventType === EventType.LOGIN_SUCCESS && event.payload && 'account' in event.payload && event.payload.account !== undefined) {
+          const account = event.payload.account
+          mslInstance.setActiveAccount(account)
+        }
+      })
+    }
+
     initializeMsal()
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <ThemeProvider theme={theme}>

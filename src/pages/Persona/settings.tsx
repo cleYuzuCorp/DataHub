@@ -151,7 +151,7 @@ const Settings = (props: { instance: any, validate: () => void }) => {
 
         setIsRestore(false)
         fetchDataFromApi()
-    }, [isRestore, IdTenant, settingsEdit])
+    }, [isRestore, IdTenant, settingsEdit]) // eslint-disable-line react-hooks/exhaustive-deps
 
     const addKeywords = () => {
         setKeywords((prevchilds) => [...prevchilds, ""])

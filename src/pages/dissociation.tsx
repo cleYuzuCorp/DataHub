@@ -67,66 +67,66 @@ const Dissociation = (props: { instance: any }) => {
         }
 
         fetchDataFromApi()
-    }, [])
-
-    const loadData = async () => {
-        setLoading(true)
-        showNotification(`Requête en cours d'exécution`, 'warning')
-
-        try {
-            if (file && idTenant) {
-                const formData = new FormData()
-                formData.append("file", file)
-
-                let temp = 0
-                const interval = 100
-                const totalTime = 8000
-
-                const progressIncrement = (interval / totalTime) * 100
-
-                const timer = setInterval(() => {
-                    if (temp < 90) {
-                        temp += progressIncrement
-                        setProgress(Math.min(temp, 100))
-                    } else {
-                        clearInterval(timer)
-                    }
-                }, interval)
-
-                await instance.initialize()
-                const accessToken = await acquireToken(instance)
-
-                const { data, error } = await fetchData(`/dissociation/${idTenant}`, {
-                    method: "POST",
-                    headers: {
-                        Authorization: `Bearer ${accessToken}`,
-                        'Content-Type': 'multipart/form-data'
-                    },
-                    data: formData,
-                })
-
-                if (error) {
-                    clearInterval(timer)
-                    setProgress(100)
-                    showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
-                } else if (data) {
-                    clearInterval(timer)
-                    setProgress(100)
-                    showNotification("Fichier traité avec succès !", 'success')
-                }
-            }
-        } catch (error) {
-            showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
-        } finally {
-            setLoading(false)
-        }
-    }
+    }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
+        const loadData = async () => {
+            setLoading(true)
+            showNotification(`Requête en cours d'exécution`, 'warning')
+
+            try {
+                if (file && idTenant) {
+                    const formData = new FormData()
+                    formData.append("file", file)
+
+                    let temp = 0
+                    const interval = 100
+                    const totalTime = 8000
+
+                    const progressIncrement = (interval / totalTime) * 100
+
+                    const timer = setInterval(() => {
+                        if (temp < 90) {
+                            temp += progressIncrement
+                            setProgress(Math.min(temp, 100))
+                        } else {
+                            clearInterval(timer)
+                        }
+                    }, interval)
+
+                    await instance.initialize()
+                    const accessToken = await acquireToken(instance)
+
+                    const { data, error } = await fetchData(`/dissociation/${idTenant}`, {
+                        method: "POST",
+                        headers: {
+                            Authorization: `Bearer ${accessToken}`,
+                            'Content-Type': 'multipart/form-data'
+                        },
+                        data: formData,
+                    })
+
+                    if (error) {
+                        clearInterval(timer)
+                        setProgress(100)
+                        showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
+                    } else if (data) {
+                        clearInterval(timer)
+                        setProgress(100)
+                        showNotification("Fichier traité avec succès !", 'success')
+                    }
+                }
+            } catch (error) {
+                showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
+            } finally {
+                setLoading(false)
+            }
+        }
+
         if (file) {
             loadData()
         }
-    }, [file])
+    }, [file]) // eslint-disable-line react-hooks/exhaustive-deps
 
     const handleFilteredChange = (value: string) => {
         setSearchTerm(value)

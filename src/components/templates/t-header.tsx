@@ -141,7 +141,7 @@ const THeader = (props: {
         }
 
         fetchDataFromApi()
-    }, [account])
+    }, [account]) // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
         const names = customers.map((customer) => customer.NomClient as string)
@@ -153,13 +153,12 @@ const THeader = (props: {
             const data = customersNames.map(name => ({ customerName: name, isLoading: false }))
             setDataLoading(data)
         }
-    }, [customersNames])
+    }, [customersNames]) // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
         const foundCustomer = customers.find(customer => active.includes(customer.NomClient as string))
-
         setSelectedCustomer(foundCustomer)
-    }, [active, customers])
+    }, [active, customers]) // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
         setLoading(true)
@@ -192,7 +191,7 @@ const THeader = (props: {
         }
 
         fetchDataFromApi()
-    }, [instance])
+    }, [instance]) // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
         const fetchNav = async () => {
@@ -244,7 +243,7 @@ const THeader = (props: {
         }
 
         fetchNav()
-    }, [active, selectedCustomer])
+    }, [active, selectedCustomer]) // eslint-disable-line react-hooks/exhaustive-deps
 
     const choices = [
         "Persona",

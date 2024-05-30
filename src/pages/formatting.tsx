@@ -123,7 +123,7 @@ const Formatting = (props: { instance: any }) => {
         }
 
         fetchDataFromApi()
-    }, [fetchDataInit])
+    }, [fetchDataInit]) // eslint-disable-line react-hooks/exhaustive-deps
 
     const handleFilteredChange = (value: string) => {
         setSearchTerm(value)

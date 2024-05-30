@@ -50,84 +50,84 @@ const ImportAssistance = (props: { instance: any }) => {
         resolver: yupResolver(schema),
     })
 
-    const loadData = async () => {
-        try {
-            setProgress(0)
+    useEffect(() => {
+        const loadData = async () => {
+            try {
+                setProgress(0)
 
-            if (file && idTenant) {
-                const formData = new FormData()
-                formData.append("file", file)
+                if (file && idTenant) {
+                    const formData = new FormData()
+                    formData.append("file", file)
 
-                let temp = 0
-                const interval = 100
-                const totalTime = 8000
+                    let temp = 0
+                    const interval = 100
+                    const totalTime = 8000
 
-                const progressIncrement = (interval / totalTime) * 100
+                    const progressIncrement = (interval / totalTime) * 100
 
-                const timer = setInterval(() => {
-                    if (temp < 90) {
-                        temp += progressIncrement
-                        setProgress(Math.min(temp, 100))
-                    } else {
-                        clearInterval(timer)
-                    }
-                }, interval)
-
-                await instance.initialize()
-                const accessToken = await acquireToken(instance)
-
-                const { data, error } = await fetchData(`/import/check/${idTenant}`, {
-                    method: "POST",
-                    headers: {
-                        Authorization: `Bearer ${accessToken}`,
-                        'Content-Type': 'multipart/form-data'
-                    },
-                    data: formData,
-                })
-
-                if (error) {
-                    clearInterval(timer)
-                    setProgress(100)
-                    showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
-                } else if (data) {
-                    clearInterval(timer)
-                    setProgress(100)
-
-                    data.matched.forEach((d: DataFile) => {
-                        if (d.Status === "Terminé" && d.Exist.length > 0) {
-                            setProposition(prevSelections => ({
-                                ...prevSelections,
-                                [d.Domain]: "choice"
-                            }))
-                            setCompanie(prevSelections => ({
-                                ...prevSelections,
-                                [d.Domain]: d.Exist[0].id
-                            }))
-                        } else if (d.Status === "Terminé") {
-                            setProposition(prevSelections => ({
-                                ...prevSelections,
-                                [d.Domain]: "create"
-                            }))
+                    const timer = setInterval(() => {
+                        if (temp < 90) {
+                            temp += progressIncrement
+                            setProgress(Math.min(temp, 100))
+                        } else {
+                            clearInterval(timer)
                         }
+                    }, interval)
+
+                    await instance.initialize()
+                    const accessToken = await acquireToken(instance)
+
+                    const { data, error } = await fetchData(`/import/check/${idTenant}`, {
+                        method: "POST",
+                        headers: {
+                            Authorization: `Bearer ${accessToken}`,
+                            'Content-Type': 'multipart/form-data'
+                        },
+                        data: formData,
                     })
 
-                    setDataMatched(data.matched)
-                    setDataCantMatched(data.cantMatched)
-                    showNotification("Fichier traité avec succès !", 'success')
-                }
-            }
-        } catch (error) {
-            showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
-        } finally {
-            setLoading(false)
-        }
-    }
+                    if (error) {
+                        clearInterval(timer)
+                        setProgress(100)
+                        showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
+                    } else if (data) {
+                        clearInterval(timer)
+                        setProgress(100)
 
-    useEffect(() => {
+                        data.matched.forEach((d: DataFile) => {
+                            if (d.Status === "Terminé" && d.Exist.length > 0) {
+                                setProposition(prevSelections => ({
+                                    ...prevSelections,
+                                    [d.Domain]: "choice"
+                                }))
+                                setCompanie(prevSelections => ({
+                                    ...prevSelections,
+                                    [d.Domain]: d.Exist[0].id
+                                }))
+                            } else if (d.Status === "Terminé") {
+                                setProposition(prevSelections => ({
+                                    ...prevSelections,
+                                    [d.Domain]: "create"
+                                }))
+                            }
+                        })
+
+                        setDataMatched(data.matched)
+                        setDataCantMatched(data.cantMatched)
+                        showNotification("Fichier traité avec succès !", 'success')
+                    }
+                }
+            } catch (error) {
+                showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
+            } finally {
+                setLoading(false)
+            }
+        }
+
         if (file) {
             loadData()
         }
-    }, [file])
+    }, [file]) // eslint-disable-line react-hooks/exhaustive-deps
 
     const handlePropositionChange = (value: string, domain: string) => {
         setProposition(prevSelections => ({
