@@ -70,7 +70,7 @@ const Data = (props: {
 
         setContactsJobTitles(jobTitles)
         setContactsOccurences(occurences)
-    }, [filteredPersonas]) // eslint-disable-line react-hooks/exhaustive-deps
+    }, [filteredPersonas])
 
     const handleFilteredChange = (value: string) => {
         setSearchTerm(value)
@@ -238,7 +238,7 @@ const Data = (props: {
         }
 
         generate()
-    }, [pdfGenerate]) // eslint-disable-line react-hooks/exhaustive-deps
+    }, [pdfGenerate])
 
     const convertChartToImage = async () => {
         const chartContainer = document.getElementById('chart-container')

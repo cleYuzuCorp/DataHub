@@ -219,7 +219,7 @@ const AppRoutes = (props: { instance?: any }) => {
     }
 
     fetchDataFromApi()
-  }, [dataInit]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [dataInit])
 
   return (
     <Router>

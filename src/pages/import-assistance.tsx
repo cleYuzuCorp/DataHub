@@ -127,7 +127,7 @@ const ImportAssistance = (props: { instance: any }) => {
         if (file) {
             loadData()
         }
-    }, [file]) // eslint-disable-line react-hooks/exhaustive-deps
+    }, [file])
 
     const handlePropositionChange = (value: string, domain: string) => {
         setProposition(prevSelections => ({

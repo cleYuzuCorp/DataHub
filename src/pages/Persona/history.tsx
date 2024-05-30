@@ -80,7 +80,7 @@ const History = (props: { instance: any }) => {
         }
 
         fetchDataFromApi()
-    }, [fetchDataInit]) // eslint-disable-line react-hooks/exhaustive-deps
+    }, [fetchDataInit])
 
     useEffect(() => {
         setLoading(true)
@@ -117,7 +117,7 @@ const History = (props: { instance: any }) => {
         }
 
         fetchDataFromApi()
-    }, [isRestored]) // eslint-disable-line react-hooks/exhaustive-deps
+    }, [isRestored])
 
     const handleFilteredChange = (value: string) => {
         setSearchTerm(value)
