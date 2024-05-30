@@ -26,7 +26,7 @@ const App = () => {
     }
 
     initializeMsal()
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <ThemeProvider theme={theme}>

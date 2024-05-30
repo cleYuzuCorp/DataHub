@@ -67,7 +67,7 @@ const Dissociation = (props: { instance: any }) => {
         }
 
         fetchDataFromApi()
-    }, [])
+    }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
         const loadData = async () => {
@@ -126,7 +126,7 @@ const Dissociation = (props: { instance: any }) => {
         if (file) {
             loadData()
         }
-    }, [file])
+    }, [file]) // eslint-disable-line react-hooks/exhaustive-deps
 
     const handleFilteredChange = (value: string) => {
         setSearchTerm(value)
