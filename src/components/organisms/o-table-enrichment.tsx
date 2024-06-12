@@ -9,6 +9,7 @@ import { acquireToken } from "../../App"
 import useNotification from "../../hooks/use-notification"
 import ANotification from "../atoms/a-notifications"
 import { fetchData } from "../api"
+import endpoints from "../../hooks/endpoints"
 
 const OTableEnrichment = (props: {
     instance: any
@@ -115,29 +116,31 @@ const OTableEnrichment = (props: {
         showNotification(`Requête en cours d'exécution`, 'warning')
 
         try {
-            const body = {
-                tableOfValues: dbPersona,
-                propositions: selectedContacts,
-            }
+            if (id) {
+                const body = {
+                    tableOfValues: dbPersona,
+                    propositions: selectedContacts,
+                }
 
-            await instance.initialize()
-            const accessToken = await acquireToken(instance)
+                await instance.initialize()
+                const accessToken = await acquireToken(instance)
 
-            const { data, error } = await fetchData(`/hubspot/contacts/persona/${id}`, {
-                method: "PATCH",
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                    "Content-Type": "application/json"
-                },
-                data: JSON.stringify(body)
-            })
+                const { data, error } = await fetchData(endpoints.hubspot.patch(parseInt(id)), {
+                    method: "PATCH",
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`,
+                        "Content-Type": "application/json"
+                    },
+                    data: JSON.stringify(body)
+                })
 
-            if (error) {
-                showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
-            } else if (data) {
-                showNotification("Enrichissement effectué avec succès !", 'success')
-                handleIgnoreProposal()
-                validate()
+                if (error) {
+                    showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
+                } else if (data) {
+                    showNotification("Enrichissement effectué avec succès !", 'success')
+                    handleIgnoreProposal()
+                    validate()
+                }
             }
         } catch (error) {
             showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')

@@ -13,6 +13,7 @@ import { acquireToken } from '../App'
 import useNotification from './use-notification'
 import ANotification from '../components/atoms/a-notifications'
 import { fetchData } from '../components/api'
+import endpoints from './endpoints'
 
 const AppRoutes = (props: { instance?: any }) => {
 
@@ -58,66 +59,68 @@ const AppRoutes = (props: { instance?: any }) => {
 
     const fetchDataFromApi = async () => {
       try {
-        await instance.initialize()
-        const accessToken = await acquireToken(instance)
+        if (selectedCustomer) {
+          await instance.initialize()
+          const accessToken = await acquireToken(instance)
 
-        const { data, error } = await fetchData(`/proposition-persona/associations-settings/${selectedCustomer?.IdTenant}`, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "application/json"
-          }
-        })
+          const { data, error } = await fetchData(endpoints.persona.get(selectedCustomer.IdTenant), {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              "Content-Type": "application/json"
+            }
+          })
 
-        if (error) {
-          showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
-        } else if (data) {
-          if (data.personasRoles || data.rolesMotsClefs || data.dbPersona) {
-            const associationsPersonaRolesData = Object.keys(data.personasRoles).map((personaKey) => {
-              return {
-                parent: personaKey,
-                childs: data.personasRoles[personaKey].Roles.map((role: any, rolesIndex: number) => ({
-                  id: rolesIndex + 1,
-                  value: role,
+          if (error) {
+            showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
+          } else if (data) {
+            if (data.personasRoles || data.rolesMotsClefs || data.dbPersona) {
+              const associationsPersonaRolesData = Object.keys(data.personasRoles).map((personaKey) => {
+                return {
+                  parent: personaKey,
+                  childs: data.personasRoles[personaKey].Roles.map((role: any, rolesIndex: number) => ({
+                    id: rolesIndex + 1,
+                    value: role,
+                  }))
+                }
+              })
+
+              setAssociationsPersonaRoles(associationsPersonaRolesData)
+
+              const associationsRoleKeywordsData = Object.keys(data.rolesMotsClefs).map((roleKey) => {
+                return {
+                  parent: roleKey,
+                  childs: data.rolesMotsClefs[roleKey].MotsClefs.length !== 0 ? data.rolesMotsClefs[roleKey].MotsClefs : [""]
+                }
+              })
+
+              setAssociationsRoleKeywords(associationsRoleKeywordsData)
+
+              const personas = data.dbPersona.map((persona: { description: string, value: string }) => {
+                return {
+                  description: persona.description,
+                  value: persona.value
+                }
+              })
+
+              setDbPersona(personas)
+
+              setDataLoading(prevDataLoading => {
+                return prevDataLoading.map(item => ({
+                  ...item,
+                  isLoading: item.customerName === selectedCustomer.NomClient
                 }))
-              }
-            })
+              })
 
-            setAssociationsPersonaRoles(associationsPersonaRolesData)
-
-            const associationsRoleKeywordsData = Object.keys(data.rolesMotsClefs).map((roleKey) => {
-              return {
-                parent: roleKey,
-                childs: data.rolesMotsClefs[roleKey].MotsClefs.length !== 0 ? data.rolesMotsClefs[roleKey].MotsClefs : [""]
-              }
-            })
-
-            setAssociationsRoleKeywords(associationsRoleKeywordsData)
-
-            const personas = data.dbPersona.map((persona: { description: string, value: string }) => {
-              return {
-                description: persona.description,
-                value: persona.value
-              }
-            })
-
-            setDbPersona(personas)
-
-            setDataLoading(prevDataLoading => {
-              return prevDataLoading.map(item => ({
-                ...item,
-                isLoading: item.customerName === selectedCustomer?.NomClient
+              setDataLoading(prevDataLoading => prevDataLoading.map(item => {
+                if (item.customerName === selectedCustomer.NomClient) {
+                  return { ...item, isLoading: true }
+                }
+                return item
               }))
-            })
-
-            setDataLoading(prevDataLoading => prevDataLoading.map(item => {
-              if (item.customerName === selectedCustomer?.NomClient) {
-                return { ...item, isLoading: true }
-              }
-              return item
-            }))
-            setDataInit(true)
-            setActive([active[0], active[1], "Enrichissement", "Données"])
+              setDataInit(true)
+              setActive([active[0], active[1], "Enrichissement", "Données"])
+            }
           }
         }
       } catch (error) {
@@ -166,7 +169,7 @@ const AppRoutes = (props: { instance?: any }) => {
 
           const accessToken = await acquireToken(instance)
 
-          const { data, error } = await fetchData(`/proposition-persona/process/${parsedId}`, {
+          const { data, error } = await fetchData(endpoints.persona.post(parsedId), {
             method: "POST",
             headers: {
               Authorization: `Bearer ${accessToken}`,

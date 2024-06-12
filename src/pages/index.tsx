@@ -9,6 +9,7 @@ import { Customer } from "../interfaces/customer"
 import useNotification from "../hooks/use-notification"
 import ANotification from "../components/atoms/a-notifications"
 import { fetchData } from "../components/api"
+import endpoints from "../hooks/endpoints"
 
 const CustomersAccounts = (props: { instance: any, account: any, customers: Customer[], setCustomers: (value: Customer[]) => void, loading: boolean }) => {
 
@@ -44,30 +45,32 @@ const CustomersAccounts = (props: { instance: any, account: any, customers: Cust
 
     const editCustomer = async () => {
         try {
-            const accessToken = await acquireToken(instance)
+            if (selectedCustomer) {
+                const accessToken = await acquireToken(instance)
 
-            const payloadName = {
-                NomClient: selectedCustomer?.NomClient
-            }
+                const payloadName = {
+                    NomClient: selectedCustomer.NomClient
+                }
 
-            const { data, error } = await fetchData(`/tenant/${selectedCustomer?.IdTenant}`, {
-                method: "PATCH",
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                    "Content-Type": "application/json"
-                },
-                data: JSON.stringify(payloadName)
-            })
+                const { data, error } = await fetchData(endpoints.tenant.patch(selectedCustomer.IdTenant), {
+                    method: "PATCH",
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`,
+                        "Content-Type": "application/json"
+                    },
+                    data: JSON.stringify(payloadName)
+                })
 
-            if (error) {
-                showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
-            } else if (data) {
-                showNotification("Client modifié avec succès !", 'success')
-                setCustomers(customers.map((customer) =>
-                    customer.IdTenant === selectedCustomer?.IdTenant ? { ...customer, ...payloadName } : customer
-                ) as Customer[])
+                if (error) {
+                    showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
+                } else if (data) {
+                    showNotification("Client modifié avec succès !", 'success')
+                    setCustomers(customers.map((customer) =>
+                        customer.IdTenant === selectedCustomer.IdTenant ? { ...customer, ...payloadName } : customer
+                    ) as Customer[])
 
-                setOpen(false)
+                    setOpen(false)
+                }
             }
         } catch (error) {
             showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
@@ -85,7 +88,7 @@ const CustomersAccounts = (props: { instance: any, account: any, customers: Cust
             const isConfirmed = window.confirm("Êtes-vous sûr de vouloir supprimer ce client ?")
 
             if (isConfirmed) {
-                const { data, error } = await fetchData(`/tenant/${id}`, {
+                const { data, error } = await fetchData(endpoints.tenant.delete(id), {
                     method: "DELETE",
                     headers: {
                         Authorization: `Bearer ${accessToken}`,

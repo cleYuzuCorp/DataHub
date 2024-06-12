@@ -15,6 +15,7 @@ import { useForm } from 'react-hook-form'
 import { fetchData } from '../components/api'
 import ANotification from '../components/atoms/a-notifications'
 import useNotification from '../hooks/use-notification'
+import endpoints from '../hooks/endpoints'
 
 const ImportAssistance = (props: { instance: any }) => {
 
@@ -77,7 +78,7 @@ const ImportAssistance = (props: { instance: any }) => {
                     await instance.initialize()
                     const accessToken = await acquireToken(instance)
 
-                    const { data, error } = await fetchData(`/import/check/${idTenant}`, {
+                    const { data, error } = await fetchData(endpoints.import_assistance.post(parseInt(idTenant)), {
                         method: "POST",
                         headers: {
                             Authorization: `Bearer ${accessToken}`,

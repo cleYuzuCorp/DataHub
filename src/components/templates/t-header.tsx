@@ -12,6 +12,7 @@ import AButton from "../atoms/a-button"
 import { fetchData } from "../api"
 import useNotification from "../../hooks/use-notification"
 import ANotification from "../atoms/a-notifications"
+import endpoints from "../../hooks/endpoints"
 
 const THeader = (props: {
     instance?: any
@@ -169,7 +170,7 @@ const THeader = (props: {
                 await instance.initialize()
                 const accessToken = await acquireToken(instance)
 
-                const { data, error } = await fetchData(`/tenant`, {
+                const { data, error } = await fetchData(endpoints.tenant.get, {
                     headers: {
                         Authorization: `Bearer ${accessToken}`,
                         "Content-Type": "application/json",

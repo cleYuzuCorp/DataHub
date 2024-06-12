@@ -11,6 +11,7 @@ import { HistoryDissociation } from "../interfaces/history-dissociation"
 import ANotification from "../components/atoms/a-notifications"
 import useNotification from "../hooks/use-notification"
 import { fetchData } from "../components/api"
+import endpoints from "../hooks/endpoints"
 
 const Dissociation = (props: { instance: any }) => {
 
@@ -39,24 +40,26 @@ const Dissociation = (props: { instance: any }) => {
             showNotification(`Requête en cours d'exécution`, 'warning')
 
             try {
-                await instance.initialize()
-                const accessToken = await acquireToken(instance)
+                if (idTenant) {
+                    await instance.initialize()
+                    const accessToken = await acquireToken(instance)
 
-                const { data, error } = await fetchData(`/historique-dissociation/${idTenant}`, {
-                    method: "GET",
-                    headers: {
-                        Authorization: `Bearer ${accessToken}`,
-                        "Content-Type": "application/json",
-                    }
-                })
-
-                if (error) {
-                    showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
-                } else if (data) {
-                    const sortedHistories = data.sort((a: { Date: string }, b: { Date: string }) => {
-                        return new Date(b.Date).getTime() - new Date(a.Date).getTime()
+                    const { data, error } = await fetchData(endpoints.history.dissociation(parseInt(idTenant)), {
+                        method: "GET",
+                        headers: {
+                            Authorization: `Bearer ${accessToken}`,
+                            "Content-Type": "application/json",
+                        }
                     })
-                    setHistories(sortedHistories)
+
+                    if (error) {
+                        showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
+                    } else if (data) {
+                        const sortedHistories = data.sort((a: { Date: string }, b: { Date: string }) => {
+                            return new Date(b.Date).getTime() - new Date(a.Date).getTime()
+                        })
+                        setHistories(sortedHistories)
+                    }
                 }
             } catch (error) {
                 showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
@@ -97,7 +100,7 @@ const Dissociation = (props: { instance: any }) => {
                     await instance.initialize()
                     const accessToken = await acquireToken(instance)
 
-                    const { data, error } = await fetchData(`/dissociation/${idTenant}`, {
+                    const { data, error } = await fetchData(endpoints.dissociation.post(parseInt(idTenant)), {
                         method: "POST",
                         headers: {
                             Authorization: `Bearer ${accessToken}`,

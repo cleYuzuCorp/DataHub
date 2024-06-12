@@ -12,6 +12,7 @@ import Chart from "react-apexcharts"
 import useNotification from "../hooks/use-notification"
 import ANotification from "../components/atoms/a-notifications"
 import { fetchData } from "../components/api"
+import endpoints from "../hooks/endpoints"
 
 const Formatting = (props: { instance: any }) => {
 
@@ -46,73 +47,79 @@ const Formatting = (props: { instance: any }) => {
 
         const fetchDataFromApi = async () => {
             try {
-                await instance.initialize()
-                const accessToken = await acquireToken(instance)
+                if (idTenant) {
+                    await instance.initialize()
+                    const accessToken = await acquireToken(instance)
 
-                const { data, error } = await fetchData(`/settings-formatage/${idTenant}`, {
-                    method: "GET",
-                    headers: {
-                        Authorization: `Bearer ${accessToken}`,
-                        "Content-Type": "application/json"
-                    }
-                })
-
-                if (error) {
-                    showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
-                } else if (data) {
-                    setChecked(data)
-                }
-            } catch (error) {
-                showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
-            } finally {
-                setLoading(false)
-                closeNotification()
-            }
-
-            try {
-                await instance.initialize()
-                const accessToken = await acquireToken(instance)
-
-                const { data, error } = await fetchData(`/dataformatage/${idTenant}`, {
-                    method: "GET",
-                    headers: {
-                        Authorization: `Bearer ${accessToken}`,
-                        "Content-Type": "application/json"
-                    }
-                })
-
-                if (error) {
-                    showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
-                } else if (data) {
-                    setData(data)
-                }
-            } catch (error) {
-                showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
-            } finally {
-                setLoading(false)
-                closeNotification()
-            }
-
-            try {
-                await instance.initialize()
-                const accessToken = await acquireToken(instance)
-
-                const { data, error } = await fetchData(`/historique-formatage/${idTenant}`, {
-                    method: "GET",
-                    headers: {
-                        Authorization: `Bearer ${accessToken}`,
-                        "Content-Type": "application/json"
-                    }
-                })
-
-                if (error) {
-                    showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
-                } else if (data) {
-                    const sortedHistories = data.sort((a: { Date: string }, b: { Date: string }) => {
-                        return new Date(b.Date as string).getTime() - new Date(a.Date as string).getTime()
+                    const { data, error } = await fetchData(endpoints.settings_formatage.get(parseInt(idTenant)), {
+                        method: "GET",
+                        headers: {
+                            Authorization: `Bearer ${accessToken}`,
+                            "Content-Type": "application/json"
+                        }
                     })
 
-                    setHistories(sortedHistories)
+                    if (error) {
+                        showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
+                    } else if (data) {
+                        setChecked(data)
+                    }
+                }
+            } catch (error) {
+                showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
+            } finally {
+                setLoading(false)
+                closeNotification()
+            }
+
+            try {
+                if (idTenant) {
+                    await instance.initialize()
+                    const accessToken = await acquireToken(instance)
+
+                    const { data, error } = await fetchData(endpoints.history.kpi(parseInt(idTenant)), {
+                        method: "GET",
+                        headers: {
+                            Authorization: `Bearer ${accessToken}`,
+                            "Content-Type": "application/json"
+                        }
+                    })
+
+                    if (error) {
+                        showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
+                    } else if (data) {
+                        setData(data)
+                    }
+                }
+            } catch (error) {
+                showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
+            } finally {
+                setLoading(false)
+                closeNotification()
+            }
+
+            try {
+                if (idTenant) {
+                    await instance.initialize()
+                    const accessToken = await acquireToken(instance)
+
+                    const { data, error } = await fetchData(endpoints.history.formatage(parseInt(idTenant)), {
+                        method: "GET",
+                        headers: {
+                            Authorization: `Bearer ${accessToken}`,
+                            "Content-Type": "application/json"
+                        }
+                    })
+
+                    if (error) {
+                        showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
+                    } else if (data) {
+                        const sortedHistories = data.sort((a: { Date: string }, b: { Date: string }) => {
+                            return new Date(b.Date as string).getTime() - new Date(a.Date as string).getTime()
+                        })
+
+                        setHistories(sortedHistories)
+                    }
                 }
             } catch (error) {
                 showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
@@ -157,28 +164,29 @@ const Formatting = (props: { instance: any }) => {
 
         const fetchDataFromApi = async () => {
             try {
-                await instance.initialize()
-                const accessToken = await acquireToken(instance)
+                if (idTenant) {
+                    await instance.initialize()
+                    const accessToken = await acquireToken(instance)
 
-                const body = {
-                    actif: event.target.checked
+                    const body = {
+                        actif: event.target.checked
+                    }
+
+                    const { data, error } = await fetchData(endpoints.settings_formatage.patch(parseInt(idTenant)), {
+                        method: "PATCH",
+                        headers: {
+                            Authorization: `Bearer ${accessToken}`,
+                            "Content-Type": "application/json"
+                        },
+                        data: JSON.stringify(body)
+                    })
+
+                    if (error) {
+                        showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
+                    } else if (data) {
+                        showNotification(event.target.checked === true ? "Formatage activé avec succès !" : "Formatage désactivé avec succès !", 'success')
+                    }
                 }
-
-                const { data, error } = await fetchData(`/settings-formatage/${idTenant}`, {
-                    method: "PATCH",
-                    headers: {
-                        Authorization: `Bearer ${accessToken}`,
-                        "Content-Type": "application/json"
-                    },
-                    data: JSON.stringify(body)
-                })
-
-                if (error) {
-                    showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
-                } else if (data) {
-                    showNotification(event.target.checked === true ? "Formatage activé avec succès !" : "Formatage désactivé avec succès !", 'success')
-                }
-
             } catch (error) {
                 showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
             } finally {

@@ -11,6 +11,7 @@ import theme from "../../hooks/theme"
 import useNotification from "../../hooks/use-notification"
 import ANotification from "../../components/atoms/a-notifications"
 import { fetchData } from "../../components/api"
+import endpoints from "../../hooks/endpoints"
 
 const Settings = (props: { instance: any, validate: () => void }) => {
 
@@ -71,7 +72,7 @@ const Settings = (props: { instance: any, validate: () => void }) => {
                     await instance.initialize()
                     const accessToken = await acquireToken(instance)
 
-                    const { data, error } = await fetchData(`/hubspot-settings/${IdTenant}`, {
+                    const { data, error } = await fetchData(endpoints.settings_hubspot.get(parseInt(IdTenant)), {
                         method: "GET",
                         headers: {
                             Authorization: `Bearer ${accessToken}`,
@@ -106,7 +107,7 @@ const Settings = (props: { instance: any, validate: () => void }) => {
                     await instance.initialize()
                     const accessToken = await acquireToken(instance)
 
-                    const { data, error } = await fetchData(`/proposition-persona/associations-settings/${IdTenant}`, {
+                    const { data, error } = await fetchData(endpoints.persona.get(parseInt(IdTenant)), {
                         method: "GET",
                         headers: {
                             Authorization: `Bearer ${accessToken}`,
@@ -379,7 +380,7 @@ const Settings = (props: { instance: any, validate: () => void }) => {
 
                     const accessToken = await acquireToken(instance)
 
-                    const { data, error } = await fetchData(`/proposition-persona/associations-settings/${parsedId}`, {
+                    const { data, error } = await fetchData(endpoints.persona.patch(parsedId), {
                         method: "PATCH",
                         headers: {
                             Authorization: `Bearer ${accessToken}`,
@@ -417,28 +418,30 @@ const Settings = (props: { instance: any, validate: () => void }) => {
 
     const editSettings = async () => {
         try {
-            const accessToken = await acquireToken(instance)
+            if (IdTenant) {
+                const accessToken = await acquireToken(instance)
 
-            const payloadSettings = {
-                IntitulePoste_NomInterne: posteNomInterne,
-                Persona_NomInterne: personaNomInterne
-            }
+                const payloadSettings = {
+                    IntitulePoste_NomInterne: posteNomInterne,
+                    Persona_NomInterne: personaNomInterne
+                }
 
-            const { data, error } = await fetchData(`/hubspot-settings/${IdTenant}`, {
-                method: "PATCH",
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                    "Content-Type": "application/json"
-                },
-                data: JSON.stringify(payloadSettings)
-            })
+                const { data, error } = await fetchData(endpoints.settings_hubspot.patch(parseInt(IdTenant)), {
+                    method: "PATCH",
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`,
+                        "Content-Type": "application/json"
+                    },
+                    data: JSON.stringify(payloadSettings)
+                })
 
-            if (error) {
-                showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
-            } else if (data) {
-                showNotification("Paramètres modifiés avec succès !", 'success')
-                setOpen(false)
-                setSettingsEdit(!settingsEdit)
+                if (error) {
+                    showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
+                } else if (data) {
+                    showNotification("Paramètres modifiés avec succès !", 'success')
+                    setOpen(false)
+                    setSettingsEdit(!settingsEdit)
+                }
             }
         } catch (error) {
             showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')

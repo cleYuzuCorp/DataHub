@@ -11,6 +11,7 @@ import { format } from 'date-fns'
 import useNotification from "../../hooks/use-notification"
 import ANotification from "../../components/atoms/a-notifications"
 import { fetchData } from "../../components/api"
+import endpoints from "../../hooks/endpoints"
 
 const History = (props: { instance: any }) => {
 
@@ -47,28 +48,30 @@ const History = (props: { instance: any }) => {
         const fetchDataFromApi = async () => {
             if (fetchDataInit) {
                 try {
-                    await instance.initialize()
-                    const accessToken = await acquireToken(instance)
+                    if (idTenant) {
+                        await instance.initialize()
+                        const accessToken = await acquireToken(instance)
 
-                    const { data, error } = await fetchData(`/proposition-persona/associations-settings/${idTenant}`, {
-                        method: "GET",
-                        headers: {
-                            Authorization: `Bearer ${accessToken}`,
-                            "Content-Type": "application/json"
-                        }
-                    })
-
-                    if (error) {
-                        showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
-                    } else if (data) {
-                        const personas = data.dbPersona.map((persona: { description: string, value: string }) => {
-                            return {
-                                description: persona.description,
-                                value: persona.value
+                        const { data, error } = await fetchData(endpoints.persona.get(parseInt(idTenant)), {
+                            method: "GET",
+                            headers: {
+                                Authorization: `Bearer ${accessToken}`,
+                                "Content-Type": "application/json"
                             }
                         })
 
-                        setDbPersona(personas)
+                        if (error) {
+                            showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
+                        } else if (data) {
+                            const personas = data.dbPersona.map((persona: { description: string, value: string }) => {
+                                return {
+                                    description: persona.description,
+                                    value: persona.value
+                                }
+                            })
+
+                            setDbPersona(personas)
+                        }
                     }
                 } catch (error) {
                     showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
@@ -88,25 +91,27 @@ const History = (props: { instance: any }) => {
 
         const fetchDataFromApi = async () => {
             try {
-                await instance.initialize()
-                const accessToken = await acquireToken(instance)
+                if (idTenant) {
+                    await instance.initialize()
+                    const accessToken = await acquireToken(instance)
 
-                const { data, error } = await fetchData(`/historique-persona/${idTenant}`, {
-                    method: "GET",
-                    headers: {
-                        Authorization: `Bearer ${accessToken}`,
-                        "Content-Type": "application/json"
-                    }
-                })
-
-                if (error) {
-                    showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
-                } else if (data) {
-                    const sortedHistories = data.sort((a: { Date: string }, b: { Date: string }) => {
-                        return new Date(b.Date as string).getTime() - new Date(a.Date as string).getTime()
+                    const { data, error } = await fetchData(endpoints.history.persona(parseInt(idTenant)), {
+                        method: "GET",
+                        headers: {
+                            Authorization: `Bearer ${accessToken}`,
+                            "Content-Type": "application/json"
+                        }
                     })
 
-                    setHistories(sortedHistories)
+                    if (error) {
+                        showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
+                    } else if (data) {
+                        const sortedHistories = data.sort((a: { Date: string }, b: { Date: string }) => {
+                            return new Date(b.Date as string).getTime() - new Date(a.Date as string).getTime()
+                        })
+
+                        setHistories(sortedHistories)
+                    }
                 }
             } catch (error) {
                 showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
@@ -171,34 +176,36 @@ const History = (props: { instance: any }) => {
         showNotification(`Requête en cours d'exécution`, 'warning')
 
         try {
-            const dataInit = selectedRows.map((row) => ({
-                hs_object_id: row.IdObjectModifiedReal,
-                role: row.IntitulePoste,
-                persona: "restaured",
-                proposedPersona: row.PersonaBefore
-            }))
+            if (idTenant) {
+                const dataInit = selectedRows.map((row) => ({
+                    hs_object_id: row.IdObjectModifiedReal,
+                    role: row.IntitulePoste,
+                    persona: "restaured",
+                    proposedPersona: row.PersonaBefore
+                }))
 
-            const body = {
-                tableOfValues: dbPersona,
-                propositions: [{ contacts: dataInit }]
-            }
+                const body = {
+                    tableOfValues: dbPersona,
+                    propositions: [{ contacts: dataInit }]
+                }
 
-            const accessToken = await acquireToken(instance)
+                const accessToken = await acquireToken(instance)
 
-            const { data, error } = await fetchData(`/hubspot/contacts/persona/${idTenant}`, {
-                method: "PATCH",
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                    "Content-Type": "application/json"
-                },
-                data: JSON.stringify(body)
-            })
+                const { data, error } = await fetchData(endpoints.hubspot.patch(parseInt(idTenant)), {
+                    method: "PATCH",
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`,
+                        "Content-Type": "application/json"
+                    },
+                    data: JSON.stringify(body)
+                })
 
-            if (error) {
-                showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
-            } else if (data) {
-                showNotification("Restauration effectué avec succès !", 'success')
-                setIsRestored(!isRestored)
+                if (error) {
+                    showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
+                } else if (data) {
+                    showNotification("Restauration effectué avec succès !", 'success')
+                    setIsRestored(!isRestored)
+                }
             }
         } catch (error) {
             showNotification(`Une erreur s'est produite lors de la requête : ${error}`, 'error')
