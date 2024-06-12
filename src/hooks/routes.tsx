@@ -136,12 +136,12 @@ const AppRoutes = (props: { instance?: any }) => {
 
   useEffect(() => {
     const fetchDataFromApi = async () => {
-      if (selectedCustomer?.IdTenant && dataInit) {
+      if (selectedCustomer && dataInit) {
         setLoading(true)
         showNotification(`Requête en cours d'exécution`, 'warning')
 
         try {
-          const parsedId = selectedCustomer?.IdTenant
+          const parsedId = selectedCustomer.IdTenant
 
           const body = {
             dbPersona: dbPersona,

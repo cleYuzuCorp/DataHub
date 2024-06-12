@@ -38,7 +38,7 @@ const MFileUpload = (props: { progress: number, file: File | undefined, setFile:
     }
 
     const handleFileChange = async (event: any) => {
-        const selectedFile = event.target.files ? event.target.files[0] : null
+        const selectedFile = event.target.files && event.target.files[0]
         setFile(selectedFile)
     }
 
@@ -131,7 +131,7 @@ const MFileUpload = (props: { progress: number, file: File | undefined, setFile:
                     <input type="file" hidden onChange={handleFileChange} accept=".xlsx,.xls" />
                 </Button>
             </Stack>
-            {file ? <Stack alignItems="center" width="100%">
+            {file && <Stack alignItems="center" width="100%">
                 {progress !== 100 ? <LinearProgress
                     variant='determinate'
                     value={progress}
@@ -145,7 +145,7 @@ const MFileUpload = (props: { progress: number, file: File | undefined, setFile:
                 /> : <Typography>
                     {file.name}
                 </Typography>}
-            </Stack> : null}
+            </Stack>}
         </Stack>
     )
 }

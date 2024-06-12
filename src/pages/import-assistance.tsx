@@ -351,7 +351,7 @@ const ImportAssistance = (props: { instance: any }) => {
                                                         <FontAwesomeIcon icon={faArrowUp} color={theme.palette.background.default} /> :
                                                         <FontAwesomeIcon icon={faArrowDown} color={theme.palette.background.default} />
                                                     }
-                                                </Stack> : key === "Status" ? <Stack
+                                                </Stack> : key === "Status" && <Stack
                                                     spacing={1}
                                                     direction="row"
                                                     alignItems="center"
@@ -367,7 +367,7 @@ const ImportAssistance = (props: { instance: any }) => {
                                                         <FontAwesomeIcon icon={faArrowUp} color={theme.palette.background.default} /> :
                                                         <FontAwesomeIcon icon={faArrowDown} color={theme.palette.background.default} />
                                                     }
-                                                </Stack> : null}
+                                                </Stack>}
                                             </TableCell>
                                         ))}
                                         <TableCell>
@@ -393,7 +393,7 @@ const ImportAssistance = (props: { instance: any }) => {
                                                         Déjà présent
                                                     </Typography> : <Typography>
                                                         Nouveau
-                                                    </Typography> : key === "Status" ? <Stack>
+                                                    </Typography> : key === "Status" && <Stack>
                                                         <Stack
                                                             spacing={1}
                                                             direction="row"
@@ -418,7 +418,7 @@ const ImportAssistance = (props: { instance: any }) => {
                                                                 {(d[key as keyof typeof d] as ReactNode)}
                                                             </Typography>
                                                         </Stack>
-                                                    </Stack> : null}
+                                                    </Stack>}
                                                 </TableCell>
                                             ))}
                                             <TableCell>

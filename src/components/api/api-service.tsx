@@ -10,7 +10,7 @@ const api = axios.create({
 api.interceptors.response.use(
     response => response,
     error => {
-        const errorMessage = error.response?.data?.message || 'Une erreur est survenue'
+        const errorMessage = error.response.data.message || 'Une erreur est survenue'
         return Promise.reject({ message: errorMessage })
     }
 )

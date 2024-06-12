@@ -180,7 +180,7 @@ const OTableEnrichment = (props: {
                         }}
                     />
 
-                    {!nothing ? <Stack spacing={2} width="100%">
+                    {!nothing && <Stack spacing={2} width="100%">
                         <AButton variant="contained" onClick={() => setOpen(true)}>
                             Valider la proposition
                         </AButton>
@@ -192,7 +192,7 @@ const OTableEnrichment = (props: {
                         <AButton variant="outlined" onClick={handleSelectAllChange}>
                             Tout séléctionner
                         </AButton>
-                    </Stack> : null}
+                    </Stack>}
                 </Stack>
 
                 <Table component={Paper} sx={{ background: theme.palette.background.default }}>
@@ -229,7 +229,7 @@ const OTableEnrichment = (props: {
                             </TableCell>
                             {!nothing && <TableCell>
                                 <Checkbox
-                                    checked={selectedContacts?.length === filteredContacts.slice(startIndex, endIndex).length || selectedContacts?.length === filteredContacts.length}
+                                    checked={selectedContacts.length === filteredContacts.slice(startIndex, endIndex).length || selectedContacts.length === filteredContacts.length}
                                     onChange={handleSelectAllPageChange}
                                     indeterminate={selectedContacts.length > 0 && selectedContacts.length < filteredContacts.slice(startIndex, endIndex).length}
                                     sx={{

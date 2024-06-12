@@ -209,7 +209,7 @@ const CustomersAccounts = (props: { instance: any, account: any, customers: Cust
                     </Stack>
                 </Stack>}
 
-                {selectedCustomer ? <Modal open={open} onClose={handleClose}>
+                {selectedCustomer && <Modal open={open} onClose={handleClose}>
                     <Stack
                         spacing={4}
                         alignItems="center"
@@ -256,7 +256,7 @@ const CustomersAccounts = (props: { instance: any, account: any, customers: Cust
                             Sauvegarder
                         </AButton>
                     </Stack>
-                </Modal> : null}
+                </Modal>}
             </Stack>
         </Container>
     )

@@ -73,14 +73,14 @@ const OFormAssociation = (props: {
     return (
         <Stack spacing={8} alignItems="center" width="100%">
             <Stack spacing={4} direction={isDesktop ? "row" : "column"} width="100%">
-                {!buttonHidden ? <Stack spacing={4} justifyContent="flex-end">
+                {!buttonHidden && <Stack spacing={4} justifyContent="flex-end">
                     <AButton variant="outlined" color="error" onClick={() => setIsRestore(true)}>
                         Restaurer
                     </AButton>
                     <AButton variant="contained" onClick={() => setOpen('Save')}>
                         Sauvegarder
                     </AButton>
-                </Stack> : null}
+                </Stack>}
 
                 <Stack
                     width="100%"
@@ -99,7 +99,7 @@ const OFormAssociation = (props: {
                             background: theme.palette.text.primary
                         }}
                     >
-                        {parentLabel === "Persona" ? <TextField
+                        {parentLabel === "Persona" && associations ? <TextField
                             select
                             label={parentLabel}
                             value={parent}
@@ -113,7 +113,7 @@ const OFormAssociation = (props: {
                                 width: '100%'
                             }}
                         >
-                            {associations?.map((association) => <MenuItem key={association.parent} value={association.parent}>
+                            {associations.map((association) => <MenuItem key={association.parent} value={association.parent}>
                                 {association.parent}
                             </MenuItem>
                             )}
@@ -176,7 +176,7 @@ const OFormAssociation = (props: {
                                 transition: 'all ease-in-out 0.4s'
                             }}
                         >
-                            {parentLabel === "Persona" ? <TextField
+                            {parentLabel === "Persona" && roles ? <TextField
                                 id={`child-input-${index}`}
                                 select
                                 label={childLabel}
@@ -198,7 +198,7 @@ const OFormAssociation = (props: {
                                     }
                                 }}
                             >
-                                {roles?.map((role) => <MenuItem key={role.parent} value={role.parent}>
+                                {roles.map((role) => <MenuItem key={role.parent} value={role.parent}>
                                     {role.parent}
                                 </MenuItem>
                                 )}
@@ -361,9 +361,9 @@ const OFormAssociation = (props: {
                                                                     <Typography>
                                                                         {keyWord}
                                                                     </Typography>
-                                                                    {isDesktop ? <Typography>
+                                                                    {isDesktop && <Typography>
                                                                         {association.childs.length < 2 || association.childs.length - 1 === innerIndex ? null : "-"}
-                                                                    </Typography> : null}
+                                                                    </Typography>}
                                                                 </Stack>)}
                                                             </Stack>
                                                         </TableCell>
@@ -379,7 +379,7 @@ const OFormAssociation = (props: {
                                                                     <FontAwesomeIcon icon={faGear} color={theme.palette.text.primary} />
                                                                 </IconButton>
 
-                                                                {parentLabel !== "Persona" ? <IconButton
+                                                                {parentLabel !== "Persona" && <IconButton
                                                                     onClick={() => remove(index)}
                                                                     sx={{
                                                                         width: '50px',
@@ -387,7 +387,7 @@ const OFormAssociation = (props: {
                                                                     }}
                                                                 >
                                                                     <FontAwesomeIcon icon={faTrash} color={theme.palette.error.main} />
-                                                                </IconButton> : null}
+                                                                </IconButton>}
                                                             </Stack>
                                                         </TableCell>
                                                     </TableRow>}
@@ -430,7 +430,7 @@ const OFormAssociation = (props: {
                     </IconButton>
                     <Typography variant="h4">
                         Êtes vous sûr de vouloir réaliser cette action ? <br />
-                        {open === 'Save' ? "Cela entraînera un chargement en fond" : null}
+                        {open === 'Save' && "Cela entraînera un chargement en fond"}
                     </Typography>
 
                     <Stack spacing={4} direction="row">

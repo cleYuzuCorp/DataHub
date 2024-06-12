@@ -139,10 +139,10 @@ const Dissociation = (props: { instance: any }) => {
         const filtered = histories.filter(history =>
             history.FromObjectID.includes(searchTerm) ||
             history.ToObjectsID.includes(searchTerm) ||
-            history.Emailmodified?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            history.Date?.includes(searchTerm) ||
-            history.FromObject?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            history.ToObject?.toLowerCase().includes(searchTerm.toLowerCase())
+            history.Emailmodified.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            history.Date.includes(searchTerm) ||
+            history.FromObject.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            history.ToObject.toLowerCase().includes(searchTerm.toLowerCase())
         )
 
         setFilteredHistories(filtered)

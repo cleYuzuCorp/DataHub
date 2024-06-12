@@ -314,7 +314,7 @@ const History = (props: { instance: any }) => {
                                     </TableCell>
                                     <TableCell align="right">
                                         <Checkbox
-                                            checked={selectedRows?.length === filteredHistories.slice(startIndex, endIndex).length || selectedRows?.length === filteredHistories.length}
+                                            checked={selectedRows.length === filteredHistories.slice(startIndex, endIndex).length || selectedRows.length === filteredHistories.length}
                                             onChange={handleSelectAllPageChange}
                                             indeterminate={selectedRows.length > 0 && selectedRows.length < filteredHistories.slice(startIndex, endIndex).length}
                                             sx={{
@@ -332,7 +332,7 @@ const History = (props: { instance: any }) => {
                             </TableHead>
                             <TableBody>
                                 {filteredHistories.slice(startIndex, endIndex).map((history, index) =>
-                                    <TableRow key={index} sx={{ background: history.IdObjectAsk !== history.IdObjectModifiedReal || (history.PersonaAsk?.toLowerCase() !== history.PersonaAfter?.toLowerCase() && history.PersonaBefore !== "restaured") ? theme.palette.error.light : null }}>
+                                    <TableRow key={index} sx={{ background: history.IdObjectAsk !== history.IdObjectModifiedReal || (history.PersonaAsk.toLowerCase() !== history.PersonaAfter.toLowerCase() && history.PersonaBefore !== "restaured") ? theme.palette.error.light : null }}>
                                         <TableCell>
                                             <Typography
                                                 fontSize="11px"
@@ -424,7 +424,7 @@ const History = (props: { instance: any }) => {
                                         </TableCell>
                                         <TableCell align="right">
                                             <Checkbox
-                                                checked={selectedRows?.length === filteredHistories.slice(startIndex, endIndex).length || selectedRows?.length === filteredHistories.length}
+                                                checked={selectedRows.length === filteredHistories.slice(startIndex, endIndex).length || selectedRows.length === filteredHistories.length}
                                                 onChange={handleSelectAllPageChange}
                                                 indeterminate={selectedRows.length > 0 && selectedRows.length < filteredHistories.slice(startIndex, endIndex).length}
                                                 sx={{
@@ -442,7 +442,7 @@ const History = (props: { instance: any }) => {
                                 </TableHead>
                                 <TableBody>
                                     {filteredHistories.slice(startIndex, endIndex).map((history, index) =>
-                                        <TableRow key={index} sx={{ background: history.IdObjectAsk !== history.IdObjectModifiedReal || (history.PersonaAsk?.toLowerCase() !== history.PersonaAfter?.toLowerCase() && history.PersonaBefore !== "restaured") ? theme.palette.error.light : null }}>
+                                        <TableRow key={index} sx={{ background: history.IdObjectAsk !== history.IdObjectModifiedReal || (history.PersonaAsk.toLowerCase() !== history.PersonaAfter.toLowerCase() && history.PersonaBefore !== "restaured") ? theme.palette.error.light : null }}>
                                             <TableCell align="center">
                                                 <Stack
                                                     textAlign="center"
