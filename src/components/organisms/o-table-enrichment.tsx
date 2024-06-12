@@ -1,7 +1,7 @@
-import { faMagnifyingGlass, faChevronUp, faChevronDown, faArrowDown, faArrowUp, faXmark } from "@fortawesome/free-solid-svg-icons"
+import { faChevronUp, faChevronDown, faArrowDown, faArrowUp, faXmark } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { Checkbox, CircularProgress, Collapse, IconButton, Modal, Paper, Stack, Table, TableBody, TableCell, TableHead, TablePagination, TableRow, TextField, Typography, useMediaQuery } from "@mui/material"
-import React, { useEffect, useState } from "react"
+import { Checkbox, CircularProgress, Collapse, IconButton, Modal, Paper, Stack, Table, TableBody, TableCell, TableHead, TablePagination, TableRow, Typography, useMediaQuery } from "@mui/material"
+import React, { useState } from "react"
 import theme from "../../hooks/theme"
 import AButton from "../atoms/a-button"
 import { Contact } from "../../interfaces/contact"
@@ -10,6 +10,7 @@ import useNotification from "../../hooks/use-notification"
 import ANotification from "../atoms/a-notifications"
 import { fetchData } from "../api"
 import endpoints from "../../hooks/endpoints"
+import MFilter from "../molecules/m-filter"
 
 const OTableEnrichment = (props: {
     instance: any
@@ -29,7 +30,6 @@ const OTableEnrichment = (props: {
 
     const [loading, setLoading] = useState(false)
     const [open, setOpen] = useState(false)
-    const [searchTerm, setSearchTerm] = useState("")
     const [filteredContacts, setFilteredContacts] = useState<Contact[]>(contacts)
 
     const [hovered, setHovered] = useState<number | undefined>()
@@ -40,6 +40,10 @@ const OTableEnrichment = (props: {
 
     const [page, setPage] = useState(0)
     const [rowsPerPage, setRowsPerPage] = useState(10)
+
+    const filterContacts = (contact: Contact, searchTerm: string) => {
+        return !ignoredContacts.includes(contact) && contact.intituledePoste.toLowerCase().includes(searchTerm.toLowerCase())
+    }
 
     const toggleSortOrder = () => {
         setSortOrder((prevOrder) => (prevOrder === 'asc' ? 'desc' : 'asc'))
@@ -52,18 +56,6 @@ const OTableEnrichment = (props: {
             return b.occurence - a.occurence
         }
     })
-
-    const handleFilteredChange = (value: string) => {
-        setSearchTerm(value)
-    }
-
-    useEffect(() => {
-        const filtered = contacts.filter(contact =>
-            (!ignoredContacts.includes(contact)) &&
-            (contact.intituledePoste.toLowerCase().includes(searchTerm.toLowerCase()))
-        )
-        setFilteredContacts(filtered)
-    }, [searchTerm, ignoredContacts, contacts])
 
     const toggleRow = (index: number) => {
         setOpenRow((prevOpenRows) => ({
@@ -161,23 +153,13 @@ const OTableEnrichment = (props: {
                 />
 
                 <Stack spacing={4} direction={isDesktop ? "row" : "column"} alignItems="center" width="100%">
-                    <TextField
+                    <MFilter
                         placeholder="Recherche par Intitulé de poste"
-                        value={searchTerm}
-                        onChange={(e) => handleFilteredChange(e.target.value)}
-                        sx={{
-                            width: "100%",
-                            borderColor: '#E0E0E0',
-                            background: theme.palette.background.default,
-                            boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)'
-                        }}
-                        InputProps={{
-                            endAdornment: <FontAwesomeIcon
-                                icon={faMagnifyingGlass}
-                                color={theme.palette.text.primary}
-                                opacity={0.5}
-                            />
-                        }}
+                        filterConfig={[{
+                            data: contacts,
+                            filterFunction: filterContacts,
+                            setFilteredData: setFilteredContacts
+                        }]}
                     />
 
                     {!nothing && <Stack spacing={2} width="100%">

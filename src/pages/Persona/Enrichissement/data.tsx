@@ -1,8 +1,6 @@
-import { CircularProgress, Container, Stack, TextField, Typography, useMediaQuery } from "@mui/material"
+import { CircularProgress, Container, Stack, Typography, useMediaQuery } from "@mui/material"
 import { JobTitle } from "../../../interfaces/job-title"
 import { Customer } from "../../../interfaces/customer"
-import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons"
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import html2canvas from "html2canvas"
 import jsPDF from "jspdf"
 import * as XLSX from 'xlsx'
@@ -13,6 +11,7 @@ import MCardData from "../../../components/molecules/m-card-data"
 import theme from "../../../hooks/theme"
 import useNotification from "../../../hooks/use-notification"
 import ANotification from "../../../components/atoms/a-notifications"
+import MFilter from "../../../components/molecules/m-filter"
 
 const Data = (props: {
     instance: any
@@ -34,13 +33,16 @@ const Data = (props: {
 
     const [pdfGenerate, setPdfGenerate] = useState(false)
 
-    const [searchTerm, setSearchTerm] = useState("")
     const [contactsJobTitles, setContactsJobTitles] = useState([""])
     const [contactsOccurences, setContactsOccurences] = useState([0])
 
     const [filteredRoles, setFilteredRoles] = useState<JobTitle[]>()
     const [filteredPersonas, setFilteredPersonas] = useState<JobTitle[]>()
     const [filteredLinks, setFilteredLinks] = useState<JobTitle[]>()
+
+    const filterFunction = (item: any, searchTerm: string) => {
+        return item.jobTitle.toLowerCase().includes(searchTerm.toLowerCase())
+    }
 
     useEffect(() => {
         if (loading) {
@@ -72,28 +74,6 @@ const Data = (props: {
         setContactsOccurences(occurences)
     }, [filteredPersonas]) // eslint-disable-line react-hooks/exhaustive-deps
 
-    const handleFilteredChange = (value: string) => {
-        setSearchTerm(value)
-    }
-
-    useEffect(() => {
-        const filteredRole = roles.filter(role =>
-            role.jobTitle.toLowerCase().includes(searchTerm.toLowerCase())
-        )
-
-        const filteredPersona = personas.filter(persona =>
-            persona.jobTitle.toLowerCase().includes(searchTerm.toLowerCase())
-        )
-
-        const filteredLink = links.filter(link =>
-            link.jobTitle.toLowerCase().includes(searchTerm.toLowerCase())
-        )
-
-        setFilteredRoles(filteredRole)
-        setFilteredPersonas(filteredPersona)
-        setFilteredLinks(filteredLink)
-    }, [searchTerm, roles, personas, links])
-
     const generateExcel = () => {
         const currentDate = new Date()
         const formattedDate = currentDate.toLocaleDateString().split('/').join('-')
@@ -122,8 +102,6 @@ const Data = (props: {
     }
 
     const generatePDF = () => {
-        setSearchTerm("")
-
         setTimeout(() => {
             setPdfGenerate(true)
         }, 2000)
@@ -298,23 +276,13 @@ const Data = (props: {
                                     </AButton>
                                 </Stack>
 
-                                <TextField
-                                    placeholder="Recherche par Intitulé de poste"
-                                    value={searchTerm}
-                                    onChange={(e) => handleFilteredChange(e.target.value)}
-                                    sx={{
-                                        width: "100%",
-                                        borderColor: '#E0E0E0',
-                                        background: theme.palette.background.default,
-                                        boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)'
-                                    }}
-                                    InputProps={{
-                                        endAdornment: <FontAwesomeIcon
-                                            icon={faMagnifyingGlass}
-                                            color={theme.palette.text.primary}
-                                            opacity={0.5}
-                                        />
-                                    }}
+                                <MFilter
+                                    placeholder="Recherche par intitulé de poste"
+                                    filterConfig={[
+                                        { data: roles, filterFunction, setFilteredData: setFilteredRoles },
+                                        { data: personas, filterFunction, setFilteredData: setFilteredPersonas },
+                                        { data: links, filterFunction, setFilteredData: setFilteredLinks }
+                                    ]}
                                 />
                             </Stack>
 

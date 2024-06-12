@@ -1,17 +1,16 @@
-import { CircularProgress, Container, Paper, Stack, Table, TableBody, TableCell, TableHead, TablePagination, TableRow, TextField, Typography, useMediaQuery } from "@mui/material"
+import { CircularProgress, Container, Paper, Stack, Table, TableBody, TableCell, TableHead, TablePagination, TableRow, Typography, useMediaQuery } from "@mui/material"
 import { useLocation } from 'react-router-dom'
 import MFileUpload from "../components/molecules/m-file-upload"
 import { useEffect, useState } from "react"
 import theme from "../hooks/theme"
 import { acquireToken } from "../App"
 import { format } from "date-fns"
-import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons"
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { HistoryDissociation } from "../interfaces/history-dissociation"
 import ANotification from "../components/atoms/a-notifications"
 import useNotification from "../hooks/use-notification"
 import { fetchData } from "../components/api"
 import endpoints from "../hooks/endpoints"
+import MFilter from "../components/molecules/m-filter"
 
 const Dissociation = (props: { instance: any }) => {
 
@@ -27,12 +26,22 @@ const Dissociation = (props: { instance: any }) => {
     const [progress, setProgress] = useState(0)
     const [file, setFile] = useState<File>()
 
-    const [searchTerm, setSearchTerm] = useState("")
     const [histories, setHistories] = useState<Array<HistoryDissociation>>([])
     const [filteredHistories, setFilteredHistories] = useState<HistoryDissociation[]>([])
 
     const [page, setPage] = useState(0)
     const [rowsPerPage, setRowsPerPage] = useState(10)
+
+    const filterHistories = (history: HistoryDissociation, searchTerm: string) => {
+        return (
+            history.FromObjectID.includes(searchTerm) ||
+            history.ToObjectsID.includes(searchTerm) ||
+            history.Emailmodified.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            history.Date.includes(searchTerm) ||
+            history.FromObject.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            history.ToObject.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+    }
 
     useEffect(() => {
         const fetchDataFromApi = async () => {
@@ -131,23 +140,6 @@ const Dissociation = (props: { instance: any }) => {
         }
     }, [file]) // eslint-disable-line react-hooks/exhaustive-deps
 
-    const handleFilteredChange = (value: string) => {
-        setSearchTerm(value)
-    }
-
-    useEffect(() => {
-        const filtered = histories.filter(history =>
-            history.FromObjectID.includes(searchTerm) ||
-            history.ToObjectsID.includes(searchTerm) ||
-            history.Emailmodified.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            history.Date.includes(searchTerm) ||
-            history.FromObject.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            history.ToObject.toLowerCase().includes(searchTerm.toLowerCase())
-        )
-
-        setFilteredHistories(filtered)
-    }, [searchTerm, histories])
-
     const startIndex = page * rowsPerPage
     const endIndex = startIndex + rowsPerPage
 
@@ -176,23 +168,13 @@ const Dissociation = (props: { instance: any }) => {
                 <MFileUpload progress={progress} file={file} setFile={setFile} />
 
                 {loading ? <CircularProgress /> : <Stack spacing={2} width="100%">
-                    <TextField
+                    <MFilter
                         placeholder="Recherche par ID, Date, Email ou Objet"
-                        value={searchTerm}
-                        onChange={(e) => handleFilteredChange(e.target.value)}
-                        sx={{
-                            width: "100%",
-                            borderColor: '#E0E0E0',
-                            background: theme.palette.background.default,
-                            boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)'
-                        }}
-                        InputProps={{
-                            endAdornment: <FontAwesomeIcon
-                                icon={faMagnifyingGlass}
-                                color={theme.palette.text.primary}
-                                opacity={0.5}
-                            />
-                        }}
+                        filterConfig={[{
+                            data: histories,
+                            filterFunction: filterHistories,
+                            setFilteredData: setFilteredHistories
+                        }]}
                     />
 
                     {isDesktop ? <Table component={Paper} sx={{ background: theme.palette.background.default }}>

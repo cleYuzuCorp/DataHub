@@ -1,6 +1,4 @@
-import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons"
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { Checkbox, CircularProgress, Container, Paper, Stack, Table, TableBody, TableCell, TableHead, TablePagination, TableRow, TextField, Typography, useMediaQuery } from "@mui/material"
+import { Checkbox, CircularProgress, Container, Paper, Stack, Table, TableBody, TableCell, TableHead, TablePagination, TableRow, Typography, useMediaQuery } from "@mui/material"
 import { useEffect, useState } from "react"
 import AButton from "../../components/atoms/a-button"
 import theme from "../../hooks/theme"
@@ -12,6 +10,7 @@ import useNotification from "../../hooks/use-notification"
 import ANotification from "../../components/atoms/a-notifications"
 import { fetchData } from "../../components/api"
 import endpoints from "../../hooks/endpoints"
+import MFilter from "../../components/molecules/m-filter"
 
 const History = (props: { instance: any }) => {
 
@@ -27,7 +26,6 @@ const History = (props: { instance: any }) => {
     const [fetchDataInit, setFetchDataInit] = useState(false)
     const [isRestored, setIsRestored] = useState(false)
 
-    const [searchTerm, setSearchTerm] = useState("")
     const [histories, setHistories] = useState<Array<HistoryPersona>>([])
     const [filteredHistories, setFilteredHistories] = useState<HistoryPersona[]>([])
     const [selectedRows, setSelectedRows] = useState<HistoryPersona[]>([])
@@ -36,6 +34,16 @@ const History = (props: { instance: any }) => {
     const [rowsPerPage, setRowsPerPage] = useState(10)
 
     const [dbPersona, setDbPersona] = useState([{ description: "", value: "" }])
+
+    const filterHistories = (history: HistoryPersona, searchTerm: string) => {
+        return (
+            history.IdObjectAsk.toString().includes(searchTerm) ||
+            history.IdObjectModifiedReal.toString().includes(searchTerm) ||
+            history.EmailModified.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            history.Date.includes(searchTerm) ||
+            history.IntitulePoste.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+    }
 
     useEffect(() => {
         setFetchDataInit(true)
@@ -123,22 +131,6 @@ const History = (props: { instance: any }) => {
 
         fetchDataFromApi()
     }, [isRestored]) // eslint-disable-line react-hooks/exhaustive-deps
-
-    const handleFilteredChange = (value: string) => {
-        setSearchTerm(value)
-    }
-
-    useEffect(() => {
-        const filtered = histories.filter(history =>
-            history.IdObjectAsk.toString().includes(searchTerm) ||
-            history.IdObjectModifiedReal.toString().includes(searchTerm) ||
-            history.EmailModified.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            history.Date.includes(searchTerm) ||
-            history.IntitulePoste.toLowerCase().includes(searchTerm.toLowerCase())
-        )
-
-        setFilteredHistories(filtered)
-    }, [searchTerm, histories])
 
     const startIndex = page * rowsPerPage
     const endIndex = startIndex + rowsPerPage
@@ -238,23 +230,13 @@ const History = (props: { instance: any }) => {
 
                 {loading ? <CircularProgress /> : <Stack spacing={4} width="100%">
                     <Stack spacing={4} direction="row" alignItems="center" width="100%">
-                        <TextField
-                            placeholder="Recherche par ID, Date, Utilisateur ou Intitulé de poste"
-                            value={searchTerm}
-                            onChange={(e) => handleFilteredChange(e.target.value)}
-                            sx={{
-                                width: "100%",
-                                borderColor: '#E0E0E0',
-                                background: theme.palette.background.default,
-                                boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)'
-                            }}
-                            InputProps={{
-                                endAdornment: <FontAwesomeIcon
-                                    icon={faMagnifyingGlass}
-                                    color={theme.palette.text.primary}
-                                    opacity={0.5}
-                                />
-                            }}
+                        <MFilter
+                            placeholder="Recherche par ID, Date, Email ou Intitulé de poste"
+                            filterConfig={[{
+                                data: histories,
+                                filterFunction: filterHistories,
+                                setFilteredData: setFilteredHistories
+                            }]}
                         />
 
                         <Stack spacing={2} width="100%">

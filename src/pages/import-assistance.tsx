@@ -2,7 +2,7 @@ import { ReactNode, useEffect, useState } from 'react'
 import { Container, Stack, Typography, CircularProgress, TextField, MenuItem, TableHead, Paper, Table, TableBody, TableCell, TableRow, TablePagination } from "@mui/material"
 import { useLocation } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faArrowDown, faArrowUp, faCircle, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons'
+import { faArrowDown, faArrowUp, faCircle } from '@fortawesome/free-solid-svg-icons'
 import theme from '../hooks/theme'
 import AButton from '../components/atoms/a-button'
 import MFileUpload from '../components/molecules/m-file-upload'
@@ -16,6 +16,7 @@ import { fetchData } from '../components/api'
 import ANotification from '../components/atoms/a-notifications'
 import useNotification from '../hooks/use-notification'
 import endpoints from '../hooks/endpoints'
+import MFilter from '../components/molecules/m-filter'
 
 const ImportAssistance = (props: { instance: any }) => {
 
@@ -35,7 +36,6 @@ const ImportAssistance = (props: { instance: any }) => {
     const [dataCantMatched, setDataCantMatched] = useState<DataFile[]>([])
     const [filteredDataMatched, setFilteredDataMatched] = useState<DataFile[]>([])
     const [filteredDataCantMatched, setFilteredDataCantMatched] = useState<DataFile[]>([])
-    const [searchTerm, setSearchTerm] = useState("")
 
     const [pageMatched, setPageMatched] = useState(0)
     const [rowsPerPageMatched, setRowsPerPageMatched] = useState(10)
@@ -50,6 +50,20 @@ const ImportAssistance = (props: { instance: any }) => {
     const { clearErrors, formState: { errors } } = useForm({
         resolver: yupResolver(schema),
     })
+
+    const filterFunction = (item: any, searchTerm: string) => {
+        return item.Domain ? item.Domain.toLowerCase().includes(searchTerm.toLowerCase()) :
+            item.Email.toLowerCase().includes(searchTerm.toLowerCase())
+    }
+
+    const sortFunction = (a: { Exist: string; Status: string }, b: { Exist: string; Status: string }, sortCriteria: { column: string; order: string }) => {
+        if (sortCriteria.column === 'Exist') {
+            return sortCriteria.order === 'asc' ? a.Exist.length - b.Exist.length : b.Exist.length - a.Exist.length
+        } else if (sortCriteria.column === 'Status') {
+            return sortCriteria.order === 'asc' ? a.Status.localeCompare(b.Status) : b.Status.localeCompare(a.Status)
+        }
+        return 0
+    }
 
     useEffect(() => {
         const loadData = async () => {
@@ -172,37 +186,6 @@ const ImportAssistance = (props: { instance: any }) => {
         }
     }
 
-    const handleFilteredChange = (value: string) => {
-        setSearchTerm(value)
-    }
-
-    useEffect(() => {
-        let filteredMatched = dataMatched.filter(d =>
-            dataMatched[0].Domain ? d.Domain.toLowerCase().includes(searchTerm.toLowerCase()) :
-                d.Email.toLowerCase().includes(searchTerm.toLowerCase())
-        )
-
-
-        let filteredCantMatched = dataCantMatched.filter(d =>
-            dataCantMatched[0].Domain ? d.Domain.toLowerCase().includes(searchTerm.toLowerCase()) :
-                d.Email.toLowerCase().includes(searchTerm.toLowerCase())
-        )
-
-        if (sortCriteria.column) {
-            filteredMatched = filteredMatched.sort((a, b) => {
-                if (sortCriteria.column === 'Exist') {
-                    return sortCriteria.order === 'asc' ? a.Exist.length - b.Exist.length : b.Exist.length - a.Exist.length
-                } else if (sortCriteria.column === 'Status') {
-                    return sortCriteria.order === 'asc' ? a.Status.localeCompare(b.Status) : b.Status.localeCompare(a.Status)
-                }
-                return 0
-            })
-        }
-
-        setFilteredDataMatched(filteredMatched)
-        setFilteredDataCantMatched(filteredCantMatched)
-    }, [searchTerm, dataMatched, dataCantMatched, sortCriteria])
-
     const startIndexMatched = pageMatched * rowsPerPageMatched
     const endIndexMatched = startIndexMatched + rowsPerPageMatched
 
@@ -286,23 +269,13 @@ const ImportAssistance = (props: { instance: any }) => {
 
                     {dataMatched.length > 0 && <Stack spacing={4} width="100%">
                         <Stack spacing={4} direction="row">
-                            <TextField
+                            <MFilter
                                 placeholder="Recherche par Domaine ou Email"
-                                value={searchTerm}
-                                onChange={(e) => handleFilteredChange(e.target.value)}
-                                sx={{
-                                    width: "100%",
-                                    borderColor: '#E0E0E0',
-                                    background: theme.palette.background.default,
-                                    boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)'
-                                }}
-                                InputProps={{
-                                    endAdornment: <FontAwesomeIcon
-                                        icon={faMagnifyingGlass}
-                                        color={theme.palette.text.primary}
-                                        opacity={0.5}
-                                    />
-                                }}
+                                filterConfig={[
+                                    { data: dataMatched, filterFunction, setFilteredData: setFilteredDataMatched, sortFunction },
+                                    { data: dataCantMatched, filterFunction, setFilteredData: setFilteredDataCantMatched }
+                                ]}
+                                sortCriteria={sortCriteria}
                             />
 
                             <Stack spacing={1}>

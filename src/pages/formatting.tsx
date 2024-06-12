@@ -1,6 +1,4 @@
-import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons"
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { CircularProgress, Container, Paper, Stack, Switch, Table, TableBody, TableCell, TableHead, TablePagination, TableRow, TextField, Typography, useMediaQuery } from "@mui/material"
+import { CircularProgress, Container, Paper, Stack, Switch, Table, TableBody, TableCell, TableHead, TablePagination, TableRow, Typography, useMediaQuery } from "@mui/material"
 import { useEffect, useState } from "react"
 import theme from "../hooks/theme"
 import { useLocation } from "react-router-dom"
@@ -13,6 +11,7 @@ import useNotification from "../hooks/use-notification"
 import ANotification from "../components/atoms/a-notifications"
 import { fetchData } from "../components/api"
 import endpoints from "../hooks/endpoints"
+import MFilter from "../components/molecules/m-filter"
 
 const Formatting = (props: { instance: any }) => {
 
@@ -30,12 +29,19 @@ const Formatting = (props: { instance: any }) => {
 
     const [data, setData] = useState<DataFormatting[]>()
 
-    const [searchTerm, setSearchTerm] = useState("")
     const [histories, setHistories] = useState<Array<HistoryFormatting>>([])
     const [filteredHistories, setFilteredHistories] = useState<HistoryFormatting[]>([])
 
     const [page, setPage] = useState(0)
     const [rowsPerPage, setRowsPerPage] = useState(10)
+
+    const filterHistories = (history: HistoryFormatting, searchTerm: string) => {
+        return (
+            history.Hs_object_id.toString().includes(searchTerm) ||
+            history.Date.includes(searchTerm) ||
+            history.Type.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+    }
 
     useEffect(() => {
         setFetchDataInit(true)
@@ -131,20 +137,6 @@ const Formatting = (props: { instance: any }) => {
 
         fetchDataFromApi()
     }, [fetchDataInit]) // eslint-disable-line react-hooks/exhaustive-deps
-
-    const handleFilteredChange = (value: string) => {
-        setSearchTerm(value)
-    }
-
-    useEffect(() => {
-        const filtered = histories.filter(history =>
-            history.Hs_object_id.toString().includes(searchTerm) ||
-            history.Date.includes(searchTerm) ||
-            history.Type.toLowerCase().includes(searchTerm.toLowerCase())
-        )
-
-        setFilteredHistories(filtered)
-    }, [searchTerm, histories])
 
     const startIndex = page * rowsPerPage
     const endIndex = startIndex + rowsPerPage
@@ -337,23 +329,13 @@ const Formatting = (props: { instance: any }) => {
                         </Stack>}
 
                         <Stack spacing={4} direction="row" alignItems="center" width="100%">
-                            <TextField
-                                placeholder="Recherche par ID, Date ou type de formatage"
-                                value={searchTerm}
-                                onChange={(e) => handleFilteredChange(e.target.value)}
-                                sx={{
-                                    width: "100%",
-                                    borderColor: '#E0E0E0',
-                                    background: theme.palette.background.default,
-                                    boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)'
-                                }}
-                                InputProps={{
-                                    endAdornment: <FontAwesomeIcon
-                                        icon={faMagnifyingGlass}
-                                        color={theme.palette.text.primary}
-                                        opacity={0.5}
-                                    />
-                                }}
+                            <MFilter
+                                placeholder="Recherche par ID, Date ou Type de formatage"
+                                filterConfig={[{
+                                    data: histories,
+                                    filterFunction: filterHistories,
+                                    setFilteredData: setFilteredHistories
+                                }]}
                             />
                         </Stack>
 
