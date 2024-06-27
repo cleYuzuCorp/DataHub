@@ -1,6 +1,6 @@
 import { faRightFromBracket, faRightToBracket, faUser, faXmark } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { IconButton, Modal, Stack, Typography } from "@mui/material"
+import { Button, IconButton, Modal, Stack, Typography } from "@mui/material"
 import AAccordion from "../atoms/a-accordion"
 import AHeaderSelect from "../atoms/a-header-select"
 import { useEffect, useState } from "react"
@@ -358,18 +358,36 @@ const THeader = (props: {
                             </Typography>
                         </Stack>
 
-                        <Stack spacing={1} direction="row" alignItems="center" onClick={handleSignOut}>
-                            <FontAwesomeIcon icon={faRightFromBracket} color={theme.palette.error.main} />
-                            <Typography color={theme.palette.error.main}>
-                                Sign Out
-                            </Typography>
-                        </Stack>
-                    </Stack> : <Stack spacing={1} direction="row" alignItems="center" onClick={handleSignIn}>
-                        <FontAwesomeIcon icon={faRightToBracket} color={theme.palette.text.primary} />
-                        <Typography>
-                            Sign In
-                        </Typography>
-                    </Stack>}
+                        <Button
+                            variant="text"
+                            onClick={handleSignOut}
+                            startIcon={
+                                <FontAwesomeIcon
+                                    icon={faRightFromBracket}
+                                    color={theme.palette.error.main}
+                                />
+                            }
+                            sx={{
+                                color: theme.palette.error.main
+                            }}
+                        >
+                            Sign Out
+                        </Button>
+                    </Stack> : <Button
+                        variant="text"
+                        onClick={handleSignIn}
+                        startIcon={
+                            <FontAwesomeIcon
+                                icon={faRightToBracket}
+                                color={theme.palette.text.primary}
+                            />
+                        }
+                        sx={{
+                            color: theme.palette.text.primary
+                        }}
+                    >
+                        Sign In
+                    </Button>}
                 </Stack>
             </Stack>
 
